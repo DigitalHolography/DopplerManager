@@ -38,6 +38,8 @@ class FileFinder:
                 hd_id INTEGER,
                 ef_folder TEXT,
                 version_text TEXT,
+                json_path TEXT,
+                json_content TEXT,
                 FOREIGN KEY (hd_id) REFERENCES hd_data (id)
             )
         ''')
@@ -48,16 +50,6 @@ class FileFinder:
                 ef_id INTEGER,
                 path TEXT,
                 type TEXT,
-                FOREIGN KEY (ef_id) REFERENCES ef_data (id)
-            )
-        ''')
-
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS ef_jsons (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                ef_id INTEGER,
-                json_content TEXT,
-                json_name TEXT,
                 FOREIGN KEY (ef_id) REFERENCES ef_data (id)
             )
         ''')
@@ -87,13 +79,13 @@ class FileFinder:
 
         return cursor.lastrowid
 
-    def InsertEFdata(self, hd_id: int, ef_folder: str, version_text: str) -> int | None:
+    def InsertEFdata(self, hd_id: int, ef_folder: str, version_text: str, json_path: str, json_content: str) -> int | None:
         cursor = self.SQLconnect.cursor()
 
         cursor.execute('''
-            INSERT INTO ef_data (hd_id, ef_folder, version_text)
-            VALUES (?, ?, ?)
-        ''', (hd_id, ef_folder, version_text))
+            INSERT INTO ef_data (hd_id, ef_folder, version_text, json_path, json_content)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (hd_id, ef_folder, version_text, json_path, json_content))
         
         self.SQLconnect.commit()
 
@@ -110,18 +102,6 @@ class FileFinder:
         self.SQLconnect.commit()
 
         return cursor.lastrowid
-    
-    def InsertEFjson(self, ef_id: int, json_content: str, json_name: str) -> int | None:
-        cursor = self.SQLconnect.cursor()
-
-        cursor.execute('''
-            INSERT INTO ef_jsons (ef_id, json_content, json_name)
-            VALUES (?, ?, ?)
-        ''', (ef_id, json_content, json_name))
-        
-        self.SQLconnect.commit()
-
-        return cursor.lastrowid
 
     def Findfiles(self, root_dir: str):
         data = []
@@ -134,13 +114,15 @@ class FileFinder:
                 if not hd_folder.is_dir() or not FinderUtils.is_hd_folder(hd_folder.name):
                     continue
 
+                # Logger.debug(f"Found HD folder: {hd_folder}", tags="FILESYSTEM")
                 # --- HD data ---
                 rendering_params = None
 
                 raw_folder = hd_folder / "raw"
                 raw_data = FinderUtils.get_raw_data(raw_folder)
 
-                rendering_json = hd_folder / f"{hd_folder}_RenderingParameters.json"
+                rendering_json = hd_folder / (f"{hd_folder.name}_RenderingParameters.json")
+                # Logger.debug(f"param = {rendering_json} | hdfol = {hd_folder}\n {f"{hd_folder.name}"}")
                 if rendering_json.exists():
                     rendering_params = FinderUtils.safe_json_load(rendering_json)
 
@@ -181,7 +163,9 @@ class FileFinder:
                     last_row = self.InsertEFdata(
                         hd_id= hd_rowId,
                         ef_folder= ef["ef_folder"],
-                        version_text= FinderUtils.get_eyeflow_version(ef["ef_folder"])
+                        version_text= FinderUtils.get_eyeflow_version(ef["ef_folder"]),
+                        json_path= ef["InputEyeFlowParams"]["path"],
+                        json_content= json.dumps(ef["InputEyeFlowParams"]["content"])
                     )
 
                     if last_row is None:

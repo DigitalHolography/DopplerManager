@@ -75,7 +75,7 @@ def get_ef_folders_data(eyeflow_folder: Path) -> list[dict]:
             continue
 
         png_paths = []
-        json_data = []
+        InputEyeFlowParams = {"path": None, "content": None}
 
         png_folder = ef_folder / "png"
         if png_folder.exists():
@@ -83,17 +83,21 @@ def get_ef_folders_data(eyeflow_folder: Path) -> list[dict]:
                 png_paths.append(str(sub))
 
         json_folder = ef_folder / "json"
-        if json_folder.exists():
-            for json_file in json_folder.glob("*.json"):
-                j = safe_json_load(json_file)
-                if j:
-                    json_data.append({"content" : j,
-                                        "name": json_file.name})
+        if json_folder.exists() and json_folder.is_dir():
+            input_param = json_folder / "InputEyeFlowParams.json"
+            if input_param.exists():
+                content = safe_json_load(input_param)
+
+                if content:
+                    InputEyeFlowParams = {
+                        "path": str(input_param),
+                        "content": content
+                    }
 
         ef_data.append({
             "ef_folder": str(ef_folder),
             "png_files": png_paths,
-            "json_objects": json_data
+            "InputEyeFlowParams": InputEyeFlowParams
         })
 
     return ef_data
