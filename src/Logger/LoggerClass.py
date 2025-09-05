@@ -53,22 +53,26 @@ def log_t(msg: str, tags: List[str] | str) -> None:
 # @param    msg     The message to be printed
 # @param    tags    Take the tag (or list of tags) to be printed before 
 class Logger:
-    def info(self, msg : str, tags: List[str] | str = []) -> None:
+    @staticmethod
+    def info(msg : str, tags: List[str] | str = []) -> None:
         if type(tags) == str:
             tags = [tags]
         log_t(msg, ["INFO "] + tags) # type: ignore
 
-    def warn(self, msg : str, tags: List[str] | str  = []) -> None:
+    @staticmethod
+    def warn(msg : str, tags: List[str] | str  = []) -> None:
         if type(tags) == str:
             tags = [tags]
         log_t(msg, ["WARN "] + tags) # type: ignore
 
-    def error(self, msg : str, tags: List[str] | str  = []) -> None:
+    @staticmethod
+    def error(msg : str, tags: List[str] | str  = []) -> None:
         if type(tags) == str:
             tags = [tags]
         log_t(msg, ["ERROR"] + tags) # type: ignore
 
-    def debug(self, msg : str, tags: List[str] | str  = []) -> None:
+    @staticmethod
+    def debug(msg : str, tags: List[str] | str  = []) -> None:
         if type(tags) == str:
             tags = [tags]
         log_t(msg, ["DEBUG"] + tags) # type: ignore
