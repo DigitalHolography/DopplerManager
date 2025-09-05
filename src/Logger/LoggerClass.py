@@ -7,16 +7,17 @@ import sys
 # └───────────────────────────────────┘
 
 tags_color = {
-    "INFO":         [col.bg.CYA, col.BLA, col.BOLD],
-    "WARN":         [col.bg.YEL, col.BLA, col.BOLD],
-    "INFO ":        [col.bg.CYA, col.BLA, col.BOLD], # For alignment
+    "INFO":         [col.bg.CYA, col.WHI, col.BOLD],
+    "WARN":         [col.bg.YEL, col.WHI, col.BOLD],
+    "INFO ":        [col.bg.CYA, col.WHI, col.BOLD], # For alignment
     "WARN ":        [col.bg.YEL, col.BLA, col.BOLD], # For alignment
-    "ERROR":        [col.bg.RED, col.BLA, col.BOLD],
-    "DEBUG":        [col.bg.BLU, col.BLA, col.BOLD],
+    "ERROR":        [col.bg.RED, col.WHI, col.BOLD],
+    "DEBUG":        [col.bg.BLU, col.WHI, col.BOLD],
     "DOWNLOAD":     [col.bg.PUR, col.BLA, col.BOLD],
     "DONE":         [col.bg.GRE, col.BLA, col.BOLD],
     "TIME":         [col.bg.BLU, col.BLA, col.BOLD],
-    "FILESYSTEM":   [col.bg.PUR, col.BLA, col.BOLD],
+    "FILESYSTEM":   [col.bg.PUR, col.WHI, col.BOLD],
+    "DATABASE":     [col.bg.WHI, col.BLA, col.BOLD],
 }
 
 ################################################################################

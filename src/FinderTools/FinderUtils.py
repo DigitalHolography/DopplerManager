@@ -141,5 +141,19 @@ def scan_directories(root_dir: str):
     
     return data
 
-#print(timeit.timeit('Path("Y:/250604").iterdir()', number=10000, setup="from pathlib import Path"))
-#print(timeit.timeit('walk("Y:/250604")', number=10000, setup="from os import walk"))
+def get_file_name_without_hd(folder_path):
+    # Get the base name of the file from the folder path
+    file_name = os.path.basename(folder_path)
+
+    # Find the index of '_HD_'
+    hd_index = file_name.find('_HD_')
+
+    if hd_index != -1:
+        # Slice the string up to '_HD_'
+        file_name = file_name[:hd_index]
+
+    return file_name
+
+def get_eyeflow_version(ef_folder: Path) -> str:
+    # TODO: To implement
+    return ""
