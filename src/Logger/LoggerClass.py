@@ -1,37 +1,47 @@
-from typing import List, Dict, Tuple # For Python before 3.9
-from ColorClass import col
+# from typing import list, Dict, Tuple # For Python before 3.10
+from src.Logger.ColorClass import col
+import sys
 
 # ┌───────────────────────────────────┐
 # │            TAGS_COLORS            │
 # └───────────────────────────────────┘
 
 tags_color = {
-    "INFO":     [col.bg.CYA, col.BLA, col.BOLD],
-    "WARN":     [col.bg.YEL, col.BLA, col.BOLD],
-    "INFO ":    [col.bg.CYA, col.BLA, col.BOLD], # For alignment
-    "WARN ":    [col.bg.YEL, col.BLA, col.BOLD], # For alignment
-    "ERROR":    [col.bg.RED, col.BLA, col.BOLD],
-    "DEBUG":    [col.bg.BLU, col.BLA, col.BOLD],
-    "DOWNLOAD": [col.bg.PUR, col.BLA, col.BOLD],
-    "DONE":     [col.bg.GRE, col.BLA, col.BOLD],
-    "TIME":     [col.bg.BLU, col.BLA, col.BOLD],
+    "INFO":         [col.bg.CYA, col.BLA, col.BOLD],
+    "WARN":         [col.bg.YEL, col.BLA, col.BOLD],
+    "INFO ":        [col.bg.CYA, col.BLA, col.BOLD], # For alignment
+    "WARN ":        [col.bg.YEL, col.BLA, col.BOLD], # For alignment
+    "ERROR":        [col.bg.RED, col.BLA, col.BOLD],
+    "DEBUG":        [col.bg.BLU, col.BLA, col.BOLD],
+    "DOWNLOAD":     [col.bg.PUR, col.BLA, col.BOLD],
+    "DONE":         [col.bg.GRE, col.BLA, col.BOLD],
+    "TIME":         [col.bg.BLU, col.BLA, col.BOLD],
+    "FILESYSTEM":   [col.bg.PUR, col.BLA, col.BOLD],
 }
 
 ################################################################################
 
+# Check for Python version
+if sys.version_info <= (3, 9):
+    print(f"{col.BOLD}{col.RED}You are using a Python version before 3.10!")
+    print(f"This could result in failure to load")
+    print(f"{col.YEL}Current version {sys.version}")
 
-def log(msg: str, colors: List[str], end: str = "\n") -> None:
+################################################################################
+
+
+def log(msg: str, colors: list[str], end: str = "\n") -> None:
     for x in colors:
         print(x, end="")
     print(f"{msg}{col.RES}", end=end)
 
-def log_tags(msg: str, tags: List[Tuple[str, List[str]]]) -> None:
+def log_tags(msg: str, tags: list[tuple[str, list[str]]]) -> None:
     for tag in tags:
         log(f" {tag[0]} ", tag[1], "")
     print("", msg)
 
 
-def log_t(msg: str, tags: List[str] | str) -> None:
+def log_t(msg: str, tags: list[str] | str) -> None:
     """
     This function will print tags before the message with color codes defined in
     the tags_color global var.
@@ -54,25 +64,25 @@ def log_t(msg: str, tags: List[str] | str) -> None:
 # @param    tags    Take the tag (or list of tags) to be printed before 
 class Logger:
     @staticmethod
-    def info(msg : str, tags: List[str] | str = []) -> None:
-        if type(tags) == str:
+    def info(msg : str, tags: list[str] | str = []) -> None:
+        if isinstance(tags, str):
             tags = [tags]
-        log_t(msg, ["INFO "] + tags) # type: ignore
+        log_t(msg, ["INFO "] + tags)
 
     @staticmethod
-    def warn(msg : str, tags: List[str] | str  = []) -> None:
-        if type(tags) == str:
+    def warn(msg : str, tags: list[str] | str = []) -> None:
+        if isinstance(tags, str):
             tags = [tags]
-        log_t(msg, ["WARN "] + tags) # type: ignore
+        log_t(msg, ["WARN "] + tags)
 
     @staticmethod
-    def error(msg : str, tags: List[str] | str  = []) -> None:
-        if type(tags) == str:
+    def error(msg : str, tags: list[str] | str = []) -> None:
+        if isinstance(tags, str):
             tags = [tags]
-        log_t(msg, ["ERROR"] + tags) # type: ignore
+        log_t(msg, ["ERROR"] + tags)
 
     @staticmethod
-    def debug(msg : str, tags: List[str] | str  = []) -> None:
-        if type(tags) == str:
+    def debug(msg : str, tags: list[str] | str = []) -> None:
+        if isinstance(tags, str):
             tags = [tags]
-        log_t(msg, ["DEBUG"] + tags) # type: ignore
+        log_t(msg, ["DEBUG"] + tags)

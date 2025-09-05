@@ -1,1 +1,6 @@
+__pycache__
+
 collected_data.db
+
+# Testing
+test.py

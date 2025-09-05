@@ -1,7 +1,7 @@
 import os
 import json
 from pathlib import Path
-from Logger import Logger
+from src.Logger.LoggerClass import Logger
 
 def is_hd_folder(name: str):
     return "_HD_" in name
@@ -9,52 +9,59 @@ def is_hd_folder(name: str):
 def is_ef_folder(name: str):
     return "_EF_" in name
 
-def get_file_size(file_path: str):
+def get_file_size(file_path: Path | str):
     try:
-        return os.path.getsize(file_path)/ (1024 * 1024)  # Size in MB
+        return os.path.getsize(file_path) / (1024 * 1024)  # Size in MB
     except Exception:
         return None
 
-def safe_json_load(file_path: str):
+def safe_json_load(file_path: Path | str):
     try:
         with open(file_path, "r") as f:
             return json.load(f)
-    except Exception:
+    except Exception as e:
+        Logger.error(f"Access denied or error reading json: {file_path} – {e}", tags="FILESYSTEM")
         return None
 
-def safe_file_read(file_path: str):
+def safe_file_read(file_path: Path | str):
     try:
         with open(file_path, "r") as f:
             return f.read()
-    except Exception:
+    except Exception as e:
+        Logger.error(f"Access denied or error reading file: {file_path} – {e}", tags="FILESYSTEM")
         return None
 
-def safe_isdir(path):
+def safe_isdir(path: Path | str):
     try:
+        path = Path(path)
         return path.is_dir()
     except (PermissionError, OSError) as e:
         # print(f"Access denied or error reading directory: {path} – {e}")
-        Logger().error(f"Access denied or error reading directory: {path} – {e}", tags="Filesystem")
+        Logger.error(f"Access denied or error reading directory: {path} – {e}", tags="FILESYSTEM")
         return False
 
-def safe_iterdir(path: str):
+def safe_iterdir(path: Path | str):
     try:
-        if safe_isdir(Path(path)):
+        path = Path(path)
+        if safe_isdir(path):
           return list(path.iterdir())
+        else:
+            return []
     except (PermissionError, OSError) as e:
-        print(f"Access denied or error reading directory: {path} – {e}")
+        Logger.error(f"Access denied or error reading directory: {path} – {e}", tags="FILESYSTEM")
+        # print(f"Access denied or error reading directory: {path} – {e}")
         return []
 
 
 def scan_directories(root_dir: str):
     data = []
     
-    for date_folder in safe_iterdir(Path(root_dir)):
-        print(f"Scanning date folder: {date_folder}")
-        if not safe_isdir(Path(date_folder)):
+    for date_folder in safe_iterdir(root_dir):
+        Logger.info(f"Scanning date folder: {date_folder}")
+        if not safe_isdir(date_folder):
             continue
         
-        for hd_folder in safe_iterdir(Path(date_folder)):
+        for hd_folder in safe_iterdir(date_folder):
             if not hd_folder.is_dir() or not is_hd_folder(hd_folder.name):
                 continue
 
@@ -125,4 +132,3 @@ def scan_directories(root_dir: str):
 
 #print(timeit.timeit('Path("Y:/250604").iterdir()', number=10000, setup="from pathlib import Path"))
 #print(timeit.timeit('walk("Y:/250604")', number=10000, setup="from os import walk"))
-
