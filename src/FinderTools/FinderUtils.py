@@ -52,6 +52,51 @@ def safe_iterdir(path: Path | str):
         # print(f"Access denied or error reading directory: {path} – {e}")
         return []
 
+def get_raw_data(raw_folder: Path) -> list[dict]:
+    raw_data = []
+
+    if raw_folder.exists():
+        raw_files = list(raw_folder.glob("*.raw")) # To check if needed
+        h5_files = list(raw_folder.glob("*.h5"))
+        for f in raw_files + h5_files:
+            raw_data.append({
+                "path": str(f),
+                "size": get_file_size(f)
+            })
+
+    return raw_data
+
+
+def get_ef_folders_data(eyeflow_folder: Path) -> list[dict]:
+    ef_data = []
+
+    for ef_folder in safe_iterdir(eyeflow_folder):
+        if not ef_folder.is_dir() or not is_ef_folder(ef_folder.name):
+            continue
+
+        png_paths = []
+        json_data = []
+
+        png_folder = ef_folder / "png"
+        if png_folder.exists():
+            for sub in png_folder.rglob("*.png"):
+                png_paths.append(str(sub))
+
+        json_folder = ef_folder / "json"
+        if json_folder.exists():
+            for json_file in json_folder.glob("*.json"):
+                j = safe_json_load(json_file)
+                if j:
+                    json_data.append({"content" : j,
+                                        "name": json_file.name})
+
+        ef_data.append({
+            "ef_folder": str(ef_folder),
+            "png_files": png_paths,
+            "json_objects": json_data
+        })
+
+    return ef_data
 
 def scan_directories(root_dir: str):
     data = []
@@ -66,23 +111,13 @@ def scan_directories(root_dir: str):
                 continue
 
             # --- HD data ---
-            raw_data = []
             rendering_params = None
             version_text = None
 
             raw_folder = hd_folder / "raw"
-            if raw_folder.exists():
-                raw_files = list(raw_folder.glob("*.raw")) # To check
-                h5_files = list(raw_folder.glob("*.h5"))
-                for f in raw_files + h5_files:
-                    raw_data.append({
-                        "path": str(f),
-                        "size": get_file_size(f)
-                    })
-
+            raw_data = get_raw_data(raw_folder)
 
             rendering_json = hd_folder / f"{hd_folder}_RenderingParameters.json"
-            # for rendering_json in hd_folder.glob(f"RenderingParameters.json"):
             if rendering_json.exists():
                 rendering_params = safe_json_load(rendering_json)
 
@@ -94,31 +129,7 @@ def scan_directories(root_dir: str):
             ef_data = []
 
             if eyeflow_folder.exists():
-                for ef_folder in safe_iterdir(Path(eyeflow_folder)):
-                    if not ef_folder.is_dir() or not is_ef_folder(ef_folder.name):
-                        continue
-
-                    png_paths = []
-                    json_data = []
-
-                    png_folder = ef_folder / "png"
-                    if png_folder.exists():
-                        for sub in png_folder.rglob("*.png"):
-                            png_paths.append(str(sub))
-
-                    json_folder = ef_folder / "json"
-                    if json_folder.exists():
-                        for json_file in json_folder.glob("*.json"):
-                            j = safe_json_load(json_file)
-                            if j:
-                                json_data.append({"content" : j,
-                                                  "name": json_file.name})
-
-                    ef_data.append({
-                        "ef_folder": str(ef_folder),
-                        "png_files": png_paths,
-                        "json_objects": json_data
-                    })
+                ef_data = get_ef_folders_data(eyeflow_folder)
 
             data.append({
                 "hd_folder": str(hd_folder),
