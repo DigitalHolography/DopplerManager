@@ -1,0 +1,12 @@
+{
+    "FINDER": {
+        "DEFAULT_ROOT_DIR": ""
+    },
+    "DB": {
+        "OVERRIDE_DB": false,
+        "DB_PATH": "collected_data.db"
+    },
+    "LOG": {
+        "LOGGING_LEVEL": ""
+    }
+}

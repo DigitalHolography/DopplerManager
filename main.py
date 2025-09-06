@@ -1,6 +1,7 @@
 import os
 from src.Logger.LoggerClass import Logger
 from src.FinderTools.FileFinderClasss import FileFinder
+from src.Utils.ParamsLoader import ConfigManager
 
 # Logger.debug("Testing the Debug", "FILESYSTEM")
 
@@ -29,4 +30,5 @@ if __name__ == "__main__":
     # For the colored output on Windows
     if os.name == 'nt':
         os.system('')
+        
     main()
