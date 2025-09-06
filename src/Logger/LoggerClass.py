@@ -12,7 +12,9 @@ tags_color = {
     "INFO ":        [col.bg.CYA, col.WHI, col.BOLD], # For alignment
     "WARN ":        [col.bg.YEL, col.BLA, col.BOLD], # For alignment
     "ERROR":        [col.bg.RED, col.WHI, col.BOLD],
+    "FATAL":        [col.bg.RED, col.WHI, col.BOLD],
     "DEBUG":        [col.bg.BLU, col.WHI, col.BOLD],
+    
     "DOWNLOAD":     [col.bg.PUR, col.BLA, col.BOLD],
     "DONE":         [col.bg.GRE, col.BLA, col.BOLD],
     "TIME":         [col.bg.BLU, col.BLA, col.BOLD],
@@ -87,3 +89,12 @@ class Logger:
         if isinstance(tags, str):
             tags = [tags]
         log_t(msg, ["DEBUG"] + tags)
+    
+    @staticmethod
+    def fatal(msg : str, tags: list[str] | str = [], raiseExeption: bool = True) -> None:
+        if isinstance(tags, str):
+            tags = [tags]
+        log_t(msg, ["FATAL"] + tags)
+        
+        if raiseExeption:
+            raise Exception(f"[FATAL] {tags} | msg")

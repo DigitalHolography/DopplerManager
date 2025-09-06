@@ -156,7 +156,7 @@ class FileFinder:
                     )
 
                     if last_row is None:
-                        Logger.error(f"Failed to insert raw_data: {raw["path"]}", tags="DATABASE")
+                        Logger.error(f"Failed to insert raw_data: {raw['path']}", tags="DATABASE")
                         continue
 
                 for ef in ef_data:
