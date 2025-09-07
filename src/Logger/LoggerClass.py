@@ -97,4 +97,4 @@ class Logger:
         log_t(msg, ["FATAL"] + tags)
         
         if raiseExeption:
-            raise Exception(f"[FATAL] {tags} | msg")
+            raise Exception(f"[FATAL] {tags} | {msg}")

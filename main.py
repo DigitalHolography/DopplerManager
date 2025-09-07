@@ -25,6 +25,12 @@ def main():
 
     # print("Done.")
     # conn.close()
+    
+# def test():
+#     print(json.dumps(ConfigManager.get_all_settings(), indent=4))
+#     print(ConfigManager.get("DB.DB_PATH"))
+#     ConfigManager.set("DB.TRUC.TEST", "lol")
+#     print(json.dumps(ConfigManager.get_all_settings(), indent=4))
 
 if __name__ == "__main__":
     # For the colored output on Windows

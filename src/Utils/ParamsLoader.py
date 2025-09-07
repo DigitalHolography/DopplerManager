@@ -34,6 +34,17 @@ class ConfigManager:
             Logger.fatal(f"Error reading config file: {e}")
             # Should be raised by the Logger.fatal
             raise Exception(f"Error reading config file: {e}")
+        
+    @staticmethod
+    def __save_settings(settings_path: Path, settings):
+        try:
+            with open(settings_path, 'w') as f:
+                json.dump(settings, f, indent=4)
+
+        except Exception as e:
+            Logger.fatal(f"Error saving config file: {e}")
+            # Should be raised by the Logger.fatal
+            raise Exception(f"Error saving config file: {e}")
 
     @staticmethod
     def get_all_settings():
@@ -83,11 +94,17 @@ class ConfigManager:
         # TODO: For now, handles simple stuff (lists not included)
         
         keys = key.split('.')
-        cur = ConfigManager.get_all_settings()
+        config_path = ConfigManager.__find_config()
+        cur = ConfigManager.__get_settings(config_path)
+        cur_save = cur
         
         for k in keys[:-1]:
-            if not isinstance(cur, dict) or k in cur:
+            if not k in cur:
                 cur[k] = {}
+            elif not isinstance(cur[k], dict):
+                Logger.error(f"The path: {cur[k]} ({key}) is already in use by non-dictonary", "SETTINGS")
             cur = cur[k]
             
         cur[keys[-1]] = value
+        
+        ConfigManager.__save_settings(config_path, cur_save)
