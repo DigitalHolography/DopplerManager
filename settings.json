@@ -1,0 +1,12 @@
+{
+    "FINDER": {
+        "DEFAULT_ROOT_DIR": "Y:\\"
+    },
+    "DB": {
+        "OVERRIDE_DB": true,
+        "DB_PATH": "renders.db"
+    },
+    "LOG": {
+        "LOGGING_LEVEL": ""
+    }
+}

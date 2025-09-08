@@ -75,7 +75,7 @@ def get_ef_folders_data(eyeflow_folder: Path) -> list[dict]:
             continue
 
         png_paths = []
-        json_data = []
+        InputEyeFlowParams = {"path": None, "content": None}
 
         png_folder = ef_folder / "png"
         if png_folder.exists():
@@ -83,17 +83,21 @@ def get_ef_folders_data(eyeflow_folder: Path) -> list[dict]:
                 png_paths.append(str(sub))
 
         json_folder = ef_folder / "json"
-        if json_folder.exists():
-            for json_file in json_folder.glob("*.json"):
-                j = safe_json_load(json_file)
-                if j:
-                    json_data.append({"content" : j,
-                                        "name": json_file.name})
+        if json_folder.exists() and json_folder.is_dir():
+            input_param = json_folder / "InputEyeFlowParams.json"
+            if input_param.exists():
+                content = safe_json_load(input_param)
+
+                if content:
+                    InputEyeFlowParams = {
+                        "path": str(input_param),
+                        "content": content
+                    }
 
         ef_data.append({
             "ef_folder": str(ef_folder),
             "png_files": png_paths,
-            "json_objects": json_data
+            "InputEyeFlowParams": InputEyeFlowParams
         })
 
     return ef_data
@@ -141,5 +145,51 @@ def scan_directories(root_dir: str):
     
     return data
 
-#print(timeit.timeit('Path("Y:/250604").iterdir()', number=10000, setup="from pathlib import Path"))
-#print(timeit.timeit('walk("Y:/250604")', number=10000, setup="from os import walk"))
+def get_file_name_without_hd(folder_path):
+    # Get the base name of the file from the folder path
+    file_name = os.path.basename(folder_path)
+
+    # Find the index of '_HD_'
+    hd_index = file_name.find('_HD_')
+
+    if hd_index != -1:
+        # Slice the string up to '_HD_'
+        file_name = file_name[:hd_index]
+
+    return file_name
+
+def get_eyeflow_version(ef_folder: Path, hd_folder_name: str) -> str:
+    # TODO: To implement better way
+
+    # Logger.debug(f"Getting eyeflow version for EF folder: {ef_folder}, HD folder name: {hd_folder_name}", tags="FILESYSTEM")
+
+    log_folder = Path(ef_folder) / "log"
+    if not log_folder.exists() or not log_folder.is_dir():
+        Logger.error(f"Eyeflow log folder does not exist: {log_folder}", tags="FILESYSTEM")
+        return "None"
+    
+    file_path = log_folder / f"{hd_folder_name}_log.txt"
+
+    if not file_path.exists() or not file_path.is_file():
+        Logger.error(f"Eyeflow log file does not exist: {file_path}", tags="FILESYSTEM")
+        return "None"
+
+    with open(file_path, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+    
+    # Find indices of lines that are bars (lines containing only '=' chars)
+    bar_lines = [i for i, line in enumerate(lines) if line.strip() and set(line.strip()) == {'='}]
+    
+    if len(bar_lines) < 2:
+        Logger.error(f"Eyeflow log file does not contain block: {file_path}", tags="FILESYSTEM")
+        return "None"
+    
+    # Get the last two bars to find the last block
+    start = bar_lines[-2]
+    end = bar_lines[-1]
+    
+    # Extract lines between the bars (excluding the bars themselves)
+    block_lines = lines[start+1:end]
+    
+    # Join and strip trailing spaces/newlines
+    return ''.join(block_lines).strip()
