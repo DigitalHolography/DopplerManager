@@ -4,7 +4,6 @@ import json
 from pathlib import Path
 import sqlite3
 
-# Assurez-vous que le chemin d'importation est correct
 import src.FileFinder.FileFinderClass as FileFinderClass
 
 # --- Page Configuration ---
@@ -15,23 +14,17 @@ DB_FILE = "renders.db"
 
 @st.cache_resource
 def get_db_connection(db_path):
-    """Crée et met en cache la connexion à la base de données."""
     return sqlite3.connect(db_path, check_same_thread=False)
 
 conn = get_db_connection(DB_FILE)
 
-# --- Initialisation de la classe avec la connexion partagée ---
-# La classe reçoit maintenant l'objet de connexion
 ff = FileFinderClass.FileFinder(conn)
 
-# Créer les tables si elles n'existent pas (ne fait rien si elles existent déjà)
 ff.CreateDB()
 
 # --- Helper Functions ---
 def load_data(query):
-    """Exécute une SQL query and returns a pandas DataFrame."""
     try:
-        # On utilise directement la connexion partagée
         df = pd.read_sql_query(query, conn)
         return df
     except Exception as e:
@@ -40,25 +33,25 @@ def load_data(query):
 
 # --- Sidebar ---
 st.sidebar.title("Actions")
-scan_path = st.sidebar.text_input("Répertoire à scanner", "Y:\\")
+scan_path = st.sidebar.text_input("Folder to scan", "Y:\\")
 
-if st.sidebar.button("Lancer le scan du répertoire"):
+if st.sidebar.button("Start directory scan"):
     if Path(scan_path).is_dir():
-        st.sidebar.info("Le scan peut prendre beaucoup de temps. Veuillez patienter.")
-        with st.spinner(f"Scan en cours dans {scan_path}..."):
+        st.sidebar.info("The scan may take a long time. Please wait.")
+        with st.spinner(f"Scanning in progress in {scan_path}..."):
             try:
                 ff.Findfiles(scan_path)
-                st.sidebar.success("Scan terminé avec succès!")
-                # Invalider les caches de données pour forcer le rechargement
+                st.sidebar.success("Scan completed successfully!")
+                # Invalidate data caches to force reload
                 st.cache_data.clear()
-                st.rerun() # Rafraîchir l'application pour afficher les nouvelles données
+                st.rerun() # Refresh the app to show new data
             except Exception as e:
-                st.sidebar.error(f"Une erreur est survenue: {e}")
+                st.sidebar.error(f"An error occurred: {e}")
     else:
-        st.sidebar.error("Le chemin spécifié n'est pas un répertoire valide.")
+        st.sidebar.error("The specified path is not a valid directory.")
 
 st.sidebar.markdown("---")
-if st.sidebar.button("Effacer la base de données"):
+if st.sidebar.button("Clear database"):
     cursor = conn.cursor()
     cursor.execute("DROP TABLE IF EXISTS raw_files")
     cursor.execute("DROP TABLE IF EXISTS ef_data")
@@ -71,64 +64,63 @@ if st.sidebar.button("Effacer la base de données"):
 # --- Main UI ---
 st.title("EyeFlowDB")
 
-# Charger les données principales
 main_df = load_data("SELECT id, hd_folder, measure_tag, version_text FROM hd_data")
 
 if main_df.empty:
-    st.warning("La base de données est vide. Veuillez lancer un scan.")
+    st.warning("The database is empty. Please start a scan.")
 else:
     # --- Filtering ---
-    st.header("Filtrage des données")
-    
+    st.header("Data Filtering")
+
     unique_tags = main_df['measure_tag'].unique()
-    selected_tags = st.multiselect("Filtrer par 'measure_tag'", options=unique_tags, default=list(unique_tags))
+    selected_tags = st.multiselect("Filter by 'measure_tag'", options=unique_tags, default=list(unique_tags))
 
     unique_versions = main_df['version_text'].dropna().unique()
-    selected_versions = st.multiselect("Filtrer par 'version_text'", options=unique_versions, default=list(unique_versions))
+    selected_versions = st.multiselect("Filter by 'version_text'", options=unique_versions, default=list(unique_versions))
     
     if not selected_tags or not selected_versions:
-        filtered_df = pd.DataFrame() # DataFrame vide si un filtre est vide
+        filtered_df = pd.DataFrame() # DataFrame empty if a filter is empty
     else:
         filtered_df = main_df[main_df['measure_tag'].isin(selected_tags) & main_df['version_text'].isin(selected_versions)]
 
-    st.header("Rendus trouvés")
+    st.header("Found Renders")
     st.dataframe(filtered_df, width='stretch')
 
     st.markdown("---")
 
     # --- Detail View ---
-    st.header("Détails d'un rendu")
-    
+    st.header("Render Details")
+
     folder_options = filtered_df['hd_folder'].tolist()
     
     if not folder_options:
-        st.info("Aucun rendu à afficher avec les filtres actuels.")
+        st.info("No render found with the current filters.")
     else:
-        selected_folder = st.selectbox("Sélectionner un dossier HD pour voir les détails", options=folder_options)
+        selected_folder = st.selectbox("Select an HD folder to view details", options=folder_options)
 
         if selected_folder:
             hd_id = main_df.loc[main_df['hd_folder'] == selected_folder, 'id'].iloc[0]
 
-            st.subheader("Paramètres de rendu")
+            st.subheader("Render Parameters")
             params_df = load_data(f"SELECT rendering_parameters FROM hd_data WHERE id = {hd_id}")
             if not params_df.empty and params_df.iloc[0, 0]:
                 try:
                     params_json = json.loads(params_df.iloc[0, 0])
                     st.json(params_json)
                 except (json.JSONDecodeError, TypeError):
-                    st.warning("Impossible d'afficher les paramètres de rendu (JSON invalide).")
+                    st.warning("Impossible to display render parameters (invalid JSON).")
                     st.text(params_df.iloc[0, 0])
             else:
-                st.info("Aucun paramètre de rendu trouvé.")
+                st.info("No render parameters found.")
 
             col1, col2 = st.columns(2)
 
             with col1:
-                st.subheader("Fichiers RAW (.raw, .h5)")
+                st.subheader("RAW Files (.raw, .h5)")
                 raw_files_df = load_data(f"SELECT path, size_MB FROM raw_files WHERE hd_id = {hd_id}")
                 st.dataframe(raw_files_df, width='stretch', hide_index=True)
 
             with col2:
-                st.subheader("Dossiers Eyeflow (_EF_)")
+                st.subheader("Eyeflow Folders (_EF_)")
                 ef_data_df = load_data(f"SELECT ef_folder, version_text FROM ef_data WHERE hd_id = {hd_id}")
                 st.dataframe(ef_data_df, width='stretch', hide_index=True)
