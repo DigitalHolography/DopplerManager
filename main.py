@@ -1,6 +1,6 @@
 import os
 from src.Logger.LoggerClass import Logger
-from src.FinderTools.FileFinderClasss import FileFinder
+from src.FileFinder.FileFinderClass import FileFinder
 from src.Utils.ParamsLoader import ConfigManager
 
 # Logger.debug("Testing the Debug", "FILESYSTEM")

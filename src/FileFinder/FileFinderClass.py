@@ -1,17 +1,13 @@
 import sqlite3
 import json
-
-import src.FinderTools.FinderUtils as FinderUtils
+import src.FileFinder.FinderUtils as FinderUtils
 from src.Logger.LoggerClass import Logger
 from src.Database.DBClass import DB
 
 class FileFinder:
-    def __init__(self, DB_PATH):
-        # Folder that will be searched
+    def __init__(self, DBClass):
         self.searchFolder = ""
-        self.DBClass = DB(DB_PATH)
-        self.DB_PATH = DB_PATH
-        # self.SQLconnect = sqlite3.connect(DB_PATH)
+        self.DBClass = DBClass
 
     def CreateDB(self) -> None:
         # cursor = self.SQLconnect.cursor()
@@ -173,7 +169,8 @@ class FileFinder:
         })
 
     def Findfiles(self, root_dir: str):
-        data = []
+        # cursor = self.SQLconnect.cursor()
+        
         for date_folder in FinderUtils.safe_iterdir(root_dir):
             Logger.info(f"Scanning date folder: {date_folder}")
             if not FinderUtils.safe_isdir(date_folder):
@@ -200,10 +197,15 @@ class FileFinder:
                 if version_text is None:
                     version_text = ""
 
+                # Simple parsing for measure_tag from folder name like "date_TAG_HD_..."
+                try:
+                    measure_tag = hd_folder.name.split('_')[1]
+                except IndexError:
+                    measure_tag = "UNKNOWN"
+
                 # --- EF data ---
                 eyeflow_folder = hd_folder / "eyeflow"
                 ef_data = []
-
                 if eyeflow_folder.exists():
                     ef_data = FinderUtils.get_ef_folders_data(eyeflow_folder)
 
