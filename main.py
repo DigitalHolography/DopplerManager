@@ -6,8 +6,22 @@ from src.Utils.ParamsLoader import ConfigManager
 # Logger.debug("Testing the Debug", "FILESYSTEM")
 
 def main():
-    ROOT_DIR = "Y:\\"  # Change to the real root
-    DB_PATH = "collected_data.db"
+    ROOT_DIR = ConfigManager.get("FINDER.DEFAULT_ROOT_DIR")  # "Y:\\"  # Change to the real root
+    DB_PATH = ConfigManager.get("DB.DB_PATH")
+
+    if not ROOT_DIR:
+        Logger.error("FINDER.DEFAULT_ROOT_DIR is not set in the configuration.", "FILESYSTEM")
+        return
+    
+    if not DB_PATH:
+        Logger.error("DB.DB_PATH is not set in the configuration.", "FILESYSTEM")
+        return
+
+    if not ConfigManager.get("DB.OVERRIDE_DB") and os.path.exists(DB_PATH):
+        Logger.warn(f"Database file already exists at {DB_PATH}. To override it, set DB.OVERRIDE_DB to true in settings.json", "DATABASE")
+    else:
+        if os.path.exists(DB_PATH):
+            os.remove(DB_PATH)
 
     FileFinderInstance = FileFinder(DB_PATH)
     FileFinderInstance.CreateDB()

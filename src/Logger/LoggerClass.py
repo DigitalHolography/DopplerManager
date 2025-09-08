@@ -15,11 +15,12 @@ tags_color = {
     "FATAL":        [col.bg.RED, col.WHI, col.BOLD],
     "DEBUG":        [col.bg.BLU, col.WHI, col.BOLD],
     
-    "DOWNLOAD":     [col.bg.PUR, col.BLA, col.BOLD],
+    "DOWNLOAD":     [col.bg.PUR, col.WHI, col.BOLD],
     "DONE":         [col.bg.GRE, col.BLA, col.BOLD],
-    "TIME":         [col.bg.BLU, col.BLA, col.BOLD],
+    "TIME":         [col.bg.BLU, col.WHI, col.BOLD],
     "FILESYSTEM":   [col.bg.PUR, col.WHI, col.BOLD],
     "DATABASE":     [col.bg.WHI, col.BLA, col.BOLD],
+    "SETTINGS":     [col.bg.BLU, col.WHI, col.BOLD],
 }
 
 ################################################################################

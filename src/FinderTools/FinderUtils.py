@@ -158,6 +158,38 @@ def get_file_name_without_hd(folder_path):
 
     return file_name
 
-def get_eyeflow_version(ef_folder: Path) -> str:
-    # TODO: To implement
-    return ""
+def get_eyeflow_version(ef_folder: Path, hd_folder_name: str) -> str:
+    # TODO: To implement better way
+
+    # Logger.debug(f"Getting eyeflow version for EF folder: {ef_folder}, HD folder name: {hd_folder_name}", tags="FILESYSTEM")
+
+    log_folder = Path(ef_folder) / "log"
+    if not log_folder.exists() or not log_folder.is_dir():
+        Logger.error(f"Eyeflow log folder does not exist: {log_folder}", tags="FILESYSTEM")
+        return "None"
+    
+    file_path = log_folder / f"{hd_folder_name}_log.txt"
+
+    if not file_path.exists() or not file_path.is_file():
+        Logger.error(f"Eyeflow log file does not exist: {file_path}", tags="FILESYSTEM")
+        return "None"
+
+    with open(file_path, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+    
+    # Find indices of lines that are bars (lines containing only '=' chars)
+    bar_lines = [i for i, line in enumerate(lines) if line.strip() and set(line.strip()) == {'='}]
+    
+    if len(bar_lines) < 2:
+        Logger.error(f"Eyeflow log file does not contain block: {file_path}", tags="FILESYSTEM")
+        return "None"
+    
+    # Get the last two bars to find the last block
+    start = bar_lines[-2]
+    end = bar_lines[-1]
+    
+    # Extract lines between the bars (excluding the bars themselves)
+    block_lines = lines[start+1:end]
+    
+    # Join and strip trailing spaces/newlines
+    return ''.join(block_lines).strip()

@@ -1,9 +1,9 @@
 {
     "FINDER": {
-        "DEFAULT_ROOT_DIR": ""
+        "DEFAULT_ROOT_DIR": "Y:\\"
     },
     "DB": {
-        "OVERRIDE_DB": false,
+        "OVERRIDE_DB": true,
         "DB_PATH": "collected_data.db"
     },
     "LOG": {

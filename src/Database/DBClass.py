@@ -63,7 +63,7 @@ class DB:
         self.SQLconnect.execute(SQL_COMMAND)
         self.SQLconnect.commit()
 
-    def insert(self, table_name: str, data: dict[str, object]) -> None:
+    def insert(self, table_name: str, data: dict[str, object]) -> int | None:
         """Inserts `data` inside the `table_name`
 
         Args:
@@ -84,8 +84,10 @@ class DB:
         placeholders = ", ".join(["?" for _ in data])
         SQL_COMMAND = f"INSERT INTO {table_name} ({columns}) VALUES ({placeholders})"
 
-        self.SQLconnect.execute(SQL_COMMAND, tuple(data.values()))
+        cursor = self.SQLconnect.execute(SQL_COMMAND, tuple(data.values()))
         self.SQLconnect.commit()
+
+        return cursor.lastrowid
         
     def select(self, table_name: str, condition: dict[str, object] | None = None) -> list[dict]:
         """Searchs the DB with given parameters
