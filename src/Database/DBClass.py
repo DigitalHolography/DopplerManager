@@ -5,9 +5,15 @@ from src.Logger.LoggerClass import Logger
 # It should be used without user input until then
 
 class DB:
-    def __init__(self, DB_PATH: str):
+    def __init__(self, DB_PATH: str | None = None, SQLconnect: sqlite3.Connection | None = None):
         self.DB_PATH = DB_PATH
-        self.SQLconnect = sqlite3.connect(DB_PATH)
+        if SQLconnect:
+            self.SQLconnect = SQLconnect
+        elif DB_PATH:
+            self.SQLconnect = sqlite3.connect(DB_PATH)
+        else:
+            Logger.fatal("You must provide either a DB_PATH or a SQLconnect", "DATABASE")
+            raise ValueError("You must provide either a DB_PATH or a SQLconnect")
         
     def check_table_existance(self, table_name: str) -> bool:
         """Will check if the table exists inside the DB
