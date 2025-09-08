@@ -5,7 +5,7 @@ from src.Logger.LoggerClass import Logger
 from src.Database.DBClass import DB
 
 class FileFinder:
-    def __init__(self, DBClass):
+    def __init__(self, DBClass: DB):
         self.searchFolder = ""
         self.DBClass = DBClass
 
