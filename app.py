@@ -28,7 +28,7 @@ def load_data(query):
         df = pd.read_sql_query(query, conn)
         return df
     except Exception as e:
-        st.error(f"Erreur lors du chargement des données: {e}")
+        st.error(f"Error while loading data: {e}")
         return pd.DataFrame()
 
 # --- Sidebar ---
@@ -58,7 +58,7 @@ if st.sidebar.button("Clear database"):
     cursor.execute("DROP TABLE IF EXISTS hd_data")
     conn.commit()
     ff.CreateDB()
-    st.sidebar.success("Base de données effacée.")
+    st.sidebar.success("Database cleared.")
     st.rerun()
 
 # --- Main UI ---
