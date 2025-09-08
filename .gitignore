@@ -1,6 +1,7 @@
 __pycache__
 
-collected_data.db
+# Database
+renders.db
 
 # Testing
 test.py
