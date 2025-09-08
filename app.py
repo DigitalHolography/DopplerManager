@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import json
 from pathlib import Path
 import sqlite3
 
@@ -73,54 +72,55 @@ else:
     st.header("Data Filtering")
 
     unique_tags = main_df['measure_tag'].unique()
-    selected_tags = st.multiselect("Filter by 'measure_tag'", options=unique_tags, default=list(unique_tags))
+    selected_tags = st.multiselect("Filter by measure tag", options=unique_tags, default=list(unique_tags))
 
     unique_versions = main_df['version_text'].dropna().unique()
-    selected_versions = st.multiselect("Filter by 'version_text'", options=unique_versions, default=list(unique_versions))
+    selected_versions = st.multiselect("Filter by HoloDoppler version", options=unique_versions, default=list(unique_versions))
     
-    if not selected_tags or not selected_versions:
-        filtered_df = pd.DataFrame() # DataFrame empty if a filter is empty
-    else:
-        filtered_df = main_df[main_df['measure_tag'].isin(selected_tags) & main_df['version_text'].isin(selected_versions)]
+    # Start with a copy of the full dataframe
+    filtered_df = main_df.copy()
+
+    # Apply filters only if selections are made in the multiselect widgets
+    if selected_tags:
+        filtered_df = filtered_df[filtered_df['measure_tag'].isin(selected_tags)]
+    if selected_versions:
+        filtered_df = filtered_df[filtered_df['version_text'].isin(selected_versions)]
 
     st.header("Found Renders")
-    st.dataframe(filtered_df, width='stretch')
+    st.dataframe(filtered_df.drop(columns=['id']), width='stretch')
 
     st.markdown("---")
 
-    # --- Detail View ---
-    st.header("Render Details")
+    if not filtered_df.empty:
+        st.header("EyeFlow Data")
 
-    folder_options = filtered_df['hd_folder'].tolist()
-    
-    if not folder_options:
-        st.info("No render found with the current filters.")
-    else:
-        selected_folder = st.selectbox("Select an HD folder to view details", options=folder_options)
+        # Get the IDs of the filtered HD folders
+        filtered_hd_ids = tuple(filtered_df['id'].tolist())
 
-        if selected_folder:
-            hd_id = main_df.loc[main_df['hd_folder'] == selected_folder, 'id'].iloc[0]
+        # Load the corresponding EyeFlow data
+        ef_df = load_data(f"SELECT hd_id, ef_folder, version_text FROM ef_data WHERE hd_id IN {filtered_hd_ids}")
 
-            st.subheader("Render Parameters")
-            params_df = load_data(f"SELECT rendering_parameters FROM hd_data WHERE id = {hd_id}")
-            if not params_df.empty and params_df.iloc[0, 0]:
-                try:
-                    params_json = json.loads(params_df.iloc[0, 0])
-                    st.json(params_json)
-                except (json.JSONDecodeError, TypeError):
-                    st.warning("Impossible to display render parameters (invalid JSON).")
-                    st.text(params_df.iloc[0, 0])
+        if not ef_df.empty:
+            # --- EyeFlow Version Filtering ---
+            unique_ef_versions = ef_df['version_text'].dropna().unique()
+            selected_ef_versions = st.multiselect("Filter by EyeFlow version", options=unique_ef_versions, default=list(unique_ef_versions))
+
+            filtered_ef_df = ef_df.copy()
+            # Apply EF version filter only if a selection is made
+            if selected_ef_versions:
+                filtered_ef_df = filtered_ef_df[filtered_ef_df['version_text'].isin(selected_ef_versions)]
+
+            st.header("Found EyeFlow Folders")
+            
+            # Only merge and display if the filtered EF dataframe is not empty
+            if not filtered_ef_df.empty:
+                # Join with hd_data to show the corresponding hd_folder
+                merged_ef_df = pd.merge(filtered_ef_df, main_df[['id', 'hd_folder']], left_on='hd_id', right_on='id', how='left')
+
+                # Hide the 'id' and 'hd_id' columns from the displayed dataframe
+                st.dataframe(merged_ef_df.drop(columns=['id', 'hd_id']), width='stretch')
             else:
-                st.info("No render parameters found.")
+                st.info("No EyeFlow data matches the current filters.")
 
-            col1, col2 = st.columns(2)
-
-            with col1:
-                st.subheader("RAW Files (.raw, .h5)")
-                raw_files_df = load_data(f"SELECT path, size_MB FROM raw_files WHERE hd_id = {hd_id}")
-                st.dataframe(raw_files_df, width='stretch', hide_index=True)
-
-            with col2:
-                st.subheader("Eyeflow Folders (_EF_)")
-                ef_data_df = load_data(f"SELECT ef_folder, version_text FROM ef_data WHERE hd_id = {hd_id}")
-                st.dataframe(ef_data_df, width='stretch', hide_index=True)
+        else:
+            st.info("No corresponding EyeFlow data found for the selected HoloDoppler filters.")
