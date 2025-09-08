@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import json
 import sqlite3
 from pathlib import Path
 
@@ -9,30 +8,27 @@ from src.Database.DBClass import DB
 from src.Utils.ParamsLoader import ConfigManager
 
 # ┌───────────────────────────────────┐
-# │            CACHE FUNCS            │
-# └───────────────────────────────────┘
-
-@st.cache_resource
-def get_db_connection(db_path):
-    return sqlite3.connect(db_path, check_same_thread=False)
-
-# ┌───────────────────────────────────┐
 # │           BACKEND SETUP           │
 # └───────────────────────────────────┘
 
+@st.cache_resource
+def initialize_database(db_path):
+    """
+    Connects to the database, instantiates the FileFinder, 
+    and ensures tables are created. This runs only once.
+    """
+    #st.toast("Initializing database connection...")
+    conn = sqlite3.connect(db_path, check_same_thread=False)
+    ff_instance = FileFinderClass.FileFinder(DB(SQLconnect=conn))
+    ff_instance.CreateDB()
+    return conn, ff_instance
 
 DB_FILE = ConfigManager.get("DB.DB_PATH", "renders.db")
-
-conn = get_db_connection(DB_FILE)
-
-ff = FileFinderClass.FileFinder(DB(SQLconnect=conn))
-
-ff.CreateDB()
+conn, ff = initialize_database(DB_FILE)
 
 # ┌───────────────────────────────────┐
 # │           FRONTEND SETUP          │
 # └───────────────────────────────────┘
-
 
 # --- Helper Functions ---
 def load_data(query):
@@ -84,62 +80,63 @@ def launch_front():
     main_df = load_data("SELECT id, hd_folder, measure_tag, version_text FROM hd_data")
 
     if main_df.empty:
-        st.warning("La base de données est vide. Veuillez lancer un scan.")
+        st.warning("The database is empty. Please start a scan.")
     else:
         # --- Filtering ---
-        st.header("Filtrage des données")
-        
+        st.header("Data Filtering")
+
         unique_tags = main_df['measure_tag'].unique()
-        selected_tags = st.multiselect("Filtrer par 'measure_tag'", options=unique_tags, default=list(unique_tags))
+        selected_tags = st.multiselect("Filter by measure tag", options=unique_tags, default=list(unique_tags))
 
         unique_versions = main_df['version_text'].dropna().unique()
-        selected_versions = st.multiselect("Filtrer par 'version_text'", options=unique_versions, default=list(unique_versions))
+        selected_versions = st.multiselect("Filter by HoloDoppler version", options=unique_versions, default=list(unique_versions))
         
-        if not selected_tags or not selected_versions:
-            filtered_df = pd.DataFrame() # DataFrame vide si un filtre est vide
-        else:
-            filtered_df = main_df[main_df['measure_tag'].isin(selected_tags) & main_df['version_text'].isin(selected_versions)]
+        # Start with a copy of the full dataframe
+        filtered_df = main_df.copy()
 
-        st.header("Rendus trouvés")
-        st.dataframe(filtered_df, width='stretch')
+        # Apply filters only if selections are made in the multiselect widgets
+        if selected_tags:
+            filtered_df = filtered_df[filtered_df['measure_tag'].isin(selected_tags)]
+        if selected_versions:
+            filtered_df = filtered_df[filtered_df['version_text'].isin(selected_versions)]
+
+        st.header("Found Renders")
+        st.dataframe(filtered_df.drop(columns=['id']), width='stretch')
 
         st.markdown("---")
 
-        # --- Detail View ---
-        st.header("Détails d'un rendu")
-        
-        folder_options = filtered_df['hd_folder'].tolist()
-        
-        if not folder_options:
-            st.info("Aucun rendu à afficher avec les filtres actuels.")
-        else:
-            selected_folder = st.selectbox("Sélectionner un dossier HD pour voir les détails", options=folder_options)
+        if not filtered_df.empty:
+            st.header("EyeFlow Data")
 
-            if selected_folder:
-                hd_id = main_df.loc[main_df['hd_folder'] == selected_folder, 'id'].iloc[0]
+            # Get the IDs of the filtered HD folders
+            filtered_hd_ids = tuple(filtered_df['id'].tolist())
 
-                st.subheader("Paramètres de rendu")
-                params_df = load_data(f"SELECT rendering_parameters FROM hd_data WHERE id = {hd_id}")
-                if not params_df.empty and params_df.iloc[0, 0]:
-                    try:
-                        params_json = json.loads(params_df.iloc[0, 0])
-                        st.json(params_json)
-                    except (json.JSONDecodeError, TypeError):
-                        st.warning("Impossible d'afficher les paramètres de rendu (JSON invalide).")
-                        st.text(params_df.iloc[0, 0])
+            # Load the corresponding EyeFlow data
+            ef_df = load_data(f"SELECT hd_id, ef_folder, version_text FROM ef_data WHERE hd_id IN {filtered_hd_ids}")
+
+            if not ef_df.empty:
+                # --- EyeFlow Version Filtering ---
+                unique_ef_versions = ef_df['version_text'].dropna().unique()
+                selected_ef_versions = st.multiselect("Filter by EyeFlow version", options=unique_ef_versions, default=list(unique_ef_versions))
+
+                filtered_ef_df = ef_df.copy()
+                # Apply EF version filter only if a selection is made
+                if selected_ef_versions:
+                    filtered_ef_df = filtered_ef_df[filtered_ef_df['version_text'].isin(selected_ef_versions)]
+
+                st.header("Found EyeFlow Folders")
+                
+                # Only merge and display if the filtered EF dataframe is not empty
+                if not filtered_ef_df.empty:
+                    # Join with hd_data to show the corresponding hd_folder
+                    merged_ef_df = pd.merge(filtered_ef_df, main_df[['id', 'hd_folder']], left_on='hd_id', right_on='id', how='left')
+
+                    # Hide the 'id' and 'hd_id' columns from the displayed dataframe
+                    st.dataframe(merged_ef_df.drop(columns=['id', 'hd_id']), width='stretch')
                 else:
-                    st.info("Aucun paramètre de rendu trouvé.")
+                    st.info("No EyeFlow data matches the current filters.")
 
-                col1, col2 = st.columns(2)
-
-                with col1:
-                    st.subheader("Fichiers RAW (.raw, .h5)")
-                    raw_files_df = load_data(f"SELECT path, size_MB FROM raw_files WHERE hd_id = {hd_id}")
-                    st.dataframe(raw_files_df, width='stretch', hide_index=True)
-
-                with col2:
-                    st.subheader("Dossiers Eyeflow (_EF_)")
-                    ef_data_df = load_data(f"SELECT ef_folder, version_text FROM ef_data WHERE hd_id = {hd_id}")
-                    st.dataframe(ef_data_df, width='stretch', hide_index=True)
+            else:
+                st.info("No corresponding EyeFlow data found for the selected HoloDoppler filters.")
 
 launch_front()
