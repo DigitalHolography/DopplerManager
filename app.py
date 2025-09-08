@@ -8,30 +8,27 @@ from src.Database.DBClass import DB
 from src.Utils.ParamsLoader import ConfigManager
 
 # ┌───────────────────────────────────┐
-# │            CACHE FUNCS            │
-# └───────────────────────────────────┘
-
-@st.cache_resource
-def get_db_connection(db_path):
-    return sqlite3.connect(db_path, check_same_thread=False)
-
-# ┌───────────────────────────────────┐
 # │           BACKEND SETUP           │
 # └───────────────────────────────────┘
 
+@st.cache_resource
+def initialize_database(db_path):
+    """
+    Connects to the database, instantiates the FileFinder, 
+    and ensures tables are created. This runs only once.
+    """
+    #st.toast("Initializing database connection...")
+    conn = sqlite3.connect(db_path, check_same_thread=False)
+    ff_instance = FileFinderClass.FileFinder(DB(SQLconnect=conn))
+    ff_instance.CreateDB()
+    return conn, ff_instance
 
 DB_FILE = ConfigManager.get("DB.DB_PATH", "renders.db")
-
-conn = get_db_connection(DB_FILE)
-
-ff = FileFinderClass.FileFinder(DB(SQLconnect=conn))
-
-ff.CreateDB()
+conn, ff = initialize_database(DB_FILE)
 
 # ┌───────────────────────────────────┐
 # │           FRONTEND SETUP          │
 # └───────────────────────────────────┘
-
 
 # --- Helper Functions ---
 def load_data(query):
