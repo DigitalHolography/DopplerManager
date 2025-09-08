@@ -1,5 +1,5 @@
-import sqlite3
 import json
+
 import src.FileFinder.FinderUtils as FinderUtils
 from src.Logger.LoggerClass import Logger
 from src.Database.DBClass import DB

@@ -18,12 +18,12 @@ def initialize_database(db_path):
     and ensures tables are created. This runs only once.
     """
     #st.toast("Initializing database connection...")
-    conn = sqlite3.connect(db_path, check_same_thread=False)
-    ff_instance = FileFinderClass.FileFinder(DB(SQLconnect=conn))
+    # conn = sqlite3.connect(db_path, check_same_thread=False)
+    ff_instance = FileFinderClass.FileFinder(DB(db_path))
     ff_instance.CreateDB()
-    return conn, ff_instance
+    return ff_instance.DBClass.SQLconnect, ff_instance
 
-DB_FILE = ConfigManager.get("DB.DB_PATH", "renders.db")
+DB_FILE = ConfigManager.get("DB.DB_PATH")
 conn, ff = initialize_database(DB_FILE)
 
 # ┌───────────────────────────────────┐

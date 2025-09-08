@@ -1,20 +1,26 @@
 import sqlite3
+import os
 from src.Logger.LoggerClass import Logger
-
+from src.Utils.ParamsLoader import ConfigManager
 # This class should can have its SQL Injection safety checks improved
 # It should be used without user input until then
 
 class DB:
-    def __init__(self, DB_PATH: str | None = None, SQLconnect: sqlite3.Connection | None = None):
+    # TODO: Implem in_memory DB option
+    def __init__(self, DB_PATH: str, SQLconnect: sqlite3.Connection | None = None, check_same_thread: bool = False):
         self.DB_PATH = DB_PATH
         if SQLconnect:
             self.SQLconnect = SQLconnect
-        elif DB_PATH:
-            self.SQLconnect = sqlite3.connect(DB_PATH)
         else:
-            Logger.fatal("You must provide either a DB_PATH or a SQLconnect", "DATABASE")
-            raise ValueError("You must provide either a DB_PATH or a SQLconnect")
-        
+            if not ConfigManager.get("DB.OVERRIDE_DB") and os.path.exists(str(DB_PATH)):
+                Logger.warn(f"Database file already exists at {DB_PATH}. To override it, set DB.OVERRIDE_DB to true in settings.json", "DATABASE")
+            else:
+                if os.path.exists(str(DB_PATH)):
+                    Logger.info(f"Overriding existing database at {DB_PATH}", "DATABASE")
+                    os.remove(str(DB_PATH))
+
+            self.SQLconnect = sqlite3.connect(DB_PATH, check_same_thread=check_same_thread)
+
     def check_table_existance(self, table_name: str) -> bool:
         """Will check if the table exists inside the DB
 
