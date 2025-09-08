@@ -14,18 +14,19 @@ from src.Utils.ParamsLoader import ConfigManager
 
 @st.cache_resource
 def get_db_connection(db_path):
-    """Crée et met en cache la connexion à la base de données."""
     return sqlite3.connect(db_path, check_same_thread=False)
 
 # ┌───────────────────────────────────┐
 # │           BACKEND SETUP           │
 # └───────────────────────────────────┘
 
+
 DB_FILE = ConfigManager.get("DB.DB_PATH", "renders.db")
 
 conn = get_db_connection(DB_FILE)
 
 ff = FileFinderClass.FileFinder(DB(SQLconnect=conn))
+
 ff.CreateDB()
 
 # ┌───────────────────────────────────┐
@@ -35,13 +36,11 @@ ff.CreateDB()
 
 # --- Helper Functions ---
 def load_data(query):
-    """Exécute une SQL query and returns a pandas DataFrame."""
     try:
-        # On utilise directement la connexion partagée
         df = pd.read_sql_query(query, conn)
         return df
     except Exception as e:
-        st.error(f"Erreur lors du chargement des données: {e}")
+        st.error(f"Error while loading data: {e}")
         return pd.DataFrame()
 
 def launch_front():
