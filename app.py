@@ -102,20 +102,24 @@ def launch_front():
 
     # Get unique values for filters from the combined DataFrame
     unique_tags = combined_df['measure_tag'].dropna().unique()
-    selected_tags = st.multiselect("Filter by measure tag", options=unique_tags, default=list(unique_tags))
+    selected_tags = st.multiselect("Filter by measure tag", options=unique_tags)
 
     unique_hd_versions = combined_df['hd_version'].dropna().unique()
-    selected_hd_versions = st.multiselect("Filter by HoloDoppler version", options=unique_hd_versions, default=list(unique_hd_versions))
+    selected_hd_versions = st.multiselect("Filter by HoloDoppler version", options=unique_hd_versions)
+
+    filtered_df = combined_df.copy()
     
     # Apply HoloDoppler filters
-    filtered_df = combined_df[
-        combined_df['measure_tag'].isin(selected_tags) &
-        combined_df['hd_version'].isin(selected_hd_versions)
-    ]
+    if selected_tags:
+        filtered_df = filtered_df[
+            filtered_df['measure_tag'].isin(selected_tags)]
+
+    if selected_hd_versions:
+        filtered_df = filtered_df[filtered_df['hd_version'].isin(selected_hd_versions)]
 
     total_hd_folders = combined_df['hd_folder'].nunique()
     shown_hd_folders = filtered_df['hd_folder'].nunique()
-    hd_display_df = filtered_df[['hd_folder', 'measure_tag', 'hd_version']].drop_duplicates()
+    hd_display_df = filtered_df[['hd_folder', 'measure_tag', 'hd_version']].drop_duplicates().reset_index(drop=True)
 
     st.header("Found HoloDoppler folders")
     st.markdown(f"**Showing {shown_hd_folders} of {total_hd_folders} HoloDoppler folders.**")
@@ -131,7 +135,7 @@ def launch_front():
 
     if not ef_base_df.empty:
         unique_ef_versions = ef_base_df['ef_version'].dropna().unique()
-        selected_ef_versions = st.multiselect("Filter by EyeFlow version", options=unique_ef_versions, default=list(unique_ef_versions))
+        selected_ef_versions = st.multiselect("Filter by EyeFlow version", options=unique_ef_versions)
         ef_display_df = ef_base_df.copy()
 
         if selected_ef_versions:
