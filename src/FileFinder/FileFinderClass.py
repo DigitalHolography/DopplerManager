@@ -92,6 +92,13 @@ class FileFinder:
         #     )
         # ''')
 
+    def ClearDB(self) -> None:
+        table_names = ["ef_pngs", "raw_files", "ef_data", "hd_data"]
+        for table in table_names:
+            self.DBClass.execute(f"DROP TABLE IF EXISTS {table}")
+        self.DBClass.commit()
+        self.CreateDB()
+
     def InsertHDdata(self, hd_folder: str, measure_tag: str, rendering_parameters: str, version_text: str) -> int | None:
         # cursor = self.SQLconnect.cursor()
 
@@ -210,8 +217,9 @@ class FileFinder:
                     ef_data = FinderUtils.get_ef_folders_data(eyeflow_folder)
 
                 hd_rowId = self.InsertHDdata(
-                    hd_folder.absolute().as_posix(), 
-                    FinderUtils.get_file_name_without_hd(hd_folder), 
+                    hd_folder.absolute().as_posix(),
+                    measure_tag,
+                    # FinderUtils.get_file_name_without_hd(hd_folder), 
                     json.dumps(rendering_params), 
                     version_text)
                 
