@@ -63,12 +63,7 @@ def launch_front():
 
     st.sidebar.markdown("---")
     if st.sidebar.button("Clear database"):
-        cursor = conn.cursor()
-        cursor.execute("DROP TABLE IF EXISTS raw_files")
-        cursor.execute("DROP TABLE IF EXISTS ef_data")
-        cursor.execute("DROP TABLE IF EXISTS hd_data")
-        conn.commit()
-        ff.CreateDB()
+        ff.ClearDB() # Single, clean method call
         st.sidebar.success("Database cleared.")
         st.rerun()
 
