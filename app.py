@@ -101,7 +101,6 @@ def launch_front():
         if selected_versions:
             filtered_df = filtered_df[filtered_df['version_text'].isin(selected_versions)]
 
-        st.header("Found HoloDoppler folders")
         st.markdown(f"**Showing {len(filtered_df)} of {len(main_df)} folders.**")
 
         if filtered_df.empty:
@@ -130,8 +129,6 @@ def launch_front():
                 if selected_ef_versions:
                     filtered_ef_df = filtered_ef_df[filtered_ef_df['version_text'].isin(selected_ef_versions)]
 
-                st.header("Found EyeFlow Folders")
-                
                 # Only merge and display if the filtered EF dataframe is not empty
                 if not filtered_ef_df.empty:
                     # Join with hd_data to show the corresponding hd_folder
