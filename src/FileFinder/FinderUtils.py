@@ -184,7 +184,7 @@ def get_num_after_hd(file_path) -> int:
     hd_index = file_name.find("_HD_")
 
     if hd_index != -1:
-        return file_name[hd_index:]
+        return int(file_name[hd_index + 4 :])  # len("_HD_") = 4
     return -1
 
 
