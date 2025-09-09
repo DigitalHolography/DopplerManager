@@ -71,75 +71,80 @@ def launch_front():
 
     st.sidebar.markdown("---")
     if st.sidebar.button("Clear database"):
-        ff.ClearDB() # Single, clean method call
+        ff.ClearDB()
         st.sidebar.success("Database cleared.")
         st.rerun()
 
     # --- Main UI ---
     st.title("EyeFlowDB")
 
-    main_df = load_data("SELECT id, hd_folder, measure_tag, version_text FROM hd_data")
+    query = """
+        SELECT
+            hd.id,
+            hd.hd_folder,
+            hd.measure_tag,
+            hd.version_text AS hd_version,
+            ef.ef_folder,
+            ef.version_text AS ef_version
+        FROM
+            hd_data AS hd
+        LEFT JOIN
+            ef_data AS ef ON hd.id = ef.hd_id
+    """
+    combined_df = load_data(query)
 
-    if main_df.empty:
+    if combined_df.empty:
         st.warning("The database is empty. Please start a scan.")
-    else:
-        # --- Filtering ---
-        st.header("HoloDoppler Data")
+        return # Stop execution if there's no data
 
-        unique_tags = main_df['measure_tag'].unique()
-        selected_tags = st.multiselect("Filter by measure tag", options=unique_tags, default=list(unique_tags))
+    # --- Filtering ---
+    st.header("HoloDoppler Data")
 
-        unique_versions = main_df['version_text'].dropna().unique()
-        selected_versions = st.multiselect("Filter by HoloDoppler version", options=unique_versions, default=list(unique_versions))
+    # Get unique values for filters from the combined DataFrame
+    unique_tags = combined_df['measure_tag'].dropna().unique()
+    selected_tags = st.multiselect("Filter by measure tag", options=unique_tags, default=list(unique_tags))
+
+    unique_hd_versions = combined_df['hd_version'].dropna().unique()
+    selected_hd_versions = st.multiselect("Filter by HoloDoppler version", options=unique_hd_versions, default=list(unique_hd_versions))
+    
+    # Apply HoloDoppler filters
+    filtered_df = combined_df[
+        combined_df['measure_tag'].isin(selected_tags) &
+        combined_df['hd_version'].isin(selected_hd_versions)
+    ]
+
+    total_hd_folders = combined_df['hd_folder'].nunique()
+    shown_hd_folders = filtered_df['hd_folder'].nunique()
+    hd_display_df = filtered_df[['hd_folder', 'measure_tag', 'hd_version']].drop_duplicates()
+
+    st.header("Found HoloDoppler folders")
+    st.markdown(f"**Showing {shown_hd_folders} of {total_hd_folders} HoloDoppler folders.**")
+    st.dataframe(hd_display_df, width='stretch')
+
+    st.markdown("---")
+
+    # --- EyeFlow Filtering ---
+    st.header("EyeFlow Data")
+    
+    # Filter for rows that actually have EyeFlow data (ef_folder is not empty)
+    ef_base_df = filtered_df.dropna(subset=['ef_folder'])
+
+    if not ef_base_df.empty:
+        unique_ef_versions = ef_base_df['ef_version'].dropna().unique()
+        selected_ef_versions = st.multiselect("Filter by EyeFlow version", options=unique_ef_versions, default=list(unique_ef_versions))
+        ef_display_df = ef_base_df.copy()
+
+        if selected_ef_versions:
+             ef_display_df = ef_display_df[ef_display_df['ef_version'].isin(selected_ef_versions)]
         
-        # Start with a copy of the full dataframe
-        filtered_df = main_df.copy()
+        total_ef_folders = ef_base_df['ef_folder'].nunique()
+        shown_ef_folders = len(ef_display_df)
 
-        # Apply filters only if selections are made in the multiselect widgets
-        if selected_tags:
-            filtered_df = filtered_df[filtered_df['measure_tag'].isin(selected_tags)]
-        if selected_versions:
-            filtered_df = filtered_df[filtered_df['version_text'].isin(selected_versions)]
-
-        st.markdown(f"**Showing {len(filtered_df)} of {len(main_df)} folders.**")
-
-        if filtered_df.empty:
-            st.info("No HoloDoppler data matches the current filters.")
-        else:
-            st.dataframe(filtered_df.drop(columns=['id']), width='stretch')
-
-        st.markdown("---")
-
-        if not filtered_df.empty:
-            st.header("EyeFlow Data")
-
-            # Get the IDs of the filtered HD folders
-            filtered_hd_ids = tuple(filtered_df['id'].tolist())
-
-            # Load the corresponding EyeFlow data
-            ef_df = load_data(f"SELECT hd_id, ef_folder, version_text FROM ef_data WHERE hd_id IN {filtered_hd_ids}")
-
-            if not ef_df.empty:
-                # --- EyeFlow Version Filtering ---
-                unique_ef_versions = ef_df['version_text'].dropna().unique()
-                selected_ef_versions = st.multiselect("Filter by EyeFlow version", options=unique_ef_versions, default=list(unique_ef_versions))
-
-                filtered_ef_df = ef_df.copy()
-                # Apply EF version filter only if a selection is made
-                if selected_ef_versions:
-                    filtered_ef_df = filtered_ef_df[filtered_ef_df['version_text'].isin(selected_ef_versions)]
-
-                # Only merge and display if the filtered EF dataframe is not empty
-                if not filtered_ef_df.empty:
-                    # Join with hd_data to show the corresponding hd_folder
-                    merged_ef_df = pd.merge(filtered_ef_df, main_df[['id', 'hd_folder']], left_on='hd_id', right_on='id', how='left')
-
-                    # Hide the 'id' and 'hd_id' columns from the displayed dataframe
-                    st.dataframe(merged_ef_df.drop(columns=['id', 'hd_id']), width='stretch')
-                else:
-                    st.info("No EyeFlow data matches the current filters.")
-
-            else:
-                st.info("No corresponding EyeFlow data found for the selected HoloDoppler filters.")
+        st.header("Found EyeFlow Folders")
+        st.markdown(f"**Showing {shown_ef_folders} of {total_ef_folders} EyeFlow folders.**")
+        ef_display_columns = ['hd_folder', 'ef_folder', 'ef_version']
+        st.dataframe(ef_display_df[ef_display_columns].reset_index(drop=True), width='stretch')
+    else:
+        st.info("No EyeFlow data matches the current HoloDoppler filters.")
 
 launch_front()
