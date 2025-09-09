@@ -7,31 +7,27 @@ import src.FileFinder.FileFinderClass as FileFinderClass
 from src.Database.DBClass import DB
 from src.Utils.ParamsLoader import ConfigManager
 
-# ┌───────────────────────────────────┐
-# │           BACKEND SETUP           │
-# └───────────────────────────────────┘
-
 @st.cache_resource
 def initialize_database(db_path):
     """
     Connects to the database, instantiates the FileFinder, 
     and ensures tables are created. This runs only once.
     """
-    #st.toast("Initializing database connection...")
     conn = sqlite3.connect(db_path, check_same_thread=False)
     ff_instance = FileFinderClass.FileFinder(DB(SQLconnect=conn))
     ff_instance.CreateDB()
     return conn, ff_instance
 
 DB_FILE = ConfigManager.get("DB.DB_PATH", "renders.db")
+st.toast("Initializing database connection...")
 conn, ff = initialize_database(DB_FILE)
 
-# ┌───────────────────────────────────┐
-# │           FRONTEND SETUP          │
-# └───────────────────────────────────┘
-
-# --- Helper Functions ---
+@st.cache_data
 def load_data(query):
+    """ 
+    Loads data from the database using the provided SQL query.
+    Caches the result to avoid redundant database calls.
+    """
     try:
         df = pd.read_sql_query(query, conn)
         return df
@@ -40,50 +36,52 @@ def load_data(query):
         return pd.DataFrame()
 
 def launch_front():
+    """
+    Launches the frontend components of the Streamlit app.
+    """
     # --- Page Configuration ---
     st.set_page_config(page_title="Render Explorer", layout="wide")
 
     # --- Sidebar ---
     st.sidebar.title("Actions")
-    scan_path = st.sidebar.text_input("Répertoire à scanner", "Y:\\")
+    scan_path = st.sidebar.text_input("Directory to scan", "Y:\\")
 
-    if st.sidebar.button("Lancer le scan du répertoire"):
+    if st.sidebar.button("Start directory scan"):
         if Path(scan_path).is_dir():
-            st.sidebar.info("Le scan peut prendre beaucoup de temps. Veuillez patienter.")
-            with st.spinner(f"Scan en cours dans {scan_path}..."):
+            st.sidebar.info("The scan may take a long time. Please wait.")
+            with st.spinner(f"Scanning {scan_path}..."):
                 try:
                     ff.Findfiles(scan_path)
-                    st.sidebar.success("Scan terminé avec succès!")
-                    # Invalider les caches de données pour forcer le rechargement
+                    st.sidebar.success("Scan completed successfully!")
+                    # Invalidate data caches to force reload
                     st.cache_data.clear()
-                    st.rerun() # Rafraîchir l'application pour afficher les nouvelles données
+                    st.rerun() # Refresh the app to show new data
                 except Exception as e:
-                    st.sidebar.error(f"Une erreur est survenue: {e}")
+                    st.sidebar.error(f"An error occurred: {e}")
         else:
-            st.sidebar.error("Le chemin spécifié n'est pas un répertoire valide.")
+            st.sidebar.error("The specified path is not a valid directory.")
 
     st.sidebar.markdown("---")
-    if st.sidebar.button("Effacer la base de données"):
+    if st.sidebar.button("Clear database"):
         cursor = conn.cursor()
         cursor.execute("DROP TABLE IF EXISTS raw_files")
         cursor.execute("DROP TABLE IF EXISTS ef_data")
         cursor.execute("DROP TABLE IF EXISTS hd_data")
         conn.commit()
         ff.CreateDB()
-        st.sidebar.success("Base de données effacée.")
+        st.sidebar.success("Database cleared.")
         st.rerun()
 
     # --- Main UI ---
     st.title("EyeFlowDB")
 
-    # Charger les données principales
     main_df = load_data("SELECT id, hd_folder, measure_tag, version_text FROM hd_data")
 
     if main_df.empty:
         st.warning("The database is empty. Please start a scan.")
     else:
         # --- Filtering ---
-        st.header("Data Filtering")
+        st.header("HoloDoppler Data")
 
         unique_tags = main_df['measure_tag'].unique()
         selected_tags = st.multiselect("Filter by measure tag", options=unique_tags, default=list(unique_tags))
@@ -100,7 +98,7 @@ def launch_front():
         if selected_versions:
             filtered_df = filtered_df[filtered_df['version_text'].isin(selected_versions)]
 
-        st.header("Found Renders")
+        st.header("Found HoloDoppler folders")
         st.dataframe(filtered_df.drop(columns=['id']), width='stretch')
 
         st.markdown("---")
