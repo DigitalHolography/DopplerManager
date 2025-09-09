@@ -1,26 +1,26 @@
 # from typing import list, Dict, Tuple # For Python before 3.10
 from src.Logger.ColorClass import col
 import sys
+import os
 
 # ┌───────────────────────────────────┐
 # │            TAGS_COLORS            │
 # └───────────────────────────────────┘
 
 tags_color = {
-    "INFO":         [col.bg.CYA, col.WHI, col.BOLD],
-    "WARN":         [col.bg.YEL, col.WHI, col.BOLD],
-    "INFO ":        [col.bg.CYA, col.WHI, col.BOLD], # For alignment
-    "WARN ":        [col.bg.YEL, col.BLA, col.BOLD], # For alignment
-    "ERROR":        [col.bg.RED, col.WHI, col.BOLD],
-    "FATAL":        [col.bg.RED, col.WHI, col.BOLD],
-    "DEBUG":        [col.bg.BLU, col.WHI, col.BOLD],
-    
-    "DOWNLOAD":     [col.bg.PUR, col.WHI, col.BOLD],
-    "DONE":         [col.bg.GRE, col.BLA, col.BOLD],
-    "TIME":         [col.bg.BLU, col.WHI, col.BOLD],
-    "FILESYSTEM":   [col.bg.PUR, col.WHI, col.BOLD],
-    "DATABASE":     [col.bg.WHI, col.BLA, col.BOLD],
-    "SETTINGS":     [col.bg.BLU, col.WHI, col.BOLD],
+    "INFO": [col.bg.CYA, col.WHI, col.BOLD],
+    "WARN": [col.bg.YEL, col.WHI, col.BOLD],
+    "INFO ": [col.bg.CYA, col.WHI, col.BOLD],  # For alignment
+    "WARN ": [col.bg.YEL, col.BLA, col.BOLD],  # For alignment
+    "ERROR": [col.bg.RED, col.WHI, col.BOLD],
+    "FATAL": [col.bg.RED, col.WHI, col.BOLD],
+    "DEBUG": [col.bg.BLU, col.WHI, col.BOLD],
+    "DOWNLOAD": [col.bg.PUR, col.WHI, col.BOLD],
+    "DONE": [col.bg.GRE, col.BLA, col.BOLD],
+    "TIME": [col.bg.BLU, col.WHI, col.BOLD],
+    "FILESYSTEM": [col.bg.PUR, col.WHI, col.BOLD],
+    "DATABASE": [col.bg.WHI, col.BLA, col.BOLD],
+    "SETTINGS": [col.bg.BLU, col.WHI, col.BOLD],
 }
 
 ################################################################################
@@ -28,8 +28,12 @@ tags_color = {
 # Check for Python version
 if sys.version_info <= (3, 9):
     print(f"{col.BOLD}{col.RED}You are using a Python version before 3.10!")
-    print(f"This could result in failure to load")
+    print("This could result in failure to load")
     print(f"{col.YEL}Current version {sys.version}")
+
+# Allows for ANSI escape character processing on Windows
+if os.name == "nt":
+    os.system("")
 
 ################################################################################
 
@@ -38,6 +42,7 @@ def log(msg: str, colors: list[str], end: str = "\n") -> None:
     for x in colors:
         print(x, end="")
     print(f"{msg}{col.RES}", end=end)
+
 
 def log_tags(msg: str, tags: list[tuple[str, list[str]]]) -> None:
     for tag in tags:
@@ -51,7 +56,7 @@ def log_t(msg: str, tags: list[str] | str) -> None:
     the tags_color global var.
     You should maybe use the Logger class.
     """
-    if type(tags) == str:
+    if isinstance(tags, str):
         tags = [tags]
     for t in tags:
         # print(tags_color.get(t, []))
@@ -65,37 +70,37 @@ def log_t(msg: str, tags: list[str] | str) -> None:
 
 # Logger class
 # @param    msg     The message to be printed
-# @param    tags    Take the tag (or list of tags) to be printed before 
+# @param    tags    Take the tag (or list of tags) to be printed before
 class Logger:
     @staticmethod
-    def info(msg : str, tags: list[str] | str = []) -> None:
+    def info(msg: str, tags: list[str] | str = []) -> None:
         if isinstance(tags, str):
             tags = [tags]
         log_t(msg, ["INFO "] + tags)
 
     @staticmethod
-    def warn(msg : str, tags: list[str] | str = []) -> None:
+    def warn(msg: str, tags: list[str] | str = []) -> None:
         if isinstance(tags, str):
             tags = [tags]
         log_t(msg, ["WARN "] + tags)
 
     @staticmethod
-    def error(msg : str, tags: list[str] | str = []) -> None:
+    def error(msg: str, tags: list[str] | str = []) -> None:
         if isinstance(tags, str):
             tags = [tags]
         log_t(msg, ["ERROR"] + tags)
 
     @staticmethod
-    def debug(msg : str, tags: list[str] | str = []) -> None:
+    def debug(msg: str, tags: list[str] | str = []) -> None:
         if isinstance(tags, str):
             tags = [tags]
         log_t(msg, ["DEBUG"] + tags)
-    
+
     @staticmethod
-    def fatal(msg : str, tags: list[str] | str = [], raiseExeption: bool = True) -> None:
+    def fatal(msg: str, tags: list[str] | str = [], raiseExeption: bool = True) -> None:
         if isinstance(tags, str):
             tags = [tags]
         log_t(msg, ["FATAL"] + tags)
-        
+
         if raiseExeption:
             raise Exception(f"[FATAL] {tags} | {msg}")

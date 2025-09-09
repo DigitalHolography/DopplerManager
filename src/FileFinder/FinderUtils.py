@@ -1,13 +1,18 @@
 import os
 import json
+import re
+
 from pathlib import Path
 from src.Logger.LoggerClass import Logger
+
 
 def is_hd_folder(name: str):
     return "_HD_" in name
 
+
 def is_ef_folder(name: str):
     return "_EF_" in name
+
 
 def get_file_size(file_path: Path | str):
     try:
@@ -15,21 +20,28 @@ def get_file_size(file_path: Path | str):
     except Exception:
         return None
 
+
 def safe_json_load(file_path: Path | str):
     try:
         with open(file_path, "r") as f:
             return json.load(f)
     except Exception as e:
-        Logger.error(f"Access denied or error reading json: {file_path} – {e}", tags="FILESYSTEM")
+        Logger.error(
+            f"Access denied or error reading json: {file_path} – {e}", tags="FILESYSTEM"
+        )
         return None
+
 
 def safe_file_read(file_path: Path | str):
     try:
         with open(file_path, "r") as f:
             return f.read()
     except Exception as e:
-        Logger.error(f"Access denied or error reading file: {file_path} – {e}", tags="FILESYSTEM")
+        Logger.error(
+            f"Access denied or error reading file: {file_path} – {e}", tags="FILESYSTEM"
+        )
         return None
+
 
 def safe_isdir(path: Path | str):
     try:
@@ -37,32 +49,35 @@ def safe_isdir(path: Path | str):
         return path.is_dir()
     except (PermissionError, OSError) as e:
         # print(f"Access denied or error reading directory: {path} – {e}")
-        Logger.error(f"Access denied or error reading directory: {path} – {e}", tags="FILESYSTEM")
+        Logger.error(
+            f"Access denied or error reading directory: {path} – {e}", tags="FILESYSTEM"
+        )
         return False
+
 
 def safe_iterdir(path: Path | str):
     try:
         path = Path(path)
         if safe_isdir(path):
-          return list(path.iterdir())
+            return list(path.iterdir())
         else:
             return []
     except (PermissionError, OSError) as e:
-        Logger.error(f"Access denied or error reading directory: {path} – {e}", tags="FILESYSTEM")
+        Logger.error(
+            f"Access denied or error reading directory: {path} – {e}", tags="FILESYSTEM"
+        )
         # print(f"Access denied or error reading directory: {path} – {e}")
         return []
+
 
 def get_raw_data(raw_folder: Path) -> list[dict]:
     raw_data = []
 
     if raw_folder.exists():
-        raw_files = list(raw_folder.glob("*.raw")) # To check if needed
+        raw_files = list(raw_folder.glob("*.raw"))  # To check if needed
         h5_files = list(raw_folder.glob("*.h5"))
         for f in raw_files + h5_files:
-            raw_data.append({
-                "path": str(f),
-                "size": get_file_size(f)
-            })
+            raw_data.append({"path": str(f), "size": get_file_size(f)})
 
     return raw_data
 
@@ -89,27 +104,27 @@ def get_ef_folders_data(eyeflow_folder: Path) -> list[dict]:
                 content = safe_json_load(input_param)
 
                 if content:
-                    InputEyeFlowParams = {
-                        "path": str(input_param),
-                        "content": content
-                    }
+                    InputEyeFlowParams = {"path": str(input_param), "content": content}
 
-        ef_data.append({
-            "ef_folder": str(ef_folder),
-            "png_files": png_paths,
-            "InputEyeFlowParams": InputEyeFlowParams
-        })
+        ef_data.append(
+            {
+                "ef_folder": str(ef_folder),
+                "png_files": png_paths,
+                "InputEyeFlowParams": InputEyeFlowParams,
+            }
+        )
 
     return ef_data
 
+
 def scan_directories(root_dir: str):
     data = []
-    
+
     for date_folder in safe_iterdir(root_dir):
         Logger.info(f"Scanning date folder: {date_folder}")
         if not safe_isdir(date_folder):
             continue
-        
+
         for hd_folder in safe_iterdir(date_folder):
             if not hd_folder.is_dir() or not is_hd_folder(hd_folder.name):
                 continue
@@ -135,28 +150,44 @@ def scan_directories(root_dir: str):
             if eyeflow_folder.exists():
                 ef_data = get_ef_folders_data(eyeflow_folder)
 
-            data.append({
-                "hd_folder": str(hd_folder),
-                "raw_files": raw_data,
-                "rendering_parameters": rendering_params,
-                "version_text": version_text,
-                "ef_data": ef_data
-            })
-    
+            data.append(
+                {
+                    "hd_folder": str(hd_folder),
+                    "raw_files": raw_data,
+                    "rendering_parameters": rendering_params,
+                    "version_text": version_text,
+                    "ef_data": ef_data,
+                }
+            )
+
     return data
+
 
 def get_file_name_without_hd(folder_path):
     # Get the base name of the file from the folder path
     file_name = os.path.basename(folder_path)
 
     # Find the index of '_HD_'
-    hd_index = file_name.find('_HD_')
+    hd_index = file_name.find("_HD_")
 
     if hd_index != -1:
         # Slice the string up to '_HD_'
         file_name = file_name[:hd_index]
 
     return file_name
+
+
+def get_num_after_hd(file_path) -> int:
+    # Get the base name of the file from the file path
+    file_name = os.path.basename(file_path)
+
+    # Use regular expression to find the pattern HD_[any number]_
+    hd_index = file_name.find("_HD_")
+
+    if hd_index != -1:
+        return file_name[hd_index:]
+    return -1
+
 
 def get_eyeflow_version(ef_folder: Path, hd_folder_name: str) -> str:
     # TODO: To implement better way
@@ -165,31 +196,37 @@ def get_eyeflow_version(ef_folder: Path, hd_folder_name: str) -> str:
 
     log_folder = Path(ef_folder) / "log"
     if not log_folder.exists() or not log_folder.is_dir():
-        Logger.error(f"Eyeflow log folder does not exist: {log_folder}", tags="FILESYSTEM")
+        Logger.error(
+            f"Eyeflow log folder does not exist: {log_folder}", tags="FILESYSTEM"
+        )
         return "None"
-    
+
     file_path = log_folder / f"{hd_folder_name}_log.txt"
 
     if not file_path.exists() or not file_path.is_file():
         Logger.error(f"Eyeflow log file does not exist: {file_path}", tags="FILESYSTEM")
         return "None"
 
-    with open(file_path, 'r', encoding='utf-8') as f:
+    with open(file_path, "r", encoding="utf-8") as f:
         lines = f.readlines()
-    
+
     # Find indices of lines that are bars (lines containing only '=' chars)
-    bar_lines = [i for i, line in enumerate(lines) if line.strip() and set(line.strip()) == {'='}]
-    
+    bar_lines = [
+        i for i, line in enumerate(lines) if line.strip() and set(line.strip()) == {"="}
+    ]
+
     if len(bar_lines) < 2:
-        Logger.error(f"Eyeflow log file does not contain block: {file_path}", tags="FILESYSTEM")
+        Logger.error(
+            f"Eyeflow log file does not contain block: {file_path}", tags="FILESYSTEM"
+        )
         return "None"
-    
+
     # Get the last two bars to find the last block
     start = bar_lines[-2]
     end = bar_lines[-1]
-    
+
     # Extract lines between the bars (excluding the bars themselves)
-    block_lines = lines[start+1:end]
-    
+    block_lines = lines[start + 1 : end]
+
     # Join and strip trailing spaces/newlines
-    return ''.join(block_lines).strip()
+    return "".join(block_lines).strip()
