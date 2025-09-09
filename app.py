@@ -19,7 +19,15 @@ def initialize_database(db_path):
     return conn, ff_instance
 
 DB_FILE = ConfigManager.get("DB.DB_PATH", "renders.db")
-st.toast("Initializing database connection...")
+
+# Use session state to run initialization notifications only once.
+if 'db_initialized' not in st.session_state:
+    # The spinner shows a message while the code inside the "with" block runs.
+    with st.spinner("Initializing database connection..."):
+        initialize_database(DB_FILE)
+    st.toast("Database ready!", icon="✅")
+    st.session_state.db_initialized = True
+
 conn, ff = initialize_database(DB_FILE)
 
 @st.cache_data
@@ -94,7 +102,12 @@ def launch_front():
             filtered_df = filtered_df[filtered_df['version_text'].isin(selected_versions)]
 
         st.header("Found HoloDoppler folders")
-        st.dataframe(filtered_df.drop(columns=['id']), width='stretch')
+        st.markdown(f"**Showing {len(filtered_df)} of {len(main_df)} folders.**")
+
+        if filtered_df.empty:
+            st.info("No HoloDoppler data matches the current filters.")
+        else:
+            st.dataframe(filtered_df.drop(columns=['id']), width='stretch')
 
         st.markdown("---")
 
