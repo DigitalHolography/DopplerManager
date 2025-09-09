@@ -103,10 +103,11 @@ class FileFinder:
         # ''')
 
     def ClearDB(self) -> None:
+        # Should really change this to delete the file instead of DROPping tables
         table_names = ["ef_pngs", "raw_files", "ef_data", "hd_data"]
         for table in table_names:
-            self.DBClass.execute(f"DROP TABLE IF EXISTS {table}")
-        self.DBClass.commit()
+            self.DBClass.SQLconnect.execute(f"DROP TABLE IF EXISTS {table}")
+        self.DBClass.SQLconnect.commit()
         self.CreateDB()
 
     def InsertHDdata(

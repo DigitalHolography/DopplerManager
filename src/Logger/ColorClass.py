@@ -9,7 +9,7 @@ class col:
     PUR = "\033[35m"
     CYA = "\033[36m"
     WHI = "\033[37m"
- 
+
     # Bright colors
     class bc:
         BLA = "\033[90m"

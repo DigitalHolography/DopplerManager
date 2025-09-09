@@ -1,14 +1,12 @@
 import json
-import os
 from pathlib import Path
 
 from src.Logger.LoggerClass import Logger
 
+
 class ConfigManager:
-    __possible_path = [
-        "settings.json"
-    ]
-    
+    __possible_path = ["settings.json"]
+
     @staticmethod
     def __find_config() -> Path:
         for path in ConfigManager.__possible_path:
@@ -19,11 +17,11 @@ class ConfigManager:
         Logger.fatal("Failed to find settings.json file")
         # Should be raised by the Logger.fatal
         raise FileNotFoundError("Failed to find settings.json file")
-    
+
     @staticmethod
     def __get_settings(settings_path: Path):
         try:
-            with open(settings_path, 'r') as f:
+            with open(settings_path, "r") as f:
                 return json.load(f)
 
         except json.JSONDecodeError as e:
@@ -34,11 +32,11 @@ class ConfigManager:
             Logger.fatal(f"Error reading config file: {e}")
             # Should be raised by the Logger.fatal
             raise Exception(f"Error reading config file: {e}")
-        
+
     @staticmethod
     def __save_settings(settings_path: Path, settings):
         try:
-            with open(settings_path, 'w') as f:
+            with open(settings_path, "w") as f:
                 json.dump(settings, f, indent=4)
 
         except Exception as e:
@@ -56,55 +54,57 @@ class ConfigManager:
         return ConfigManager.__get_settings(ConfigManager.__find_config())
 
     @staticmethod
-    def get(key: str, default_value = None):
-        """Will return the value held by the key. This is a "hot-reload", 
+    def get(key: str, default_value=None):
+        """Will return the value held by the key. This is a "hot-reload",
         meaning that it will check each time this function is called for
         changes.
 
         Args:
             key (str): The key, should be separated by commas (e.g: var.to.get)
-            default_value (any, optional): Default value if not found, 
-                                              if None, will send a log Error. 
+            default_value (any, optional): Default value if not found,
+                                              if None, will send a log Error.
                                               Defaults to None.
 
         Returns:
             any: The value of the key
         """
-        
+
         # TODO: For now, handles simple stuff (lists not included)
-        
-        keys = key.split('.')
+
+        keys = key.split(".")
         value = ConfigManager.get_all_settings()
-        
+
         for k in keys:
             if isinstance(value, dict) and k in value:
                 value = value[k]
             else:
-                if (default_value):
+                if default_value:
                     return default_value
                 else:
                     Logger.error(f"The key: {k} ({keys}) was not found!")
                     return None
 
         return value
-    
+
     @staticmethod
     def set(key: str, value):
-        
         # TODO: For now, handles simple stuff (lists not included)
-        
-        keys = key.split('.')
+
+        keys = key.split(".")
         config_path = ConfigManager.__find_config()
         cur = ConfigManager.__get_settings(config_path)
         cur_save = cur
-        
+
         for k in keys[:-1]:
-            if not k in cur:
+            if k not in cur:
                 cur[k] = {}
             elif not isinstance(cur[k], dict):
-                Logger.error(f"The path: {cur[k]} ({key}) is already in use by non-dictonary", "SETTINGS")
+                Logger.error(
+                    f"The path: {cur[k]} ({key}) is already in use by non-dictonary",
+                    "SETTINGS",
+                )
             cur = cur[k]
-            
+
         cur[keys[-1]] = value
-        
+
         ConfigManager.__save_settings(config_path, cur_save)

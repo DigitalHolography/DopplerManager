@@ -5,21 +5,34 @@ from src.Utils.ParamsLoader import ConfigManager
 # This class should can have its SQL Injection safety checks improved
 # It should be used without user input until then
 
+
 class DB:
     # TODO: Implem in_memory DB option
-    def __init__(self, DB_PATH: str, SQLconnect: sqlite3.Connection | None = None, check_same_thread: bool = False):
+    def __init__(
+        self,
+        DB_PATH: str,
+        SQLconnect: sqlite3.Connection | None = None,
+        check_same_thread: bool = False,
+    ):
         self.DB_PATH = DB_PATH
         if SQLconnect:
             self.SQLconnect = SQLconnect
         else:
             if not ConfigManager.get("DB.OVERRIDE_DB") and os.path.exists(str(DB_PATH)):
-                Logger.warn(f"Database file already exists at {DB_PATH}. To override it, set DB.OVERRIDE_DB to true in settings.json", "DATABASE")
+                Logger.warn(
+                    f"Database file already exists at {DB_PATH}. To override it, set DB.OVERRIDE_DB to true in settings.json",
+                    "DATABASE",
+                )
             else:
                 if os.path.exists(str(DB_PATH)):
-                    Logger.info(f"Overriding existing database at {DB_PATH}", "DATABASE")
+                    Logger.info(
+                        f"Overriding existing database at {DB_PATH}", "DATABASE"
+                    )
                     os.remove(str(DB_PATH))
 
-            self.SQLconnect = sqlite3.connect(DB_PATH, check_same_thread=check_same_thread)
+            self.SQLconnect = sqlite3.connect(
+                DB_PATH, check_same_thread=check_same_thread
+            )
 
     def check_table_existance(self, table_name: str) -> bool:
         """Will check if the table exists inside the DB
@@ -30,17 +43,20 @@ class DB:
         Returns:
             bool: True if `table_name` exists, False otherwise
         """
-        
+
         if not table_name.isidentifier:
             Logger.error(
                 f"Table name is not a valid identifier ({table_name})", "DATABASE"
             )
             return False
-        
-        res = self.SQLconnect.execute("""
+
+        res = self.SQLconnect.execute(
+            """
             SELECT name FROM sqlite_master 
             WHERE type='table' AND name=?
-        """, (table_name,))
+        """,
+            (table_name,),
+        )
         return res.fetchone() is not None
 
     def create_table(self, table_name: str, columns: dict[str, str]) -> None:
@@ -100,8 +116,10 @@ class DB:
         self.SQLconnect.commit()
 
         return cursor.lastrowid
-        
-    def select(self, table_name: str, condition: dict[str, object] | None = None) -> list[dict]:
+
+    def select(
+        self, table_name: str, condition: dict[str, object] | None = None
+    ) -> list[dict]:
         """Searchs the DB with given parameters
 
         Args:
@@ -111,19 +129,19 @@ class DB:
         Returns:
             list[dict]: A list of found matching entries
         """
-        
+
         if not self.check_table_existance(table_name):
             Logger.error(f"{table_name} does not exists", "DATABASE")
             return []
-        
+
         if condition:
-            conds = ' AND '.join([f"{k} = ?" for k in condition.keys()])
+            conds = " AND ".join([f"{k} = ?" for k in condition.keys()])
             sql = f"SELECT * FROM {table_name} WHERE {conds}"
             cursor = self.SQLconnect.execute(sql, tuple(condition.values()))
         else:
             sql = f"SELECT * FROM {table_name}"
             cursor = self.SQLconnect.execute(sql)
-        
+
         return [dict(row) for row in cursor.fetchall()]
 
     def close(self):

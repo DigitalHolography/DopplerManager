@@ -1,6 +1,5 @@
 import os
 import json
-import re
 
 from pathlib import Path
 from src.Logger.LoggerClass import Logger
