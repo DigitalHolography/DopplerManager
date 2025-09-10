@@ -288,6 +288,20 @@ class FileFinder:
                         )
                         continue
 
+                    # for png in ef["png_files"]:
+                    #     png_row = self.InsertEFpng(
+                    #         last_row,
+                    #         png,
+                    #         FinderUtils.get_png_type(png),
+                    #     )
+
+                    #     if png_row is None:
+                    #         Logger.error(
+                    #             f"Failed to insert png data for folder: {ef['ef_folder']} (png: {png})",
+                    #             tags="DATABASE",
+                    #         )
+                    #         continue
+
                 # data.append({
                 #     "hd_folder": str(hd_folder),
                 #     "raw_files": raw_data,

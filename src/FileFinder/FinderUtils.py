@@ -1,5 +1,6 @@
 import os
 import json
+import re
 
 from pathlib import Path
 from src.Logger.LoggerClass import Logger
@@ -116,6 +117,22 @@ def get_ef_folders_data(eyeflow_folder: Path) -> list[dict]:
     return ef_data
 
 
+def get_png_type(path: Path) -> str:
+    path = Path(path)
+    if not path.exists() or not path.is_file() or path.suffix.lower() != ".png":
+        return "None"
+
+    name = path.stem  # Get the file name without extension
+
+    match = re.search(r"HD_\d+_", name)
+
+    if match:
+        # Extract the part after the matched pattern
+        return name[match.end() :]
+    else:
+        return "None"
+
+
 def scan_directories(root_dir: str):
     data = []
 
@@ -193,7 +210,8 @@ def get_eyeflow_version(ef_folder: Path, hd_folder_name: str) -> str:
 
     # Logger.debug(f"Getting eyeflow version for EF folder: {ef_folder}, HD folder name: {hd_folder_name}", tags="FILESYSTEM")
 
-    log_folder = Path(ef_folder) / "log"
+    ef_folder = Path(ef_folder)
+    log_folder = ef_folder / "log"
     if not log_folder.exists() or not log_folder.is_dir():
         Logger.error(
             f"Eyeflow log folder does not exist: {log_folder}", tags="FILESYSTEM"
