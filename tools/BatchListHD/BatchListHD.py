@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import filedialog, scrolledtext, ttk
 import os
 import re
+import shutil
 
 # --- Global lists to store the search results ---
 holo_cine_files = []
@@ -68,7 +69,7 @@ def start_search():
     ef_batch_input.clear()
     
     for button in [export_hd_button, export_holo_cine_button, export_missing_hd_button,
-                   export_ef_button, export_missing_ef_button]:
+                   export_ef_button, export_missing_ef_button, export_ef_results_button]:
         button.config(state=tk.DISABLED)
 
     if not input_file or not root_folder:
@@ -125,7 +126,9 @@ def start_search():
         if holo_cine_files: export_holo_cine_button.config(state=tk.NORMAL)
         if latest_hd_folders: export_hd_button.config(state=tk.NORMAL)
         if hd_batch_input: export_missing_hd_button.config(state=tk.NORMAL)
-        if latest_ef_folders: export_ef_button.config(state=tk.NORMAL)
+        if latest_ef_folders:
+            export_ef_button.config(state=tk.NORMAL)
+            export_ef_results_button.config(state=tk.NORMAL)
         if ef_batch_input: export_missing_ef_button.config(state=tk.NORMAL)
 
     except Exception as e:
@@ -248,10 +251,85 @@ def export_ef_batch_input():
         "Successfully exported {count} missing EF folder paths."
     )
 
+def export_ef_results():
+    """
+    Asks for a destination, then creates a result folder for each identifier
+    and copies the contents of 'pdf' and 'json' folders into it.
+    """
+    destination_root = filedialog.askdirectory(title="Select Destination for EF Results")
+    if not destination_root:
+        return  # User cancelled
+
+    if not latest_ef_folders:
+        status_label.config(text="No EF folders found to export results from.")
+        return
+    
+    input_file = input_file_path.get()
+    if not input_file:
+        status_label.config(text="Cannot find the original input file to get identifiers.")
+        return
+
+    try:
+        with open(input_file, 'r') as f:
+            identifiers = [line.strip() for line in f if line.strip()]
+    except Exception as e:
+        status_label.config(text=f"Error reading identifiers from input file: {e}")
+        return
+
+    # --- Create all result directories first ---
+    for identifier in identifiers:
+        result_dir = os.path.join(destination_root, f"{identifier}_results")
+        os.makedirs(result_dir, exist_ok=True)
+
+    copied_count = 0
+    error_list = []
+
+    for ef_folder in latest_ef_folders:
+        ef_folder_name = os.path.basename(ef_folder)
+        matched_identifier = None
+
+        # Find which identifier this EF folder belongs to
+        for identifier in identifiers:
+            if ef_folder_name.startswith(identifier):
+                matched_identifier = identifier
+                break
+        
+        if not matched_identifier:
+            error_msg = f"Could not match EF folder '{ef_folder_name}' to any input identifier."
+            error_list.append(error_msg)
+            log_ef(f"[EXPORT ERROR] {error_msg}")
+            continue
+
+        destination_dir = os.path.join(destination_root, f"{matched_identifier}_results")
+
+        # --- Copy contents of 'pdf' and 'json' subdirectories ---
+        for sub_dir_name in ['pdf', 'json']:
+            source_sub_dir = os.path.join(ef_folder, sub_dir_name)
+            if os.path.isdir(source_sub_dir):
+                for item in os.listdir(source_sub_dir):
+                    source_item = os.path.join(source_sub_dir, item)
+                    dest_item = os.path.join(destination_dir, item)
+                    try:
+                        if os.path.isdir(source_item):
+                            shutil.copytree(source_item, dest_item, dirs_exist_ok=True)
+                        else:
+                            shutil.copy2(source_item, dest_item)
+                        copied_count += 1
+                    except Exception as e:
+                        error_msg = f"Error copying '{source_item}' to '{dest_item}': {e}"
+                        error_list.append(error_msg)
+                        log_ef(f"[EXPORT ERROR] {error_msg}")
+    
+    # --- Final status update ---
+    if error_list:
+        status_label.config(text=f"Export complete with {len(error_list)} errors. Copied {copied_count} items/folders.")
+    else:
+        status_label.config(text=f"Successfully exported results. Copied {copied_count} items/folders.")
+
 # --- GUI Setup ---
 app = tk.Tk()
 app.title("File and Folder Finder")
-app.geometry("850x600")
+app.geometry("850x650") # Increased height slightly for new button
 
 input_file_path = tk.StringVar()
 root_folder_path = tk.StringVar()
@@ -279,16 +357,20 @@ start_button.pack(pady=(10,5), ipady=5, fill=tk.X)
 # --- Export Frames for better layout ---
 export_found_frame = tk.LabelFrame(main_frame, text="Export Found Items", padx=5, pady=5)
 export_found_frame.pack(fill=tk.X, pady=5)
-for i in range(3): export_found_frame.columnconfigure(i, weight=1)
+for i in range(2): export_found_frame.columnconfigure(i, weight=1)
 
-export_holo_cine_button = tk.Button(export_found_frame, text="Export .holo/.cine files", command=export_holo_cine_files, state=tk.DISABLED)
-export_holo_cine_button.grid(row=0, column=0, padx=(0, 5), ipady=5, sticky="ew")
+export_holo_cine_button = tk.Button(export_found_frame, text="Export .holo/.cine paths", command=export_holo_cine_files, state=tk.DISABLED)
+export_holo_cine_button.grid(row=0, column=0, padx=(0, 5), pady=5, ipady=5, sticky="ew")
 
-export_hd_button = tk.Button(export_found_frame, text="Export latest HD folders", command=export_hd_folders, state=tk.DISABLED)
-export_hd_button.grid(row=0, column=1, padx=(5, 5), ipady=5, sticky="ew")
+export_hd_button = tk.Button(export_found_frame, text="Export latest HD folder paths", command=export_hd_folders, state=tk.DISABLED)
+export_hd_button.grid(row=0, column=1, padx=(5, 0), pady=5, ipady=5, sticky="ew")
 
-export_ef_button = tk.Button(export_found_frame, text="Export latest EF folders", command=export_ef_folders, state=tk.DISABLED)
-export_ef_button.grid(row=0, column=2, padx=(5, 0), ipady=5, sticky="ew")
+export_ef_button = tk.Button(export_found_frame, text="Export latest EF folder paths", command=export_ef_folders, state=tk.DISABLED)
+export_ef_button.grid(row=1, column=0, padx=(0, 5), pady=5, ipady=5, sticky="ew")
+
+export_ef_results_button = tk.Button(export_found_frame, text="Export EF results", command=export_ef_results, state=tk.DISABLED)
+export_ef_results_button.grid(row=1, column=1, padx=(5, 0), pady=5, ipady=5, sticky="ew")
+
 
 export_missing_frame = tk.LabelFrame(main_frame, text="Export Batch Inputs", padx=5, pady=5)
 export_missing_frame.pack(fill=tk.X, pady=5)
