@@ -253,8 +253,8 @@ def export_ef_batch_input():
 
 def export_ef_results():
     """
-    Asks for a destination, then creates a result folder for each identifier
-    and copies the contents of 'pdf' and 'json' folders into it.
+    Asks for a destination, creates result folders for each identifier with
+    subdirectories for pdfs, h5 files, and json files, then copies them.
     """
     destination_root = filedialog.askdirectory(title="Select Destination for EF Results")
     if not destination_root:
@@ -276,10 +276,12 @@ def export_ef_results():
         status_label.config(text=f"Error reading identifiers from input file: {e}")
         return
 
-    # --- Create all result directories first ---
+    # --- Create all result directories and subdirectories first ---
     for identifier in identifiers:
         result_dir = os.path.join(destination_root, f"{identifier}_results")
-        os.makedirs(result_dir, exist_ok=True)
+        os.makedirs(os.path.join(result_dir, "pdf_reports"), exist_ok=True)
+        os.makedirs(os.path.join(result_dir, "h5"), exist_ok=True)
+        os.makedirs(os.path.join(result_dir, "json"), exist_ok=True)
 
     copied_count = 0
     error_list = []
@@ -300,31 +302,49 @@ def export_ef_results():
             log_ef(f"[EXPORT ERROR] {error_msg}")
             continue
 
-        destination_dir = os.path.join(destination_root, f"{matched_identifier}_results")
+        # --- Define destination subdirectories ---
+        base_destination_dir = os.path.join(destination_root, f"{matched_identifier}_results")
+        pdf_dest = os.path.join(base_destination_dir, "pdf_reports")
+        h5_dest = os.path.join(base_destination_dir, "h5")
+        json_dest = os.path.join(base_destination_dir, "json")
 
-        # --- Copy contents of 'pdf' and 'json' subdirectories ---
-        for sub_dir_name in ['pdf', 'json']:
-            source_sub_dir = os.path.join(ef_folder, sub_dir_name)
-            if os.path.isdir(source_sub_dir):
-                for item in os.listdir(source_sub_dir):
-                    source_item = os.path.join(source_sub_dir, item)
-                    dest_item = os.path.join(destination_dir, item)
-                    try:
-                        if os.path.isdir(source_item):
-                            shutil.copytree(source_item, dest_item, dirs_exist_ok=True)
-                        else:
-                            shutil.copy2(source_item, dest_item)
+        # --- Copy PDF files ---
+        source_pdf_dir = os.path.join(ef_folder, 'pdf')
+        if os.path.isdir(source_pdf_dir):
+            for item in os.listdir(source_pdf_dir):
+                source_item = os.path.join(source_pdf_dir, item)
+                try:
+                    if os.path.isfile(source_item):
+                        shutil.copy2(source_item, pdf_dest)
                         copied_count += 1
-                    except Exception as e:
-                        error_msg = f"Error copying '{source_item}' to '{dest_item}': {e}"
-                        error_list.append(error_msg)
-                        log_ef(f"[EXPORT ERROR] {error_msg}")
+                except Exception as e:
+                    error_msg = f"Error copying '{source_item}': {e}"
+                    error_list.append(error_msg)
+                    log_ef(f"[EXPORT ERROR] {error_msg}")
+
+        # --- Copy H5 and JSON files ---
+        source_json_dir = os.path.join(ef_folder, 'json')
+        if os.path.isdir(source_json_dir):
+            for item in os.listdir(source_json_dir):
+                source_item = os.path.join(source_json_dir, item)
+                try:
+                    if os.path.isfile(source_item):
+                        if item.endswith('.h5'):
+                            shutil.copy2(source_item, h5_dest)
+                            copied_count += 1
+                        elif item.endswith('.json'):
+                            shutil.copy2(source_item, json_dest)
+                            copied_count += 1
+                except Exception as e:
+                    error_msg = f"Error copying '{source_item}': {e}"
+                    error_list.append(error_msg)
+                    log_ef(f"[EXPORT ERROR] {error_msg}")
     
     # --- Final status update ---
     if error_list:
-        status_label.config(text=f"Export complete with {len(error_list)} errors. Copied {copied_count} items/folders.")
+        status_label.config(text=f"Export complete with {len(error_list)} errors. Copied {copied_count} files.")
     else:
-        status_label.config(text=f"Successfully exported results. Copied {copied_count} items/folders.")
+        status_label.config(text=f"Successfully exported results. Copied {copied_count} files.")
 
 # --- GUI Setup ---
 app = tk.Tk()
