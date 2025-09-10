@@ -1,0 +1,7 @@
+__pycache__
+
+# Database
+*.db
+
+# Testing
+test.py
