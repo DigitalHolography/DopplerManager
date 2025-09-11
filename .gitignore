@@ -7,3 +7,6 @@ __pycache__
 test.py
 
 results/
+
+build/
+dist/
