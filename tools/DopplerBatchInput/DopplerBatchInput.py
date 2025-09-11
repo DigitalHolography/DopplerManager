@@ -397,7 +397,7 @@ def export_ef_results():
 
 # --- GUI Setup ---
 app = tk.Tk()
-app.title("File and Folder Finder")
+app.title("Doppler Batch Input Tool")
 app.geometry("850x700")
 
 input_file_path = tk.StringVar()
