@@ -3,7 +3,7 @@ from tkinter import scrolledtext, ttk
 
 class AppUI:
     def __init__(self, root):
-        root.title("Doppler Batch Input Tool")
+        root.title("Doppler Batch Tool")
         root.geometry("850x700")
 
         self.input_file_path = tk.StringVar()
