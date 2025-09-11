@@ -64,9 +64,8 @@ def start_search():
         log_area.delete('1.0', tk.END)
         log_area.config(state=tk.DISABLED)
     
-    # Hide progress bars on new search
-    search_progress_frame.pack_forget()
-    export_progress_frame.pack_forget()
+    # Hide progress bar on new search
+    progress_frame.pack_forget()
 
     status_label.config(text="")
     latest_hd_folders.clear()
@@ -89,10 +88,10 @@ def start_search():
 
         # Setup and show the search progress bar
         total_identifiers = len(identifiers)
-        search_progress_bar['maximum'] = total_identifiers
-        search_progress_bar['value'] = 0
-        search_progress_label.config(text="0%")
-        search_progress_frame.pack(fill=tk.X, pady=5, before=export_found_frame)
+        progress_bar['maximum'] = total_identifiers
+        progress_bar['value'] = 0
+        progress_label.config(text="0%")
+        progress_frame.pack(fill=tk.X, side=tk.TOP, pady=(0, 5)) # Pack above status label
         app.update_idletasks()
 
         found_files_master_list = []
@@ -105,9 +104,9 @@ def start_search():
             if not matching_top_dirs:
                 log_holo_cine(f"[ERROR] No directory starting with '{prefix}' found for identifier '{identifier}'.")
                 # Update progress even if an item is skipped
-                search_progress_bar['value'] = i + 1
+                progress_bar['value'] = i + 1
                 percent = int(((i + 1) / total_identifiers) * 100)
-                search_progress_label.config(text=f"{percent}%")
+                progress_label.config(text=f"{percent}%")
                 app.update_idletasks()
                 continue
 
@@ -126,9 +125,9 @@ def start_search():
                 log_holo_cine(f"[ERROR] No '.holo' or '.cine' files for '{identifier}' found in its matching directory/directories.")
             
             # Update progress after each identifier is processed
-            search_progress_bar['value'] = i + 1
+            progress_bar['value'] = i + 1
             percent = int(((i + 1) / total_identifiers) * 100)
-            search_progress_label.config(text=f"{percent}%")
+            progress_label.config(text=f"{percent}%")
             app.update_idletasks()
 
         # --- Finalize .holo/.cine and HD results ---
@@ -161,7 +160,7 @@ def start_search():
         status_label.config(text=f"An error occurred: {e}")
     finally:
         # Hide the progress bar when done
-        search_progress_frame.pack_forget()
+        progress_frame.pack_forget()
 
 def find_latest_hd_folder(directory, source_filename):
     """
@@ -307,10 +306,10 @@ def export_ef_results():
 
     # Setup and show export progress bar
     total_ef_folders = len(latest_ef_folders)
-    export_progress_bar['maximum'] = total_ef_folders
-    export_progress_bar['value'] = 0
-    export_progress_label.config(text="0%")
-    export_progress_frame.pack(fill=tk.X, before=status_label)
+    progress_bar['maximum'] = total_ef_folders
+    progress_bar['value'] = 0
+    progress_label.config(text="0%")
+    progress_frame.pack(fill=tk.X, side=tk.TOP, pady=(0, 5)) # Pack above status label
     app.update_idletasks()
 
     # --- Create all result directories and subdirectories first ---
@@ -372,13 +371,13 @@ def export_ef_results():
                     log_ef(f"[EXPORT ERROR] {error_msg}")
         
         # Update export progress
-        export_progress_bar['value'] = i + 1
+        progress_bar['value'] = i + 1
         percent = int(((i + 1) / total_ef_folders) * 100)
-        export_progress_label.config(text=f"{percent}%")
+        progress_label.config(text=f"{percent}%")
         app.update_idletasks()
     
     # Hide the progress bar
-    export_progress_frame.pack_forget()
+    progress_frame.pack_forget()
 
     # --- Final status update ---
     if error_list:
@@ -399,7 +398,7 @@ def export_ef_results():
 # --- GUI Setup ---
 app = tk.Tk()
 app.title("File and Folder Finder")
-app.geometry("850x700") # Increased height for progress bars
+app.geometry("850x700")
 
 input_file_path = tk.StringVar()
 root_folder_path = tk.StringVar()
@@ -423,15 +422,6 @@ root_folder_label.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
 
 start_button = tk.Button(main_frame, text="Start Search", command=start_search)
 start_button.pack(pady=(10,5), ipady=5, fill=tk.X)
-
-# Frame for the search progress bar
-search_progress_frame = tk.Frame(main_frame)
-search_progress_frame.columnconfigure(0, weight=1) # Make progress bar expand
-search_progress_bar = ttk.Progressbar(search_progress_frame, orient='horizontal', mode='determinate')
-search_progress_bar.grid(row=0, column=0, sticky="ew")
-search_progress_label = tk.Label(search_progress_frame, text="0%")
-search_progress_label.grid(row=0, column=1, padx=(5,0))
-# The frame itself will be packed/unpacked in the start_search function
 
 # --- Export Frames for better layout ---
 export_found_frame = tk.LabelFrame(main_frame, text="Export Found Items", padx=5, pady=5)
@@ -479,18 +469,18 @@ log_notebook.add(ef_folder_tab, text="EF Folder Logs")
 ef_log_area = scrolledtext.ScrolledText(ef_folder_tab, wrap=tk.WORD, height=10, state=tk.DISABLED)
 ef_log_area.pack(fill=tk.BOTH, expand=True, padx=2, pady=2)
 
-# Create a bottom frame to hold the export progress and status label
+# Create a bottom frame to hold the progress bar and status label
 bottom_frame = tk.Frame(main_frame)
 bottom_frame.pack(side=tk.BOTTOM, pady=(5, 0), fill=tk.X)
 
-# Frame for the export progress bar
-export_progress_frame = tk.Frame(bottom_frame)
-export_progress_frame.columnconfigure(0, weight=1)
-export_progress_bar = ttk.Progressbar(export_progress_frame, orient='horizontal', mode='determinate')
-export_progress_bar.grid(row=0, column=0, sticky="ew")
-export_progress_label = tk.Label(export_progress_frame, text="0%")
-export_progress_label.grid(row=0, column=1, padx=(5,0))
-# The frame itself will be packed/unpacked in the export_ef_results function
+# Frame for the unified progress bar (used for both search and export)
+progress_frame = tk.Frame(bottom_frame)
+progress_frame.columnconfigure(0, weight=1)
+progress_bar = ttk.Progressbar(progress_frame, orient='horizontal', mode='determinate')
+progress_bar.grid(row=0, column=0, sticky="ew")
+progress_label = tk.Label(progress_frame, text="0%")
+progress_label.grid(row=0, column=1, padx=(5,0))
+# The frame itself will be packed/unpacked by the start_search and export_ef_results functions
 
 status_label = tk.Label(bottom_frame, text="Please select your input file and root folder.", relief="sunken", anchor="w", padx=5)
 status_label.pack(side=tk.BOTTOM, fill=tk.X)
