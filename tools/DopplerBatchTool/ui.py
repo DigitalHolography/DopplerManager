@@ -5,6 +5,7 @@ class AppUI:
     def __init__(self, root):
         root.title("Doppler Batch Tool")
         root.geometry("850x700")
+        root.iconbitmap("tools/DopplerBatchTool/icon.ico")
 
         self.input_file_path = tk.StringVar()
         self.root_folder_path = tk.StringVar()
