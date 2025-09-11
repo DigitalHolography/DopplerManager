@@ -41,7 +41,7 @@ class AppUI:
         export_found_frame.pack(fill=tk.X, pady=5)
         for i in range(2): export_found_frame.columnconfigure(i, weight=1)
 
-        self.export_holo_cine_button = tk.Button(export_found_frame, text="Export .holo/.cine paths", state=tk.DISABLED)
+        self.export_holo_cine_button = tk.Button(export_found_frame, text="Export .holo paths", state=tk.DISABLED)
         self.export_holo_cine_button.grid(row=0, column=0, padx=(0, 5), pady=5, ipady=5, sticky="ew")
 
         self.export_hd_button = tk.Button(export_found_frame, text="Export latest HD folder paths", state=tk.DISABLED)
@@ -67,7 +67,7 @@ class AppUI:
         log_notebook = ttk.Notebook(parent)
         log_notebook.pack(pady=5, fill=tk.BOTH, expand=True)
 
-        self.holo_cine_log_area = self._create_log_tab(log_notebook, ".holo/.cine Logs")
+        self.holo_cine_log_area = self._create_log_tab(log_notebook, ".holo Logs")
         self.hd_log_area = self._create_log_tab(log_notebook, "HD Folder Logs")
         self.ef_log_area = self._create_log_tab(log_notebook, "EF Folder Logs")
 
