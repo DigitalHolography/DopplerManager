@@ -39,10 +39,6 @@ def load_data(query):
     Loads data from the database using the provided SQL query.
     Caches the result to avoid redundant database calls.
     """
-    """ 
-    Loads data from the database using the provided SQL query.
-    Caches the result to avoid redundant database calls.
-    """
     try:
         df = pd.read_sql_query(query, conn)
         return df
@@ -52,9 +48,6 @@ def load_data(query):
 
 
 def launch_front():
-    """
-    Launches the frontend components of the Streamlit app.
-    """
     """
     Launches the frontend components of the Streamlit app.
     """
