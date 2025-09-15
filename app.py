@@ -50,7 +50,7 @@ def launch_front():
     Launches the frontend components of the Streamlit app.
     """
     # --- Page Configuration ---
-    st.set_page_config(page_title="Render Explorer", layout="wide")
+    st.set_page_config(page_title="FetchDopplerDB", layout="wide")
 
     # --- Sidebar ---
     st.sidebar.title("Actions")
@@ -78,7 +78,7 @@ def launch_front():
         st.rerun()
 
     # --- Main UI ---
-    st.title("EyeFlowDB")
+    st.title("FetchDopplerDB")
 
     query = """
         SELECT
@@ -97,12 +97,11 @@ def launch_front():
 
     if combined_df.empty:
         st.warning("The database is empty. Please start a scan.")
-        return  # Stop execution if there's no data
+        return
 
     # --- Filtering ---
     st.header("HoloDoppler Data")
 
-    # Get unique values for filters from the combined DataFrame
     unique_tags = combined_df["measure_tag"].dropna().unique()
     selected_tags = st.multiselect("Filter by measure tag", options=unique_tags)
 
@@ -127,8 +126,6 @@ def launch_front():
         .drop_duplicates()
         .reset_index(drop=True)
     )
-
-    st.header("Found HoloDoppler folders")
     st.markdown(
         f"**Showing {shown_hd_folders} of {total_hd_folders} HoloDoppler folders.**"
     )
@@ -157,7 +154,6 @@ def launch_front():
         total_ef_folders = ef_base_df["ef_folder"].nunique()
         shown_ef_folders = len(ef_display_df)
 
-        st.header("Found EyeFlow Folders")
         st.markdown(
             f"**Showing {shown_ef_folders} of {total_ef_folders} EyeFlow folders.**"
         )
