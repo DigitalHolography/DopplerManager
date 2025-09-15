@@ -205,7 +205,7 @@ def get_num_after_hd(file_path) -> int:
     return -1
 
 
-def get_eyeflow_version(ef_folder: Path, hd_folder_name: str) -> str:
+def get_eyeflow_version(ef_folder: Path, hd_folder_name: str) -> str | None:
     # TODO: To implement better way
 
     # Logger.debug(f"Getting eyeflow version for EF folder: {ef_folder}, HD folder name: {hd_folder_name}", tags="FILESYSTEM")
@@ -216,13 +216,13 @@ def get_eyeflow_version(ef_folder: Path, hd_folder_name: str) -> str:
         Logger.error(
             f"Eyeflow log folder does not exist: {log_folder}", tags="FILESYSTEM"
         )
-        return "None"
+        return None
 
     file_path = log_folder / f"{hd_folder_name}_log.txt"
 
     if not file_path.exists() or not file_path.is_file():
         Logger.error(f"Eyeflow log file does not exist: {file_path}", tags="FILESYSTEM")
-        return "None"
+        return None
 
     with open(file_path, "r", encoding="utf-8") as f:
         lines = f.readlines()
@@ -232,18 +232,27 @@ def get_eyeflow_version(ef_folder: Path, hd_folder_name: str) -> str:
         i for i, line in enumerate(lines) if line.strip() and set(line.strip()) == {"="}
     ]
 
-    if len(bar_lines) < 2:
+    if len(bar_lines) < 4:
         Logger.error(
             f"Eyeflow log file does not contain block: {file_path}", tags="FILESYSTEM"
         )
-        return "None"
+        return None
 
-    # Get the last two bars to find the last block
-    start = bar_lines[-2]
-    end = bar_lines[-1]
+    # Get the second block
+    start = bar_lines[2]
+    end = bar_lines[3]
 
     # Extract lines between the bars (excluding the bars themselves)
     block_lines = lines[start + 1 : end]
 
-    # Join and strip trailing spaces/newlines
-    return "".join(block_lines).strip()
+    match len(block_lines):
+        # Got the "ERROR" (ver. si not found)
+        case 1:
+            return None
+
+        # Got the release version
+        case 2:
+            return block_lines[1]
+
+        case _:
+            return block_lines[-1].split(":")[1][1:]
