@@ -15,7 +15,7 @@ def initialize_database(db_path):
     """
     ff_instance = FileFinder(DB(db_path))
     ff_instance.CreateDB()
-    return ff_instance.DBClass.SQLconnect, ff_instance
+    return ff_instance.DB.SQLconnect, ff_instance
 
 
 DB_FILE = ConfigManager.get("DB.DB_PATH", "renders.db")

@@ -6,112 +6,107 @@ from src.Database.DBClass import DB
 
 
 class FileFinder:
-    def __init__(self, DBClass: DB):
+    def __init__(self, DB: DB):
         self.searchFolder = ""
-        self.DBClass = DBClass
+        self.DB = DB
 
     def CreateDB(self) -> None:
-        self.DBClass.create_table(
-            "hd_data",
+        self.DB.create_table(
+            "holo_data",
             {
                 "id": "INTEGER PRIMARY KEY AUTOINCREMENT",
-                "hd_folder": "TEXT",
-                "measure_tag": "TEXT",
-                "render_number": "INTEGER",
+                "path": "VARCHAR(255) NOT NULL",
+                "created_at": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+            },
+        )
+
+        self.DB.create_table(
+            "hd_render",
+            {
+                "id": "INTEGER PRIMARY KEY AUTOINCREMENT",
+                "holo_id": "INTEGER NOT NULL",
+                "path": "VARCHAR(255) NOT NULL",
+                "tag": "VARCHAR(255) NOT NULL",
+                "render_number": "INTEGER NOT NULL",
                 "rendering_parameters": "TEXT",
-                "version_text": "TEXT",
+                "version": "VARCHAR(255)",
+                "updated_at": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+                "FOREIGN KEY (holo_id)": "REFERENCES holo_data (id)",
             },
         )
 
-        self.DBClass.create_table(
-            "raw_files",
+        self.DB.create_table(
+            "ef_render",
             {
                 "id": "INTEGER PRIMARY KEY AUTOINCREMENT",
-                "hd_id": "INTEGER",
-                "path": "TEXT",
-                "size_MB": "INTEGER",
-                "FOREIGN KEY (hd_id)": "REFERENCES hd_data (id)",
-            },
-        )
-
-        self.DBClass.create_table(
-            "ef_data",
-            {
-                "id": "INTEGER PRIMARY KEY AUTOINCREMENT",
-                "hd_id": "INTEGER",
-                "ef_folder": "TEXT",
-                "version_text": "TEXT",
-                "json_path": "TEXT",
-                "json_content": "TEXT",
-                "FOREIGN KEY (hd_id)": "REFERENCES hd_data (id)",
-            },
-        )
-
-        self.DBClass.create_table(
-            "ef_pngs",
-            {
-                "id": "INTEGER PRIMARY KEY AUTOINCREMENT",
-                "ef_id": "INTEGER",
-                "path": "TEXT",
-                "type": "INTEGER",
-                "FOREIGN KEY (ef_id)": "REFERENCES ef_data (id)",
+                "hd_id": "INTEGER NOT NULL",
+                "render_number": "INTEGER NOT NULL",
+                "path": "VARCHAR(255) NOT NULL",
+                "input_parameters": "TEXT",
+                "version": "VARCHAR(255)",
+                "report_path": "VARCHAR(255)",
+                "updated_at": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+                "FOREIGN KEY (hd_id)": "REFERENCES hd_render (id)",
             },
         )
 
     def ClearDB(self) -> None:
         # Should really change this to delete the file instead of DROPping tables
-        table_names = ["ef_pngs", "raw_files", "ef_data", "hd_data"]
+        table_names = ["ef_pngs", "raw_files", "ef_render", "hd_render"]
         for table in table_names:
-            self.DBClass.SQLconnect.execute(f"DROP TABLE IF EXISTS {table}")
-        self.DBClass.SQLconnect.commit()
+            self.DB.SQLconnect.execute(f"DROP TABLE IF EXISTS {table}")
+        self.DB.SQLconnect.commit()
         self.CreateDB()
 
-    def InsertHDdata(
+    def InsertHDRender(
         self,
-        hd_folder: str,
-        measure_tag: str,
+        holo_id: int,
+        path: str,
+        tag: str,
         render_number: int,
         rendering_parameters: str,
-        version_text: str,
+        version: str | None,
+        updated_at: str | None,
     ) -> int | None:
-        return self.DBClass.insert(
-            "hd_data",
+        return self.DB.insert(
+            "hd_render",
             {
-                "hd_folder": hd_folder,
-                "measure_tag": measure_tag,
+                "holo_id": holo_id,
+                "path": path,
+                "tag": tag,
                 "render_number": render_number,
                 "rendering_parameters": rendering_parameters,
-                "version_text": version_text,
+                "version": version,
+                "updated_at": updated_at,
             },
         )
 
-    def InsertRawFile(self, hd_id: int, path: str, size_MB: int) -> int | None:
-        return self.DBClass.insert(
-            "raw_files", {"hd_id": hd_id, "path": path, "size_MB": size_MB}
-        )
+    def InsertHoloFile(self, hd_id: int, path: str) -> int | None:
+        return self.DB.insert("holo_files", {"hd_id": hd_id, "path": path})
 
-    def InsertEFdata(
+    def InsertEFRender(
         self,
         hd_id: int,
-        ef_folder: str,
-        version_text: str | None,
-        json_path: str,
-        json_content: str,
+        render_number: int,
+        path: str,
+        input_parameters: str | None,
+        version: str | None,
+        report_path: str | None,
+        created_at: str,
+        updated_at: str,
     ) -> int | None:
-        return self.DBClass.insert(
-            "ef_data",
+        return self.DB.insert(
+            "ef_render",
             {
                 "hd_id": hd_id,
-                "ef_folder": ef_folder,
-                "version_text": version_text,
-                "json_path": json_path,
-                "json_content": json_content,
+                "render_number": render_number,
+                "path": path,
+                "input_parameters": input_parameters,
+                "version": version,
+                "report_path": report_path,
+                "created_at": created_at,
+                "updated_at": updated_at,
             },
-        )
-
-    def InsertEFpng(self, ef_id: int, path: str, type: str) -> int | None:
-        return self.DBClass.insert(
-            "ef_pngs", {"ef_id": ef_id, "path": path, "type": type}
         )
 
     def Findfiles(self, root_dir: str):
@@ -151,12 +146,12 @@ class FileFinder:
 
                 # --- EF data ---
                 eyeflow_folder = hd_folder / "eyeflow"
-                ef_data = []
+                ef_render = []
                 if eyeflow_folder.exists():
-                    ef_data = FinderUtils.get_ef_folders_data(eyeflow_folder)
+                    ef_render = FinderUtils.get_ef_folders_data(eyeflow_folder)
 
                 hd_folder_path = hd_folder.absolute().as_posix()
-                hd_rowId = self.InsertHDdata(
+                hd_rowId = self.InsertHDRender(
                     hd_folder_path,
                     measure_tag,
                     FinderUtils.get_num_after_hd(hd_folder_path),
@@ -182,8 +177,8 @@ class FileFinder:
                         )
                         continue
 
-                for ef in ef_data:
-                    last_row = self.InsertEFdata(
+                for ef in ef_render:
+                    last_row = self.InsertEFRender(
                         hd_id=hd_rowId,
                         ef_folder=ef["ef_folder"],
                         version_text=FinderUtils.get_eyeflow_version(

@@ -1,0 +1,38 @@
+// Use DBML to define your database structure
+// Docs: https://dbml.dbdiagram.io/docs
+
+Table hd_render {
+  id integer [primary key]
+  holo_id integer [not null]
+  path varchar [not null]
+  tag varchar [not null]
+  render_number interger [not null]
+  rendering_parameters text
+  version varchar
+  updated_at timestamp
+}
+
+Table ef_render {
+  id integer [primary key]
+  hd_id integer [not null]
+  render_number interger [not null]
+  path varchar [not null]
+  input_parameters text
+  version varchar
+  report_path varchar
+  updated_at timestamp
+}
+
+Table holo_data {
+  id integer [primary key]
+  path varchar // [note: 'Content of the post']
+  created_at timestamp [not null]
+}
+
+
+
+Ref: ef_render.hd_id > hd_render.id // many-to-one
+
+Ref: hd_render.holo_id > holo_data.id
+
+//Ref: users.id < follows.followed_user_id
