@@ -11,8 +11,6 @@ class FileFinder:
         self.DBClass = DBClass
 
     def CreateDB(self) -> None:
-        # cursor = self.SQLconnect.cursor()
-
         self.DBClass.create_table(
             "hd_data",
             {
@@ -25,16 +23,6 @@ class FileFinder:
             },
         )
 
-        # cursor.execute('''
-        #     CREATE TABLE IF NOT EXISTS hd_data (
-        #         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        #         hd_folder TEXT,
-        #         measure_tag TEXT,
-        #         rendering_parameters TEXT,
-        #         version_text TEXT
-        #     )
-        # ''')
-
         self.DBClass.create_table(
             "raw_files",
             {
@@ -45,16 +33,6 @@ class FileFinder:
                 "FOREIGN KEY (hd_id)": "REFERENCES hd_data (id)",
             },
         )
-
-        # cursor.execute('''
-        #     CREATE TABLE IF NOT EXISTS raw_files (
-        #         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        #         hd_id INTEGER,
-        #         path TEXT,
-        #         size_MB INTEGER,
-        #         FOREIGN KEY (hd_id) REFERENCES hd_data (id)
-        #     )
-        # ''')
 
         self.DBClass.create_table(
             "ef_data",
@@ -69,18 +47,6 @@ class FileFinder:
             },
         )
 
-        # cursor.execute('''
-        #     CREATE TABLE IF NOT EXISTS ef_data (
-        #         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        #         hd_id INTEGER,
-        #         ef_folder TEXT,
-        #         version_text TEXT,
-        #         json_path TEXT,
-        #         json_content TEXT,
-        #         FOREIGN KEY (hd_id) REFERENCES hd_data (id)
-        #     )
-        # ''')
-
         self.DBClass.create_table(
             "ef_pngs",
             {
@@ -91,16 +57,6 @@ class FileFinder:
                 "FOREIGN KEY (ef_id)": "REFERENCES ef_data (id)",
             },
         )
-
-        # cursor.execute('''
-        #     CREATE TABLE IF NOT EXISTS ef_pngs (
-        #         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        #         ef_id INTEGER,
-        #         path TEXT,
-        #         type TEXT,
-        #         FOREIGN KEY (ef_id) REFERENCES ef_data (id)
-        #     )
-        # ''')
 
     def ClearDB(self) -> None:
         # Should really change this to delete the file instead of DROPping tables
@@ -118,14 +74,6 @@ class FileFinder:
         rendering_parameters: str,
         version_text: str,
     ) -> int | None:
-        # cursor = self.SQLconnect.cursor()
-
-        # cursor.execute('''
-        #     INSERT INTO hd_data (hd_folder, measure_tag, rendering_parameters, version_text)
-        #     VALUES (?, ?, ?, ?)
-        # ''', (hd_folder, measure_tag, rendering_parameters, version_text))
-
-        # self.SQLconnect.commit()
 
         return self.DBClass.insert(
             "hd_data",
@@ -139,15 +87,6 @@ class FileFinder:
         )
 
     def InsertRawFile(self, hd_id: int, path: str, size_MB: int) -> int | None:
-        # cursor = self.SQLconnect.cursor()
-
-        # cursor.execute('''
-        #     INSERT INTO raw_files (hd_id, path, size_MB)
-        #     VALUES (?, ?, ?)
-        # ''', (hd_id, path, size_MB))
-
-        # self.SQLconnect.commit()
-
         return self.DBClass.insert(
             "raw_files", {"hd_id": hd_id, "path": path, "size_MB": size_MB}
         )
@@ -160,16 +99,6 @@ class FileFinder:
         json_path: str,
         json_content: str,
     ) -> int | None:
-        # cursor = self.SQLconnect.cursor()
-
-        # cursor.execute('''
-        #     INSERT INTO ef_data (hd_id, ef_folder, version_text, json_path, json_content)
-        #     VALUES (?, ?, ?, ?, ?)
-        # ''', (hd_id, ef_folder, version_text, json_path, json_content))
-
-        # self.SQLconnect.commit()
-
-        # return cursor.lastrowid
         return self.DBClass.insert(
             "ef_data",
             {
@@ -182,17 +111,6 @@ class FileFinder:
         )
 
     def InsertEFpng(self, ef_id: int, path: str, type: str) -> int | None:
-        # cursor = self.SQLconnect.cursor()
-
-        # cursor.execute('''
-        #     INSERT INTO ef_pngs (ef_id, path, type)
-        #     VALUES (?, ?, ?)
-        # ''', (ef_id, path, type))
-
-        # self.SQLconnect.commit()
-
-        # return cursor.lastrowid
-
         return self.DBClass.insert(
             "ef_pngs", {"ef_id": ef_id, "path": path, "type": type}
         )
@@ -211,7 +129,6 @@ class FileFinder:
                 ):
                     continue
 
-                # Logger.debug(f"Found HD folder: {hd_folder}", tags="FILESYSTEM")
                 # --- HD data ---
                 rendering_params = None
 
@@ -221,7 +138,6 @@ class FileFinder:
                 rendering_json = hd_folder / (
                     f"{hd_folder.name}_RenderingParameters.json"
                 )
-                # Logger.debug(f"param = {rendering_json} | hdfol = {hd_folder}\n {f"{hd_folder.name}"}")
                 if rendering_json.exists():
                     rendering_params = FinderUtils.safe_json_load(rendering_json)
 
@@ -229,8 +145,6 @@ class FileFinder:
                 version_text = FinderUtils.safe_file_read(version_file)
                 if version_text is None:
                     version_text = ""
-
-                # Simple parsing for measure_tag from folder name like "date_TAG_HD_..."
                 try:
                     measure_tag = hd_folder.name.split("_")[1]
                 except IndexError:
@@ -247,7 +161,6 @@ class FileFinder:
                     hd_folder_path,
                     measure_tag,
                     FinderUtils.get_num_after_hd(hd_folder_path),
-                    # FinderUtils.get_file_name_without_hd(hd_folder),
                     json.dumps(rendering_params),
                     version_text,
                 )
@@ -287,11 +200,3 @@ class FileFinder:
                             tags="DATABASE",
                         )
                         continue
-
-                # data.append({
-                #     "hd_folder": str(hd_folder),
-                #     "raw_files": raw_data,
-                #     "rendering_parameters": rendering_params,
-                #     "version_text": version_text,
-                #     "ef_data": ef_data
-                # })

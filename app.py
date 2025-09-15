@@ -13,8 +13,6 @@ def initialize_database(db_path):
     Connects to the database, instantiates the FileFinder,
     and ensures tables are created. This runs only once.
     """
-    # st.toast("Initializing database connection...")
-    # conn = sqlite3.connect(db_path, check_same_thread=False)
     ff_instance = FileFinder(DB(db_path))
     ff_instance.CreateDB()
     return ff_instance.DBClass.SQLconnect, ff_instance

@@ -2,9 +2,6 @@ import sqlite3
 import os
 from src.Logger.LoggerClass import Logger
 from src.Utils.ParamsLoader import ConfigManager
-# This class should can have its SQL Injection safety checks improved
-# It should be used without user input until then
-
 
 class DB:
     # TODO: Implem in_memory DB option
