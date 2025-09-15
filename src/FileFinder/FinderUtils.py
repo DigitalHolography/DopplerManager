@@ -31,7 +31,7 @@ def safe_json_load(file_path: Path | str):
         return None
 
 
-def safe_file_read(file_path: Path | str):
+def safe_file_read(file_path: Path | str) -> str | None:
     try:
         with open(file_path, "r") as f:
             return f.read()
@@ -42,12 +42,11 @@ def safe_file_read(file_path: Path | str):
         return None
 
 
-def safe_isdir(path: Path | str):
+def safe_isdir(path: Path | str) -> bool:
     try:
         path = Path(path)
         return path.is_dir()
     except (PermissionError, OSError) as e:
-        # print(f"Access denied or error reading directory: {path} – {e}")
         Logger.error(
             f"Access denied or error reading directory: {path} – {e}", tags="FILESYSTEM"
         )
@@ -65,7 +64,6 @@ def safe_iterdir(path: Path | str):
         Logger.error(
             f"Access denied or error reading directory: {path} – {e}", tags="FILESYSTEM"
         )
-        # print(f"Access denied or error reading directory: {path} – {e}")
         return []
 
 
