@@ -74,7 +74,6 @@ class FileFinder:
         rendering_parameters: str,
         version_text: str,
     ) -> int | None:
-
         return self.DBClass.insert(
             "hd_data",
             {
@@ -95,7 +94,7 @@ class FileFinder:
         self,
         hd_id: int,
         ef_folder: str,
-        version_text: str,
+        version_text: str | None,
         json_path: str,
         json_content: str,
     ) -> int | None:
