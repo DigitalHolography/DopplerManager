@@ -1,24 +1,14 @@
 import os
 import json
 import re
+import datetime
 
 from pathlib import Path
 from src.Logger.LoggerClass import Logger
 
 
-def is_hd_folder(name: str):
-    return "_HD_" in name
-
-
 def is_ef_folder(name: str):
     return "_EF_" in name
-
-
-def get_file_size(file_path: Path | str):
-    try:
-        return os.path.getsize(file_path) / (1024 * 1024)  # Size in MB
-    except Exception:
-        return None
 
 
 def safe_json_load(file_path: Path | str):
@@ -48,7 +38,6 @@ def safe_isdir(path: Path | str):
         path = Path(path)
         return path.is_dir()
     except (PermissionError, OSError) as e:
-        # print(f"Access denied or error reading directory: {path} – {e}")
         Logger.error(
             f"Access denied or error reading directory: {path} – {e}", tags="FILESYSTEM"
         )
@@ -66,20 +55,7 @@ def safe_iterdir(path: Path | str):
         Logger.error(
             f"Access denied or error reading directory: {path} – {e}", tags="FILESYSTEM"
         )
-        # print(f"Access denied or error reading directory: {path} – {e}")
         return []
-
-
-def get_raw_data(raw_folder: Path) -> list[dict]:
-    raw_data = []
-
-    if raw_folder.exists():
-        raw_files = list(raw_folder.glob("*.raw"))  # To check if needed
-        h5_files = list(raw_folder.glob("*.h5"))
-        for f in raw_files + h5_files:
-            raw_data.append({"path": str(f), "size": get_file_size(f)})
-
-    return raw_data
 
 
 def get_ef_folders_data(eyeflow_folder: Path) -> list[dict]:
@@ -108,101 +84,13 @@ def get_ef_folders_data(eyeflow_folder: Path) -> list[dict]:
 
         ef_data.append(
             {
-                "ef_folder": str(ef_folder),
+                "ef_folder": ef_folder,
                 "png_files": png_paths,
                 "InputEyeFlowParams": InputEyeFlowParams,
             }
         )
 
     return ef_data
-
-
-def get_png_type(path: Path) -> str:
-    path = Path(path)
-    if not path.exists() or not path.is_file() or path.suffix.lower() != ".png":
-        return "None"
-
-    name = path.stem  # Get the file name without extension
-
-    match = re.search(r"HD_\d+_", name)
-
-    if match:
-        # Extract the part after the matched pattern
-        return name[match.end() :]
-    else:
-        return "None"
-
-
-def scan_directories(root_dir: str):
-    data = []
-
-    for date_folder in safe_iterdir(root_dir):
-        Logger.info(f"Scanning date folder: {date_folder}")
-        if not safe_isdir(date_folder):
-            continue
-
-        for hd_folder in safe_iterdir(date_folder):
-            if not hd_folder.is_dir() or not is_hd_folder(hd_folder.name):
-                continue
-
-            # --- HD data ---
-            rendering_params = None
-            version_text = None
-
-            raw_folder = hd_folder / "raw"
-            raw_data = get_raw_data(raw_folder)
-
-            rendering_json = hd_folder / f"{hd_folder}_RenderingParameters.json"
-            if rendering_json.exists():
-                rendering_params = safe_json_load(rendering_json)
-
-            version_file = hd_folder / "version.txt"
-            version_text = safe_file_read(version_file)
-
-            # --- EF data ---
-            eyeflow_folder = hd_folder / "eyeflow"
-            ef_data = []
-
-            if eyeflow_folder.exists():
-                ef_data = get_ef_folders_data(eyeflow_folder)
-
-            data.append(
-                {
-                    "hd_folder": str(hd_folder),
-                    "raw_files": raw_data,
-                    "rendering_parameters": rendering_params,
-                    "version_text": version_text,
-                    "ef_data": ef_data,
-                }
-            )
-
-    return data
-
-
-def get_file_name_without_hd(folder_path):
-    # Get the base name of the file from the folder path
-    file_name = os.path.basename(folder_path)
-
-    # Find the index of '_HD_'
-    hd_index = file_name.find("_HD_")
-
-    if hd_index != -1:
-        # Slice the string up to '_HD_'
-        file_name = file_name[:hd_index]
-
-    return file_name
-
-
-def get_num_after_hd(file_path) -> int:
-    # Get the base name of the file from the file path
-    file_name = os.path.basename(file_path)
-
-    # Use regular expression to find the pattern HD_[any number]_
-    hd_index = file_name.find("_HD_")
-
-    if hd_index != -1:
-        return int(file_name[hd_index + 4 :])  # len("_HD_") = 4
-    return -1
 
 
 def get_eyeflow_version(ef_folder: Path, hd_folder_name: str) -> str | None:
@@ -251,8 +139,113 @@ def get_eyeflow_version(ef_folder: Path, hd_folder_name: str) -> str | None:
             return None
 
         # Got the release version
-        case 2:
+        case 2:  # Release PulseWave
             return block_lines[1]
 
-        case _:
+        case 3:  # Release Eyeflow
+            return block_lines[0].split(" ")[-1]
+
+        case 4:  # dev Eyeflow
             return block_lines[-1].split(":")[1][1:]
+
+        case _:
+            Logger.error(
+                f"Wrong Split to block lines for {ef_folder} ({block_lines})",
+                "EYEFLOW",
+            )
+
+
+def find_all_holo_files(root_folder: Path) -> list[Path]:
+    """
+    Searches for all .holo files recursively from the root_path.
+    Returns a list of unique, absolute file paths.
+    """
+    found_files = []
+    search_paths = [root_folder]
+
+    for path in search_paths:
+        for dirpath, _, filenames in os.walk(path):
+            for filename in filenames:
+                if filename.endswith(".holo"):
+                    absolute_path = os.path.abspath(os.path.join(dirpath, filename))
+                    found_files.append(absolute_path)
+
+    return found_files
+
+
+def find_all_hd_folders_from_holo(holo_file_path: Path) -> dict[int, Path]:
+    source_filename = os.path.basename(holo_file_path)
+    base_name = os.path.splitext(source_filename)[0]
+    hd_pattern = re.compile(f"^{re.escape(base_name)}_HD_(\\d+)$")
+
+    hd_folders = {}
+
+    parent_dir = os.path.dirname(holo_file_path)
+    for f in os.listdir(parent_dir):
+        f_path = os.path.join(parent_dir, f)
+        if not os.path.isdir(f_path):
+            continue
+
+        match = hd_pattern.match(f)
+        if match:
+            number = int(match.group(1))
+            hd_folders[number] = Path(f_path)
+
+    return hd_folders
+
+
+def parse_folder_date(path: Path) -> datetime.date:
+    folder_name = os.path.basename(path)
+    date_pattern = re.compile(r"^(\d{2})(\d{2})(\d{2}).*$")
+
+    matchs = date_pattern.match(folder_name)
+    if not matchs:  # or len(matchs.groups()) == 3:
+        Logger.error(
+            f"{path} does not match date format, defaulting to creation date of folder"
+        )
+        return datetime.date.fromtimestamp(os.path.getctime(path))
+
+    try:
+        return datetime.date(
+            2000 + int(matchs.group(1)), int(matchs.group(2)), int(matchs.group(3))
+        )
+    except Exception as _:
+        Logger.error(f"Wrong date format: {folder_name} ({matchs.groups})")
+        return datetime.date.fromtimestamp(os.path.getctime(path))
+
+
+def get_last_update(path: Path) -> datetime.datetime | None:
+    if not path.exists():
+        Logger.error(f"Path does not exists to get its update: {path}")
+        return None
+
+    return datetime.datetime.fromtimestamp(os.path.getmtime(path))
+
+
+def get_meusure_tag(path: Path) -> str | None:
+    try:
+        return path.name.split("_")[1]
+    except IndexError:
+        return None
+
+
+def get_render_number(path: Path) -> int | None:
+    try:
+        return int(path.name.split("_")[-1])
+    except Exception as _:
+        return None
+
+
+def get_report_pdf(ef_folder: Path) -> Path | None:
+    ef_folder = Path(ef_folder)
+    pdf_folder = ef_folder / "pdf"
+
+    if not os.path.isdir(pdf_folder):
+        return None
+
+    pdfs = os.listdir(pdf_folder)
+    if not pdfs or len(pdfs) == 0:
+        return None
+
+    # Need to change in case of more than one pdf
+    return pdf_folder / pdfs[0]

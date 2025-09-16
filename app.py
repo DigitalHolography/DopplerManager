@@ -60,14 +60,14 @@ def launch_front():
         if Path(scan_path).is_dir():
             st.sidebar.info("The scan may take a long time. Please wait.")
             with st.spinner(f"Scanning {scan_path}..."):
-                try:
-                    ff.Findfiles(scan_path)
-                    st.sidebar.success("Scan completed successfully!")
-                    # Invalidate data caches to force reload
-                    st.cache_data.clear()
-                    st.rerun()  # Refresh the app to show new data
-                except Exception as e:
-                    st.sidebar.error(f"An error occurred: {e}")
+                # try:
+                ff.Findfiles(scan_path)
+                st.sidebar.success("Scan completed successfully!")
+                # Invalidate data caches to force reload
+                st.cache_data.clear()
+                st.rerun()  # Refresh the app to show new data
+        # except Exception as e:
+        # st.sidebar.error(f"An error occurred: {e}")
         else:
             st.sidebar.error("The specified path is not a valid directory.")
 
