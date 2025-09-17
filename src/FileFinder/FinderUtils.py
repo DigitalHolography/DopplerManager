@@ -16,9 +16,7 @@ def safe_json_load(file_path: Path | str):
         with open(file_path, "r") as f:
             return json.load(f)
     except Exception as e:
-        Logger.error(
-            f"Access denied or error reading json: {file_path} – {e}", tags="FILESYSTEM"
-        )
+        Logger.error(f"{e}", tags="FILESYSTEM")
         return None
 
 
@@ -27,9 +25,7 @@ def safe_file_read(file_path: Path | str) -> str | None:
         with open(file_path, "r") as f:
             return f.read()
     except Exception as e:
-        Logger.error(
-            f"Access denied or error reading file: {file_path} – {e}", tags="FILESYSTEM"
-        )
+        Logger.error(f"{e}", tags="FILESYSTEM")
         return None
 
 
@@ -93,10 +89,35 @@ def get_ef_folders_data(eyeflow_folder: Path) -> list[dict]:
     return ef_data
 
 
+def find_version_in_log(file_path: Path) -> str | None:
+    """
+    Efficiently finds and extracts a version number from a log file using regex.
+    """
+    version_patterns = [
+        re.compile(r"PulseWave GitHub version (v[\d.]+)"),
+        re.compile(r"Most recent tag : ([-a-z0-9.]+)"),
+        re.compile(r"Welcome to EyeFlow (v[\d.]+)"),
+    ]
+
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            for line in f:
+                for pattern in version_patterns:
+                    match = pattern.search(line)
+                    if match:
+                        # Return the version string as soon as it's found
+                        return match.group(1).strip()
+    except FileNotFoundError:
+        Logger.error(
+            f"File not found during version search: {file_path}", tags="FILESYSTEM"
+        )
+        return None
+
+    return None
+
+
 def get_eyeflow_version(ef_folder: Path, hd_folder_name: str) -> str | None:
     # TODO: To implement better way
-
-    # Logger.debug(f"Getting eyeflow version for EF folder: {ef_folder}, HD folder name: {hd_folder_name}", tags="FILESYSTEM")
 
     ef_folder = Path(ef_folder)
     log_folder = ef_folder / "log"
@@ -106,54 +127,34 @@ def get_eyeflow_version(ef_folder: Path, hd_folder_name: str) -> str | None:
         )
         return None
 
-    file_path = log_folder / f"{hd_folder_name}_log.txt"
+    file_path_list = get_all_files_extension(log_folder, "txt")
 
-    if not file_path.exists() or not file_path.is_file():
-        Logger.error(f"Eyeflow log file does not exist: {file_path}", tags="FILESYSTEM")
-        return None
-
-    with open(file_path, "r", encoding="utf-8") as f:
-        lines = f.readlines()
-
-    # Find indices of lines that are bars (lines containing only '=' chars)
-    bar_lines = [
-        i for i, line in enumerate(lines) if line.strip() and set(line.strip()) == {"="}
-    ]
-
-    if len(bar_lines) < 4:
-        Logger.warn(
-            f"Eyeflow log file does not contain version block: {file_path}",
+    if not file_path_list:
+        Logger.error(
+            f"Eyeflow log file does not exist inside folder: {log_folder}",
             tags="FILESYSTEM",
         )
         return None
 
-    # Get the second block
-    start = bar_lines[2]
-    end = bar_lines[3]
+    if len(file_path_list) > 1:
+        Logger.warn(
+            f"More than one log file found inside {log_folder}", tags="FILESYSTEM"
+        )
 
-    # Extract lines between the bars (excluding the bars themselves)
-    block_lines = lines[start + 1 : end]
+    # We take the first found
+    file_path = file_path_list[0]
+    # file_path = log_folder / f"{hd_folder_name}_log.txt"
 
-    match len(block_lines):
-        # Got the "ERROR" (ver. si not found)
-        case 1:
-            return None
+    version = find_version_in_log(file_path)
 
-        # Got the release version
-        case 2:  # Release PulseWave
-            return block_lines[1]
+    if not version:
+        Logger.warn(
+            f"No version string in log file: {file_path}",
+            tags="FILESYSTEM",
+        )
+        return None
 
-        case 3:  # Release Eyeflow
-            return block_lines[0].split(" ")[-1]
-
-        case 4:  # dev Eyeflow
-            return block_lines[-1].split(":")[1][1:]
-
-        case _:
-            Logger.warn(
-                f"Wrong Split to block lines for {ef_folder} ({block_lines})",
-                "EYEFLOW",
-            )
+    return version
 
 
 def find_all_holo_files(root_folder: Path) -> list[Path]:
@@ -165,10 +166,14 @@ def find_all_holo_files(root_folder: Path) -> list[Path]:
     search_paths = [root_folder]
 
     for path in search_paths:
-        for dirpath, _, filenames in os.walk(path):
+        for dirpath, dirnames, filenames in os.walk(path):
+            # Only keeps the folders that does not contain "_HD_"
+            dirnames[:] = [d for d in dirnames if "_HD_" not in d]
+
             for filename in filenames:
                 if filename.endswith(".holo"):
-                    absolute_path = os.path.abspath(os.path.join(dirpath, filename))
+                    # absolute_path = os.path.abspath(os.path.join(dirpath, filename))
+                    absolute_path = (Path(dirpath) / filename).resolve()
                     found_files.append(absolute_path)
 
     return found_files
@@ -182,15 +187,14 @@ def find_all_hd_folders_from_holo(holo_file_path: Path) -> dict[int, Path]:
     hd_folders = {}
 
     parent_dir = os.path.dirname(holo_file_path)
-    for f in os.listdir(parent_dir):
-        f_path = os.path.join(parent_dir, f)
-        if not os.path.isdir(f_path):
+    for entry in os.scandir(parent_dir):
+        if not entry.is_dir():
             continue
 
-        match = hd_pattern.match(f)
+        match = hd_pattern.match(entry.name)
         if match:
             number = int(match.group(1))
-            hd_folders[number] = Path(f_path)
+            hd_folders[number] = Path(entry.path)
 
     return hd_folders
 
@@ -265,3 +269,17 @@ def json_dump_nullable(text: str | None):
         return json.dumps(text)
 
     return None
+
+
+def get_all_files_extension(folder: Path, extension: str) -> list[Path]:
+    """
+    Retrieves all files with a specified extension from a folder.
+
+    Args:
+        folder (Path): A Path object representing the folder to search in.
+        extension (str): The file extension to search for (e.g., 'txt', 'pdf').
+
+    Returns:
+        list[Path]: A list of Path objects for all files that match the given extension.
+    """
+    return list(folder.glob(f"*.{extension}"))

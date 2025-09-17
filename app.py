@@ -1,10 +1,12 @@
 import streamlit as st
 import pandas as pd
 from pathlib import Path
+import time
 
 from src.FileFinder.FileFinderClass import FileFinder
 from src.Database.DBClass import DB
 from src.Utils.ParamsLoader import ConfigManager
+from src.Logger.LoggerClass import Logger
 
 
 @st.cache_resource
@@ -59,7 +61,10 @@ def launch_front():
         if Path(scan_path).is_dir():
             st.sidebar.info("The scan may take a long time. Please wait.")
             with st.spinner(f"Scanning {scan_path}..."):
+                t1 = time.time()
                 ff.Findfiles(scan_path)
+                t2 = time.time()
+                Logger.info(f"Time taken: {t2 - t1:.6f}", "TIME")
                 st.sidebar.success("Scan completed successfully!")
                 st.cache_data.clear()
                 st.rerun()
@@ -109,14 +114,14 @@ def launch_front():
 
     total_holo_files = combined_df["holo_file"].nunique()
     shown_holo_files = filtered_holo_df["holo_file"].nunique()
-    
+
     holo_display_df = (
         filtered_holo_df[["holo_file", "measure_tag"]]
         .drop_duplicates()
         .reset_index(drop=True)
     )
     st.markdown(f"**Showing {shown_holo_files} of {total_holo_files} .holo files.**")
-    st.dataframe(holo_display_df, width='stretch')
+    st.dataframe(holo_display_df, width="stretch")
 
     st.markdown("---")
 
@@ -139,7 +144,7 @@ def launch_front():
 
         total_hd_in_selection = hd_base_df["hd_folder"].nunique()
         shown_hd_folders = filtered_hd_df["hd_folder"].nunique()
-        
+
         hd_display_df = (
             filtered_hd_df[["hd_folder", "measure_tag", "hd_version"]]
             .drop_duplicates()
@@ -148,8 +153,8 @@ def launch_front():
         st.markdown(
             f"**Showing {shown_hd_folders} of {total_hd_in_selection} HoloDoppler folders from the selection above.**"
         )
-        st.dataframe(hd_display_df, width='stretch')
-        
+        st.dataframe(hd_display_df, width="stretch")
+
         st.markdown("---")
 
         # --- 3. EyeFlow Filters & Data ---
@@ -162,7 +167,7 @@ def launch_front():
             selected_ef_versions = st.multiselect(
                 "Filter by EyeFlow version", options=unique_ef_versions
             )
-            
+
             ef_display_df = ef_base_df.copy()
             if selected_ef_versions:
                 ef_display_df = ef_display_df[
@@ -177,8 +182,10 @@ def launch_front():
             )
             ef_display_columns = ["hd_folder", "ef_folder", "ef_version"]
             st.dataframe(
-                ef_display_df[ef_display_columns].drop_duplicates().reset_index(drop=True),
-                width='stretch',
+                ef_display_df[ef_display_columns]
+                .drop_duplicates()
+                .reset_index(drop=True),
+                width="stretch",
             )
         else:
             st.info("No EyeFlow data matches the current HoloDoppler filters.")
