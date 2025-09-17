@@ -75,8 +75,6 @@ def launch_front():
     # --- Main UI ---
     st.title("DopplerManager")
 
-    # This query starts from the parent (.holo file) and LEFT JOINs children.
-    # This correctly models the "zero or more" relationship at each level.
     query = """
         SELECT
             h_data.path AS holo_file,
