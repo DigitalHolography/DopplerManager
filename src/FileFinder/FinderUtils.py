@@ -44,7 +44,7 @@ def safe_isdir(path: Path | str) -> bool:
         return False
 
 
-def safe_iterdir(path: Path | str):
+def safe_iterdir(path: Path | str) -> list[Path]:
     try:
         path = Path(path)
         if safe_isdir(path):
@@ -121,8 +121,9 @@ def get_eyeflow_version(ef_folder: Path, hd_folder_name: str) -> str | None:
     ]
 
     if len(bar_lines) < 4:
-        Logger.error(
-            f"Eyeflow log file does not contain block: {file_path}", tags="FILESYSTEM"
+        Logger.warn(
+            f"Eyeflow log file does not contain version block: {file_path}",
+            tags="FILESYSTEM",
         )
         return None
 
@@ -149,7 +150,7 @@ def get_eyeflow_version(ef_folder: Path, hd_folder_name: str) -> str | None:
             return block_lines[-1].split(":")[1][1:]
 
         case _:
-            Logger.error(
+            Logger.warn(
                 f"Wrong Split to block lines for {ef_folder} ({block_lines})",
                 "EYEFLOW",
             )
@@ -192,6 +193,13 @@ def find_all_hd_folders_from_holo(holo_file_path: Path) -> dict[int, Path]:
             hd_folders[number] = Path(f_path)
 
     return hd_folders
+
+
+def check_folder_name_format(path: Path) -> bool:
+    folder_name = os.path.basename(path)
+    date_pattern = re.compile(r"^\d{6}.*$")
+
+    return date_pattern.match(folder_name) is not None
 
 
 def parse_folder_date(path: Path) -> datetime.date:
@@ -249,3 +257,10 @@ def get_report_pdf(ef_folder: Path) -> Path | None:
 
     # Need to change in case of more than one pdf
     return pdf_folder / pdfs[0]
+
+
+def json_dump_nullable(text: str | None):
+    if text:
+        return json.dumps(text)
+
+    return None
