@@ -1,10 +1,12 @@
 import streamlit as st
 import pandas as pd
 from pathlib import Path
+import time
 
 from src.FileFinder.FileFinderClass import FileFinder
 from src.Database.DBClass import DB
 from src.Utils.ParamsLoader import ConfigManager
+from src.Logger.LoggerClass import Logger
 
 
 @st.cache_resource
@@ -61,7 +63,10 @@ def launch_front():
             st.sidebar.info("The scan may take a long time. Please wait.")
             with st.spinner(f"Scanning {scan_path}..."):
                 # try:
+                t1 = time.time()
                 ff.Findfiles(scan_path)
+                t2 = time.time()
+                Logger.info(f"Time taken: {t2 - t1:.6f}", "TIME")
                 st.sidebar.success("Scan completed successfully!")
                 # Invalidate data caches to force reload
                 st.cache_data.clear()

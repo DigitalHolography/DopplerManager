@@ -21,6 +21,7 @@ tags_color = {
     "FILESYSTEM": [col.bg.PUR, col.WHI, col.BOLD],
     "DATABASE": [col.bg.WHI, col.BLA, col.BOLD],
     "SETTINGS": [col.bg.BLU, col.WHI, col.BOLD],
+    "SKIP": [col.bg.GRE, col.WHI, col.BOLD],
 }
 
 ################################################################################
