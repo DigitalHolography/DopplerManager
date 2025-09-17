@@ -234,10 +234,11 @@ def get_last_update(path: Path) -> datetime.datetime | None:
     return datetime.datetime.fromtimestamp(os.path.getmtime(path))
 
 
-def get_meusure_tag(path: Path) -> str | None:
+def get_measure_tag(path: Path) -> str | None:
     try:
-        return path.name.split("_")[1]
-    except IndexError:
+        tag = path.name.split("_")[1]
+        return tag
+    except Exception as _:
         return None
 
 

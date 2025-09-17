@@ -16,13 +16,13 @@ class FileFinder:
             "holo_data": {
                 "id": "INTEGER PRIMARY KEY AUTOINCREMENT",
                 "path": "VARCHAR(255) NOT NULL",
+                "tag": "VARCHAR(255)",
                 "created_at": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
             },
             "hd_render": {
                 "id": "INTEGER PRIMARY KEY AUTOINCREMENT",
                 "holo_id": "INTEGER NOT NULL",
                 "path": "VARCHAR(255) NOT NULL",
-                "tag": "VARCHAR(255)",
                 "render_number": "INTEGER",
                 "rendering_parameters": "TEXT",
                 "version": "VARCHAR(255)",
@@ -57,7 +57,6 @@ class FileFinder:
         self,
         holo_id: int,
         path: str,
-        tag: str | None,
         render_number: int | None,
         rendering_parameters: str | None,
         version: str | None,
@@ -68,7 +67,6 @@ class FileFinder:
             {
                 "holo_id": holo_id,
                 "path": path,
-                "tag": tag,
                 "render_number": render_number,
                 "rendering_parameters": rendering_parameters,
                 "version": version,
@@ -77,10 +75,10 @@ class FileFinder:
         )
 
     def InsertHoloFile(
-        self, path: Path, created_at: datetime.date | None
+        self, path: Path, tag: str | None, created_at: datetime.date | None
     ) -> int | None:
         return self.DB.insert(
-            "holo_data", {"path": str(path), "created_at": created_at}
+            "holo_data", {"path": str(path), "tag": tag, "created_at": created_at}
         )
 
     def InsertEFRender(
@@ -121,7 +119,9 @@ class FileFinder:
 
             for holo_file in holo_files:
                 holo_id = self.InsertHoloFile(
-                    holo_file, FinderUtils.parse_folder_date(holo_file)
+                    path=holo_file,
+                    tag=FinderUtils.get_measure_tag(Path(holo_file)),
+                    created_at=FinderUtils.parse_folder_date(holo_file)
                 )
 
                 if not holo_id:
@@ -157,7 +157,6 @@ class FileFinder:
                     hd_rowId = self.InsertHDRender(
                         holo_id=holo_id,
                         path=hd_folder_path,
-                        tag=FinderUtils.get_meusure_tag(Path(hd_folder_path)),
                         render_number=render_number,
                         rendering_parameters=FinderUtils.json_dump_nullable(
                             rendering_params
