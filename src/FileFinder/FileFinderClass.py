@@ -1,4 +1,3 @@
-import json
 import datetime
 from pathlib import Path
 
@@ -45,47 +44,6 @@ class FileFinder:
 
         for key, val in tables.items():
             self.DB.create_table(key, val)
-
-        # To delete Later
-
-        # self.DB.create_table(
-        #     "holo_data",
-        #     {
-        #         "id": "INTEGER PRIMARY KEY AUTOINCREMENT",
-        #         "path": "VARCHAR(255) NOT NULL",
-        #         "created_at": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
-        #     },
-        # )
-
-        # self.DB.create_table(
-        #     "hd_render",
-        #     {
-        #         "id": "INTEGER PRIMARY KEY AUTOINCREMENT",
-        #         "holo_id": "INTEGER NOT NULL",
-        #         "path": "VARCHAR(255) NOT NULL",
-        #         "tag": "VARCHAR(255) NOT NULL",
-        #         "render_number": "INTEGER NOT NULL",
-        #         "rendering_parameters": "TEXT",
-        #         "version": "VARCHAR(255)",
-        #         "updated_at": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
-        #         "FOREIGN KEY (holo_id)": "REFERENCES holo_data (id)",
-        #     },
-        # )
-
-        # self.DB.create_table(
-        #     "ef_render",
-        #     {
-        #         "id": "INTEGER PRIMARY KEY AUTOINCREMENT",
-        #         "hd_id": "INTEGER NOT NULL",
-        #         "render_number": "INTEGER NOT NULL",
-        #         "path": "VARCHAR(255) NOT NULL",
-        #         "input_parameters": "TEXT",
-        #         "version": "VARCHAR(255)",
-        #         "report_path": "VARCHAR(255)",
-        #         "updated_at": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
-        #         "FOREIGN KEY (hd_id)": "REFERENCES hd_render (id)",
-        #     },
-        # )
 
     def ClearDB(self) -> None:
         # Should really change this to delete the file instead of DROPping tables
@@ -143,13 +101,17 @@ class FileFinder:
                 "path": str(path),
                 "input_parameters": input_parameters,
                 "version": version,
-                "report_path": str(report_path),
+                "report_path": str(report_path) if report_path else None,
                 "updated_at": updated_at,
             },
         )
 
     def Findfiles(self, root_dir: str):
         for date_folder in FinderUtils.safe_iterdir(root_dir):
+            if not FinderUtils.check_folder_name_format(date_folder):
+                Logger.info(f"Skipping: {date_folder}", "SKIP")
+                continue
+
             Logger.info(f"Scanning date folder: {date_folder}")
             if not FinderUtils.safe_isdir(date_folder):
                 continue
@@ -197,7 +159,9 @@ class FileFinder:
                         path=hd_folder_path,
                         tag=FinderUtils.get_meusure_tag(Path(hd_folder_path)),
                         render_number=render_number,
-                        rendering_parameters=json.dumps(rendering_params),
+                        rendering_parameters=FinderUtils.json_dump_nullable(
+                            rendering_params
+                        ),
                         version=version_text,
                         updated_at=FinderUtils.get_last_update(Path(hd_folder_path)),
                     )
@@ -215,7 +179,7 @@ class FileFinder:
                                 ef["ef_folder"]
                             ),
                             path=ef["ef_folder"],
-                            input_parameters=json.dumps(
+                            input_parameters=FinderUtils.json_dump_nullable(
                                 ef["InputEyeFlowParams"]["content"]
                             ),
                             version=FinderUtils.get_eyeflow_version(
