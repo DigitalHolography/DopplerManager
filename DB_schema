@@ -5,7 +5,6 @@ Table hd_render {
   id integer [primary key]
   holo_id integer [not null]
   path varchar [not null]
-  tag varchar [not null]
   render_number interger [not null]
   rendering_parameters text
   version varchar
@@ -26,6 +25,7 @@ Table ef_render {
 Table holo_data {
   id integer [primary key]
   path varchar // [note: 'Content of the post']
+  tag varchar
   created_at timestamp [not null]
 }
 
