@@ -25,11 +25,10 @@ if "db_initialized" not in st.session_state:
     # The spinner shows a message while the code inside the "with" block runs.
     with st.spinner("Initializing database connection..."):
         initialize_database(DB_FILE)
-    st.toast("Database ready!", icon="✅")
     st.session_state.db_initialized = True
 
 conn, ff = initialize_database(DB_FILE)
-
+st.toast("Database initialized.", icon="✅")
 
 @st.cache_data
 def load_data(query):
@@ -60,14 +59,11 @@ def launch_front():
         if Path(scan_path).is_dir():
             st.sidebar.info("The scan may take a long time. Please wait.")
             with st.spinner(f"Scanning {scan_path}..."):
-                # try:
                 ff.Findfiles(scan_path)
                 st.sidebar.success("Scan completed successfully!")
                 # Invalidate data caches to force reload
                 st.cache_data.clear()
                 st.rerun()  # Refresh the app to show new data
-        # except Exception as e:
-        # st.sidebar.error(f"An error occurred: {e}")
         else:
             st.sidebar.error("The specified path is not a valid directory.")
 
@@ -80,18 +76,19 @@ def launch_front():
     # --- Main UI ---
     st.title("FetchDopplerDB")
 
+    # Updated SQL query for the new database schema
     query = """
         SELECT
             hd.id,
-            hd.hd_folder,
-            hd.measure_tag,
-            hd.version_text AS hd_version,
-            ef.ef_folder,
-            ef.version_text AS ef_version
+            hd.path AS hd_folder,
+            hd.tag AS measure_tag,
+            hd.version AS hd_version,
+            ef.path AS ef_folder,
+            ef.version AS ef_version
         FROM
-            hd_data AS hd
+            hd_render AS hd
         LEFT JOIN
-            ef_data AS ef ON hd.id = ef.hd_id
+            ef_render AS ef ON hd.id = ef.hd_id
     """
     combined_df = load_data(query)
 
@@ -99,13 +96,13 @@ def launch_front():
         st.warning("The database is empty. Please start a scan.")
         return
 
-    # --- Filtering ---
+    # --- HoloDoppler Filtering ---
     st.header("HoloDoppler Data")
 
-    unique_tags = combined_df["measure_tag"].dropna().unique()
+    unique_tags = sorted(combined_df["measure_tag"].dropna().unique())
     selected_tags = st.multiselect("Filter by measure tag", options=unique_tags)
 
-    unique_hd_versions = combined_df["hd_version"].dropna().unique()
+    unique_hd_versions = sorted(combined_df["hd_version"].dropna().unique())
     selected_hd_versions = st.multiselect(
         "Filter by HoloDoppler version", options=unique_hd_versions
     )
@@ -129,18 +126,19 @@ def launch_front():
     st.markdown(
         f"**Showing {shown_hd_folders} of {total_hd_folders} HoloDoppler folders.**"
     )
-    st.dataframe(hd_display_df, width="stretch")
+    st.dataframe(hd_display_df, width='stretch')
 
     st.markdown("---")
 
     # --- EyeFlow Filtering ---
     st.header("EyeFlow Data")
 
-    # Filter for rows that actually have EyeFlow data (ef_folder is not empty)
+    # The filtering pipeline continues: use the already-filtered dataframe (filtered_df)
+    # as the basis for EyeFlow data.
     ef_base_df = filtered_df.dropna(subset=["ef_folder"])
 
     if not ef_base_df.empty:
-        unique_ef_versions = ef_base_df["ef_version"].dropna().unique()
+        unique_ef_versions = sorted(ef_base_df["ef_version"].dropna().unique())
         selected_ef_versions = st.multiselect(
             "Filter by EyeFlow version", options=unique_ef_versions
         )
@@ -152,14 +150,15 @@ def launch_front():
             ]
 
         total_ef_folders = ef_base_df["ef_folder"].nunique()
-        shown_ef_folders = len(ef_display_df)
+        shown_ef_folders = ef_display_df["ef_folder"].nunique()
 
         st.markdown(
             f"**Showing {shown_ef_folders} of {total_ef_folders} EyeFlow folders.**"
         )
         ef_display_columns = ["hd_folder", "ef_folder", "ef_version"]
         st.dataframe(
-            ef_display_df[ef_display_columns].reset_index(drop=True), width="stretch"
+            ef_display_df[ef_display_columns].reset_index(drop=True),
+            width='stretch',
         )
     else:
         st.info("No EyeFlow data matches the current HoloDoppler filters.")
