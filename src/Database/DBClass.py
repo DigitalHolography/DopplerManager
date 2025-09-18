@@ -3,6 +3,7 @@ import os
 from src.Logger.LoggerClass import Logger
 from src.Utils.ParamsLoader import ConfigManager
 
+
 class DB:
     # TODO: Implem in_memory DB option
     def __init__(
@@ -12,6 +13,8 @@ class DB:
         check_same_thread: bool = False,
     ):
         self.DB_PATH = DB_PATH
+        self.check_same_thread = check_same_thread
+
         if SQLconnect:
             self.SQLconnect = SQLconnect
         else:
@@ -63,6 +66,8 @@ class DB:
             table_name (str): The name of the table
             columns (dict[str, str]): The columns of the table
         """
+
+        # Maybe store the tables for easy recreation
 
         # Security check
         if not table_name.isidentifier:
@@ -141,5 +146,24 @@ class DB:
 
         return [dict(row) for row in cursor.fetchall()]
 
-    def close(self):
+    # def close(self):
+    #     self.SQLconnect.close()
+
+    def clear_db(self) -> None:
         self.SQLconnect.close()
+
+        try:
+            if os.path.exists(self.DB_PATH):
+                os.remove(self.DB_PATH)
+            else:
+                Logger.error(f"Error removing database file {self.DB_PATH}", "DATABASE")
+        except OSError as e:
+            Logger.error(
+                f"Error removing database file {self.DB_PATH}: {e}", "DATABASE"
+            )
+
+        self.SQLconnect = sqlite3.connect(
+            self.DB_PATH, check_same_thread=self.check_same_thread
+        )
+
+        Logger.info(f"Successfully cleared DB: {self.DB_PATH}", "DATABASE")

@@ -46,12 +46,8 @@ class FileFinder:
             self.DB.create_table(key, val)
 
     def ClearDB(self) -> None:
-        # Should really change this to delete the file instead of DROPping tables
-        table_names = ["ef_pngs", "raw_files", "ef_render", "hd_render"]
-        for table in table_names:
-            self.DB.SQLconnect.execute(f"DROP TABLE IF EXISTS {table}")
-        self.DB.SQLconnect.commit()
-        self.CreateDB()
+        self.DB.clear_db()  # Is fully empty
+        self.CreateDB()  # Adds the tables
 
     def InsertHDRender(
         self,
@@ -104,8 +100,18 @@ class FileFinder:
             },
         )
 
-    def Findfiles(self, root_dir: str):
-        for date_folder in FinderUtils.safe_iterdir(root_dir):
+    def Findfiles(self, root_dir: str, callback_bar=None):
+        date_folders = list(FinderUtils.safe_iterdir(root_dir))
+        total_folders = len(date_folders)
+
+        for i, date_folder in enumerate(date_folders):
+            if callback_bar:
+                # Update progress bar with the percentage and current folder name
+                progress_text = (
+                    f"Scanning ({i + 1}/{total_folders}): {date_folder.name}"
+                )
+                callback_bar.progress((i + 1) / total_folders, text=progress_text)
+
             if not FinderUtils.check_folder_name_format(date_folder):
                 Logger.info(f"Skipping: {date_folder}", "SKIP")
                 continue
@@ -121,7 +127,7 @@ class FileFinder:
                 holo_id = self.InsertHoloFile(
                     path=holo_file,
                     tag=FinderUtils.get_measure_tag(Path(holo_file)),
-                    created_at=FinderUtils.parse_folder_date(holo_file)
+                    created_at=FinderUtils.parse_folder_date(holo_file),
                 )
 
                 if not holo_id:

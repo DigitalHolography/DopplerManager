@@ -60,11 +60,17 @@ def launch_front():
     if st.sidebar.button("Start directory scan"):
         if Path(scan_path).is_dir():
             st.sidebar.info("The scan may take a long time. Please wait.")
+
+            progress_bar = st.sidebar.progress(0, text="Preparing to scan...")
+
             with st.spinner(f"Scanning {scan_path}..."):
                 t1 = time.time()
-                ff.Findfiles(scan_path)
+                ff.Findfiles(scan_path, progress_bar)
                 t2 = time.time()
                 Logger.info(f"Time taken: {t2 - t1:.6f}", "TIME")
+
+                progress_bar.progress(1.0, text="Scan complete!")
+
                 st.sidebar.success("Scan completed successfully!")
                 st.cache_data.clear()
                 st.rerun()
