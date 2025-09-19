@@ -41,7 +41,7 @@ def main():
     Acts as a conductor, calling rendering functions in order.
     """
     # --- Page Configuration ---
-    st.set_page_config(page_title="FetchDopplerDB", layout="wide")
+    st.set_page_config(page_title="DopplerManager", layout="wide")
     
     # --- Initialization ---
     DB_FILE = ConfigManager.get("DB.DB_PATH", "renders.db")
