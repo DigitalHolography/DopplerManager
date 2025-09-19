@@ -20,33 +20,21 @@ def initialize_database(db_path):
     return ff_instance.DB.SQLconnect, ff_instance
 
 
-DB_FILE = ConfigManager.get("DB.DB_PATH", "renders.db")
-
-# Use session state to run initialization notifications only once.
-if "db_initialized" not in st.session_state:
-    with st.spinner("Initializing database connection..."):
-        initialize_database(DB_FILE)
-    st.session_state.db_initialized = True
-    st.toast("Database initialized.", icon="✅")
-
-conn, ff = initialize_database(DB_FILE)
-
-
 @st.cache_data
-def load_data(query):
+def load_data(query, _conn):
     """
     Loads data from the database using the provided SQL query.
     Caches the result to avoid redundant database calls.
     """
     try:
-        df = pd.read_sql_query(query, conn)
+        df = pd.read_sql_query(query, _conn)
         return df
     except Exception as e:
         st.error(f"Error while loading data: {e}")
         return pd.DataFrame()
 
 
-def launch_front():
+def launch_front(conn, ff):
     """
     Launches the frontend components of the Streamlit app.
     """
@@ -101,7 +89,7 @@ def launch_front():
         LEFT JOIN
             ef_render AS ef ON hd.id = ef.hd_id
     """
-    combined_df = load_data(query)
+    combined_df = load_data(query, conn)
 
     if combined_df.empty:
         st.warning("The database is empty. Please start a scan.")
@@ -200,4 +188,20 @@ def launch_front():
 
 
 if __name__ == "__main__":
-    launch_front()
+    DB_FILE = ConfigManager.get("DB.DB_PATH", "renders.db")
+
+    # Use session state to run initialization notifications only once.
+    if "db_initialized" not in st.session_state:
+        with st.spinner("Initializing database connection..."):
+            # The initialize_database function is cached by Streamlit
+            conn, ff = initialize_database(DB_FILE)
+            st.session_state.conn = conn
+            st.session_state.ff = ff
+        st.session_state.db_initialized = True
+        st.toast("Database initialized.", icon="✅")
+
+    # Load from session state on subsequent reruns
+    conn = st.session_state.conn
+    ff = st.session_state.ff
+
+    launch_front(conn, ff)

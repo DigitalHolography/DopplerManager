@@ -283,3 +283,81 @@ def get_all_files_extension(folder: Path, extension: str) -> list[Path]:
         list[Path]: A list of Path objects for all files that match the given extension.
     """
     return list(folder.glob(f"*.{extension}"))
+
+
+def process_date_folder(date_folder: Path) -> tuple[list, list, list]:
+    """
+    Scans a single date folder and gathers data for .holo, HD, and EF files.
+    This function is designed to be run in a separate process.
+    It does NOT interact with the database.
+    """
+    if not check_folder_name_format(date_folder) or not safe_isdir(date_folder):
+        Logger.info(f"Skipping: {date_folder}", "SKIP")
+        return ([], [], [])
+
+    Logger.info(f"Processing folder: {date_folder.name}", "WORKER")
+
+    holo_data_to_insert = []
+    hd_data_to_insert = []
+    ef_data_to_insert = []
+
+    holo_files = find_all_holo_files(date_folder)
+
+    for holo_file in holo_files:
+        holo_entry = {
+            "path": holo_file,
+            "tag": get_measure_tag(holo_file),
+            "created_at": parse_folder_date(holo_file),
+        }
+
+        # We need a temporary ID to link the data before it's in the DB
+        # It will be later replaced by the actual Id row of table
+        temp_holo_id = str(holo_file)
+        holo_data_to_insert.append((temp_holo_id, holo_entry))
+
+        hd_folders = find_all_hd_folders_from_holo(holo_file)
+        for render_number, hd_folder in hd_folders.items():
+            rendering_params_json = (
+                hd_folder / f"{hd_folder.name}_RenderingParameters.json"
+            )
+
+            rendering_params = (
+                safe_json_load(rendering_params_json)
+                if rendering_params_json.exists()
+                else None
+            )
+
+            version_text = safe_file_read(hd_folder / "version.txt")
+
+            hd_entry = {
+                "holo_id": temp_holo_id,
+                "path": hd_folder.absolute().as_posix(),
+                "render_number": render_number,
+                "rendering_parameters": json_dump_nullable(rendering_params),
+                "version": version_text,
+                "updated_at": get_last_update(hd_folder),
+            }
+
+            # We need a temporary ID to link the data before it's in the DB
+            # It will be later replaced by the actual Id row of table
+            temp_hd_id = str(hd_folder.absolute())
+            hd_data_to_insert.append((temp_hd_id, hd_entry))
+
+            eyeflow_folder = hd_folder / "eyeflow"
+            if eyeflow_folder.exists():
+                ef_renders = get_ef_folders_data(eyeflow_folder)
+                for ef in ef_renders:
+                    ef_entry = {
+                        "hd_id": temp_hd_id,
+                        "render_number": get_render_number(ef["ef_folder"]),
+                        "path": ef["ef_folder"],
+                        "input_parameters": json_dump_nullable(
+                            ef["InputEyeFlowParams"]["content"]
+                        ),
+                        "version": get_eyeflow_version(ef["ef_folder"], hd_folder.name),
+                        "report_path": get_report_pdf(ef["ef_folder"]),
+                        "updated_at": get_last_update(ef["ef_folder"]),
+                    }
+                    ef_data_to_insert.append(ef_entry)
+
+    return (holo_data_to_insert, hd_data_to_insert, ef_data_to_insert)

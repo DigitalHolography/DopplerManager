@@ -34,6 +34,9 @@ class DB:
                 DB_PATH, check_same_thread=check_same_thread
             )
 
+        # Forces the foreign Keys (duh)
+        self.SQLconnect.execute("PRAGMA foreign_keys = ON;")
+
     def check_table_existance(self, table_name: str) -> bool:
         """Will check if the table exists inside the DB
 
@@ -167,3 +170,29 @@ class DB:
         )
 
         Logger.info(f"Successfully cleared DB: {self.DB_PATH}", "DATABASE")
+
+    def upsert(self, table_name: str, data: dict[str, object]) -> int | None:
+        """
+        Inserts data into the table. If a row with the same primary key already exists,
+        it replaces the existing row (INSERT OR REPLACE).
+        """
+        if not table_name.isidentifier():
+            Logger.fatal(
+                f"Table name is not a valid identifier ({table_name})", "DATABASE"
+            )
+            return
+
+        if not self.check_table_existance(table_name):
+            Logger.error(f"{table_name} does not exist", "DATABASE")
+            return
+
+        columns = ", ".join(data.keys())
+        placeholders = ", ".join(["?" for _ in data])
+        SQL_COMMAND = (
+            f"INSERT OR REPLACE INTO {table_name} ({columns}) VALUES ({placeholders})"
+        )
+
+        cursor = self.SQLconnect.execute(SQL_COMMAND, tuple(data.values()))
+        self.SQLconnect.commit()
+
+        return cursor.lastrowid
