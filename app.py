@@ -22,18 +22,6 @@ def initialize_database(db_path):
     return ff_instance.DB.SQLconnect, ff_instance
 
 
-DB_FILE = ConfigManager.get("DB.DB_PATH", "renders.db")
-
-# Use session state to run initialization notifications only once.
-if "db_initialized" not in st.session_state:
-    with st.spinner("Initializing database connection..."):
-        initialize_database(DB_FILE)
-    st.session_state.db_initialized = True
-    st.toast("Database initialized.", icon="✅")
-
-conn, ff = initialize_database(DB_FILE)
-
-
 @st.cache_data
 def load_data(query, _conn):
     """
