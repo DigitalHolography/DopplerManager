@@ -119,5 +119,12 @@ def render_holo_section(combined_df: pd.DataFrame) -> pd.DataFrame:
                 width='stretch',
             )
 
+            st.download_button(
+                label="Export paths to .txt",
+                data="\n".join(holo_with_no_hd["holo_file"].unique()),
+                file_name="hd_batch_input.txt",
+                mime="text/plain",
+            )
+
     st.markdown("---")
     return filtered_holo_df

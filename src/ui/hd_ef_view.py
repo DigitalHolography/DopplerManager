@@ -52,6 +52,13 @@ def render_hd_ef_section(filtered_holo_df: pd.DataFrame) -> None:
                 .reset_index(drop=True),
                 width="stretch",
             )
+            
+            st.download_button(
+                label="Export paths to .txt",
+                data="\n".join(hd_with_no_ef["hd_folder"].unique()),
+                file_name="ef_batch_input.txt",
+                mime="text/plain",
+            )
 
     st.markdown("---")
 
