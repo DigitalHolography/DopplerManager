@@ -1,13 +1,14 @@
 import streamlit as st
 import pandas as pd
-from pathlib import Path
-import time
 import multiprocessing
 
 from src.FileFinder.FileFinderClass import FileFinder
 from src.Database.DBClass import DB
 from src.Utils.ParamsLoader import ConfigManager
-from src.Logger.LoggerClass import Logger
+
+from src.ui.sidebar import render_sidebar
+from src.ui.holo_view import render_holo_section
+from src.ui.hd_ef_view import render_hd_ef_section
 
 
 @st.cache_resource
@@ -19,6 +20,18 @@ def initialize_database(db_path):
     ff_instance = FileFinder(DB(db_path))
     ff_instance.CreateDB()
     return ff_instance.DB.SQLconnect, ff_instance
+
+
+DB_FILE = ConfigManager.get("DB.DB_PATH", "renders.db")
+
+# Use session state to run initialization notifications only once.
+if "db_initialized" not in st.session_state:
+    with st.spinner("Initializing database connection..."):
+        initialize_database(DB_FILE)
+    st.session_state.db_initialized = True
+    st.toast("Database initialized.", icon="✅")
+
+conn, ff = initialize_database(DB_FILE)
 
 
 @st.cache_data
@@ -35,50 +48,37 @@ def load_data(query, _conn):
         return pd.DataFrame()
 
 
-def launch_front(conn, ff):
+def main():
     """
-    Launches the frontend components of the Streamlit app.
+    Main function to run the Streamlit app.
+    Acts as a conductor, calling rendering functions in order.
     """
     # --- Page Configuration ---
-    st.set_page_config(page_title="FetchDopplerDB", layout="wide")
+    multiprocessing.freeze_support()
+    st.set_page_config(page_title="DopplerManager", layout="wide")
 
-    # --- Sidebar ---
-    st.sidebar.title("Actions")
-    scan_path = st.sidebar.text_input("Directory to scan", "Y:\\")
+    # --- Initialization ---
+    DB_FILE = ConfigManager.get("DB.DB_PATH", "renders.db")
 
-    if st.sidebar.button("Start directory scan"):
-        if Path(scan_path).is_dir():
-            st.sidebar.info("The scan may take a long time. Please wait.")
+    if "db_initialized" not in st.session_state:
+        with st.spinner("Initializing database connection..."):
+            initialize_database(DB_FILE)
+        st.session_state.db_initialized = True
+        st.toast("Database initialized.")
 
-            progress_bar = st.sidebar.progress(0, text="Preparing to scan...")
+    conn, ff = initialize_database(DB_FILE)
 
-            with st.spinner(f"Scanning {scan_path}..."):
-                t1 = time.time()
-                ff.Findfiles(scan_path, progress_bar)
-                t2 = time.time()
-                Logger.info(f"Time taken: {t2 - t1:.6f}", "TIME")
+    # --- UI Rendering ---
+    render_sidebar(ff)
 
-                progress_bar.progress(1.0, text="Scan complete!")
-
-                st.sidebar.success("Scan completed successfully!")
-                st.cache_data.clear()
-                st.rerun()
-        else:
-            st.sidebar.error("The specified path is not a valid directory.")
-
-    st.sidebar.markdown("---")
-    if st.sidebar.button("Clear database"):
-        ff.ClearDB()
-        st.sidebar.success("Database cleared.")
-        st.rerun()
-
-    # --- Main UI ---
     st.title("DopplerManager")
 
+    # --- Data Loading ---
     query = """
         SELECT
             h_data.path AS holo_file,
             h_data.tag AS measure_tag,
+            h_data.created_at AS holo_created_at,
             hd.path AS hd_folder,
             hd.version AS hd_version,
             ef.path AS ef_folder,
@@ -91,121 +91,15 @@ def launch_front(conn, ff):
             ef_render AS ef ON hd.id = ef.hd_id
     """
     combined_df = load_data(query, conn)
+    combined_df = load_data(query, conn)
 
     if combined_df.empty:
         st.warning("The database is empty. Please start a scan.")
         return
 
-    # --- 1. Holo Filters & Data ---
-    st.header("1. Holo Data")
-    unique_tags = sorted(combined_df["measure_tag"].dropna().unique())
-    selected_tags = st.multiselect("Filter by measure tag", options=unique_tags)
-
-    filtered_holo_df = combined_df.copy()
-    if selected_tags:
-        filtered_holo_df = filtered_holo_df[
-            filtered_holo_df["measure_tag"].isin(selected_tags)
-        ]
-
-    total_holo_files = combined_df["holo_file"].nunique()
-    shown_holo_files = filtered_holo_df["holo_file"].nunique()
-
-    holo_display_df = (
-        filtered_holo_df[["holo_file", "measure_tag"]]
-        .drop_duplicates()
-        .reset_index(drop=True)
-    )
-    st.markdown(f"**Showing {shown_holo_files} of {total_holo_files} .holo files.**")
-    st.dataframe(holo_display_df, width="stretch")
-
-    st.markdown("---")
-
-    # --- 2. HoloDoppler Filters & Data ---
-    st.header("2. HoloDoppler Data")
-    # Base for HD data are the selected Holo files that have HD folders
-    hd_base_df = filtered_holo_df.dropna(subset=["hd_folder"])
-
-    if not hd_base_df.empty:
-        unique_hd_versions = sorted(hd_base_df["hd_version"].dropna().unique())
-        selected_hd_versions = st.multiselect(
-            "Filter by HoloDoppler version", options=unique_hd_versions
-        )
-
-        filtered_hd_df = hd_base_df.copy()
-        if selected_hd_versions:
-            filtered_hd_df = filtered_hd_df[
-                filtered_hd_df["hd_version"].isin(selected_hd_versions)
-            ]
-
-        total_hd_in_selection = hd_base_df["hd_folder"].nunique()
-        shown_hd_folders = filtered_hd_df["hd_folder"].nunique()
-
-        hd_display_df = (
-            filtered_hd_df[["hd_folder", "measure_tag", "hd_version"]]
-            .drop_duplicates()
-            .reset_index(drop=True)
-        )
-        st.markdown(
-            f"**Showing {shown_hd_folders} of {total_hd_in_selection} HoloDoppler folders from the selection above.**"
-        )
-        st.dataframe(hd_display_df, width="stretch")
-
-        st.markdown("---")
-
-        # --- 3. EyeFlow Filters & Data ---
-        st.header("3. EyeFlow Data")
-        # Base for EF data is the filtered HD data from the step above
-        ef_base_df = filtered_hd_df.dropna(subset=["ef_folder"])
-
-        if not ef_base_df.empty:
-            unique_ef_versions = sorted(ef_base_df["ef_version"].dropna().unique())
-            selected_ef_versions = st.multiselect(
-                "Filter by EyeFlow version", options=unique_ef_versions
-            )
-
-            ef_display_df = ef_base_df.copy()
-            if selected_ef_versions:
-                ef_display_df = ef_display_df[
-                    ef_display_df["ef_version"].isin(selected_ef_versions)
-                ]
-
-            total_ef_in_selection = ef_base_df["ef_folder"].nunique()
-            shown_ef_folders = ef_display_df["ef_folder"].nunique()
-
-            st.markdown(
-                f"**Showing {shown_ef_folders} of {total_ef_in_selection} EyeFlow folders from the selection above.**"
-            )
-            ef_display_columns = ["hd_folder", "ef_folder", "ef_version"]
-            st.dataframe(
-                ef_display_df[ef_display_columns]
-                .drop_duplicates()
-                .reset_index(drop=True),
-                width="stretch",
-            )
-        else:
-            st.info("No EyeFlow data matches the current HoloDoppler filters.")
-    else:
-        st.info("No HoloDoppler data matches the current Holo filters.")
+    filtered_by_holo = render_holo_section(combined_df)
+    render_hd_ef_section(filtered_by_holo)
 
 
 if __name__ == "__main__":
-    # Should help for some windows errors (for executables)
-    multiprocessing.freeze_support()
-
-    DB_FILE = ConfigManager.get("DB.DB_PATH", "renders.db")
-
-    # Use session state to run initialization notifications only once.
-    if "db_initialized" not in st.session_state:
-        with st.spinner("Initializing database connection..."):
-            # The initialize_database function is cached by Streamlit
-            conn, ff = initialize_database(DB_FILE)
-            st.session_state.conn = conn
-            st.session_state.ff = ff
-        st.session_state.db_initialized = True
-        st.toast("Database initialized.", icon="✅")
-
-    # Load from session state on subsequent reruns
-    conn = st.session_state.conn
-    ff = st.session_state.ff
-
-    launch_front(conn, ff)
+    main()
