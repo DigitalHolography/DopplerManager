@@ -64,6 +64,7 @@ def main():
         SELECT
             h_data.path AS holo_file,
             h_data.tag AS measure_tag,
+            h_data.created_at AS holo_created_at,
             hd.path AS hd_folder,
             hd.version AS hd_version,
             ef.path AS ef_folder,

@@ -77,7 +77,7 @@ def render_hd_ef_section(filtered_holo_df: pd.DataFrame) -> None:
         st.markdown(
             f"**Showing {shown_ef_folders} of {total_ef_in_selection} EyeFlow folders from the selection above.**"
         )
-        ef_display_columns = ["hd_folder", "ef_folder", "ef_version"]
+        ef_display_columns = ["ef_folder", "ef_version"]
         st.dataframe(
             ef_display_df[ef_display_columns]
             .drop_duplicates()
