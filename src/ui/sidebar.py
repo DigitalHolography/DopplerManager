@@ -9,18 +9,18 @@ def render_sidebar(ff: FileFinder) -> None:
     """
     Renders the sidebar UI components and handles the associated logic.
     """
-    st.sidebar.title("Actions")
+    st.sidebar.title("Database Controls")
     scan_path = st.sidebar.text_input("Directory to scan", "Y:\\")
 
-    if st.sidebar.button("Start directory scan"):
+    if st.sidebar.button("Update database"):
         if Path(scan_path).is_dir():
-            st.sidebar.info("The scan may take a few minutes. Please wait.")
-            with st.spinner(f"Scanning {scan_path}..."):
+            st.sidebar.info("The update may take a few minutes. Please wait.")
+            with st.spinner(f"Updating database with files from {scan_path}..."):
                 t1 = time.time()
                 ff.Findfiles(scan_path)
                 t2 = time.time()
                 Logger.info(f"Time taken: {t2 - t1:.6f}", "TIME")
-                st.sidebar.success("Scan completed successfully!")
+                st.sidebar.success("Database updated successfully!")
                 # Clear the data cache and rerun the app to show new data
                 st.cache_data.clear()
                 st.rerun()

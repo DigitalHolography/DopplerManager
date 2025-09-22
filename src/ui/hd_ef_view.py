@@ -6,8 +6,7 @@ def render_hd_ef_section(filtered_holo_df: pd.DataFrame) -> None:
     Renders the HoloDoppler and EyeFlow sections based on the
     pre-filtered holo data.
     """
-    # --- 2. HoloDoppler Filters & Data ---
-    st.header("2. HoloDoppler Data")
+    st.header("HoloDoppler Data")
     hd_base_df = filtered_holo_df.dropna(subset=["hd_folder"])
 
     if hd_base_df.empty:
@@ -62,8 +61,7 @@ def render_hd_ef_section(filtered_holo_df: pd.DataFrame) -> None:
 
     st.markdown("---")
 
-    # --- 3. EyeFlow Filters & Data ---
-    st.header("3. EyeFlow Data")
+    st.header("EyeFlow Data")
     ef_base_df = filtered_hd_df.dropna(subset=["ef_folder"])
 
     if not ef_base_df.empty:

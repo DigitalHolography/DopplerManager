@@ -35,7 +35,7 @@ def render_holo_section(combined_df: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame: The dataframe filtered by the user's selections.
     """
-    st.header("1. Holo Data")
+    st.header("Holo Data")
 
     base_holo_df = combined_df.copy()
 
