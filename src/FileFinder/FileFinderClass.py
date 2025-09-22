@@ -20,12 +20,19 @@ class FileFinder:
                 "tag": "VARCHAR(255)",
                 "created_at": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
             },
+            "preview_doppler_video": {
+                "id": "INTEGER PRIMARY KEY AUTOINCREMENT",
+                "holo_id": "INTEGER NOT NULL",
+                "path": "VARCHAR(255) NOT NULL",
+                "FOREIGN KEY (holo_id)": "REFERENCES holo_data (id) ON DELETE CASCADE",
+            },
             "hd_render": {
                 "id": "INTEGER PRIMARY KEY AUTOINCREMENT",
                 "holo_id": "INTEGER NOT NULL",
                 "path": "VARCHAR(255) NOT NULL",
                 "render_number": "INTEGER",
                 "rendering_parameters": "TEXT",
+                "raw_h5_path": "VARCHAR(255)",
                 "version": "VARCHAR(255)",
                 "updated_at": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
                 "FOREIGN KEY (holo_id)": "REFERENCES holo_data (id) ON DELETE CASCADE",
@@ -38,6 +45,7 @@ class FileFinder:
                 "input_parameters": "TEXT",
                 "version": "VARCHAR(255)",
                 "report_path": "VARCHAR(255)",
+                "h5_output": "VARCHAR(255)",
                 "updated_at": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
                 "FOREIGN KEY (hd_id)": "REFERENCES hd_render (id) ON DELETE CASCADE",
             },
@@ -53,9 +61,10 @@ class FileFinder:
     def InsertHDRender(
         self,
         holo_id: int,
-        path: str,
+        path: Path,
         render_number: int | None,
         rendering_parameters: str | None,
+        raw_h5_path: Path | None,
         version: str | None,
         updated_at: datetime.datetime | None,
     ) -> int | None:
@@ -63,9 +72,10 @@ class FileFinder:
             "hd_render",
             {
                 "holo_id": holo_id,
-                "path": path,
+                "path": FinderUtils.parse_path(path),
                 "render_number": render_number,
                 "rendering_parameters": rendering_parameters,
+                "raw_h5_path": FinderUtils.parse_path(raw_h5_path),
                 "version": version,
                 "updated_at": updated_at,
             },
@@ -82,10 +92,11 @@ class FileFinder:
         self,
         hd_id: int,
         render_number: int | None,
-        path: str,
+        path: Path,
         input_parameters: str | None,
         version: str | None,
         report_path: Path | None,
+        h5_output: Path | None,
         updated_at: datetime.datetime | None,
     ) -> int | None:
         return self.DB.insert(
@@ -93,32 +104,55 @@ class FileFinder:
             {
                 "hd_id": hd_id,
                 "render_number": render_number,
-                "path": str(path),
+                "path": FinderUtils.parse_path(path),
                 "input_parameters": input_parameters,
                 "version": version,
-                "report_path": str(report_path) if report_path else None,
+                "report_path": FinderUtils.parse_path(report_path),
+                "h5_output": FinderUtils.parse_path(h5_output),
                 "updated_at": updated_at,
             },
         )
 
-    def Findfiles(self, root_dir: str, callback_bar=None):
+    def InsertPreviewVideo(self, holo_id: int, path: Path) -> int | None:
+        return self.DB.insert(
+            "preview_doppler_video",
+            {
+                "holo_id": holo_id,
+                "path": FinderUtils.parse_path(path),
+            },
+        )
+
+    def Findfiles(self, root_dir: str, callback_bar=None, use_parallelism=True):
         date_folders = list(FinderUtils.safe_iterdir(root_dir))
         total_folders = len(date_folders)
 
-        # Use as many processes as there are CPU cores
-        with multiprocessing.Pool() as pool:
-            results = []
-            # Use imap_unordered to get results as they complete, which is great for progress bars
-            for i, result in enumerate(
-                pool.imap_unordered(FinderUtils.process_date_folder, date_folders)
-            ):
+        results = []
+
+        if use_parallelism:
+            # Use as many processes as there are CPU cores
+            with multiprocessing.Pool() as pool:
+                for i, result in enumerate(
+                    pool.imap_unordered(FinderUtils.process_date_folder, date_folders)
+                ):
+                    if callback_bar:
+                        progress_text = f"Scanning ({i + 1}/{total_folders})"
+                        callback_bar.progress(
+                            (i + 1) / total_folders, text=progress_text
+                        )
+                    results.append(result)
+        else:
+            Logger.info("Running scan in sequential mode.", "FILESYSTEM")
+            for i, date_folder in enumerate(date_folders):
                 if callback_bar:
-                    progress_text = f"Scanning ({i + 1}/{total_folders})"
+                    progress_text = (
+                        f"Scanning ({i + 1}/{total_folders}): {date_folder.name}"
+                    )
                     callback_bar.progress((i + 1) / total_folders, text=progress_text)
+
+                result = FinderUtils.process_date_folder(date_folder)
                 results.append(result)
 
         # --- Data Insertion Phase ---
-        # The main process handles all database writes
         Logger.info(
             "All folders scanned. Inserting data into the database...", "DATABASE"
         )
@@ -126,14 +160,25 @@ class FileFinder:
         holo_id_map = {}  # To map temporary string IDs to final database integer IDs
 
         try:
-            for holo_list, hd_list, ef_list in results:
-                # 1. Insert Holo data
+            for holo_list, hd_list, ef_list, preview_list in results:
+                # Holo data
                 for temp_holo_id, holo_data in holo_list:
                     db_id = self.InsertHoloFile(**holo_data)
                     if db_id:
                         holo_id_map[temp_holo_id] = db_id
 
-                # 2. Insert HoloDoppler data
+                # Preview video data
+                for preview_data in preview_list:
+                    temp_parent_holo_id = preview_data["holo_id"]
+                    if temp_parent_holo_id in holo_id_map:
+                        preview_data["holo_id"] = holo_id_map[temp_parent_holo_id]
+                        self.InsertPreviewVideo(**preview_data)
+                    else:
+                        Logger.error(
+                            f".holo file ({temp_parent_holo_id}) is not found for preview_video: {preview_data['path']}"
+                        )
+
+                # HoloDoppler data
                 hd_id_map = {}
                 for temp_hd_id, hd_data in hd_list:
                     # Replace temporary parent ID with the real one
@@ -148,7 +193,7 @@ class FileFinder:
                             f".holo file ({temp_parent_holo_id}) is not found for HD_folder: {hd_data['path']}"
                         )
 
-                # 3. Insert EyeFlow data
+                # EyeFlow data
                 for ef_data in ef_list:
                     temp_parent_hd_id = ef_data["hd_id"]
                     if temp_parent_hd_id in hd_id_map:

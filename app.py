@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from pathlib import Path
 import time
+import multiprocessing
 
 from src.FileFinder.FileFinderClass import FileFinder
 from src.Database.DBClass import DB
@@ -188,6 +189,9 @@ def launch_front(conn, ff):
 
 
 if __name__ == "__main__":
+    # Should help for some windows errors (for executables)
+    multiprocessing.freeze_support()
+
     DB_FILE = ConfigManager.get("DB.DB_PATH", "renders.db")
 
     # Use session state to run initialization notifications only once.
