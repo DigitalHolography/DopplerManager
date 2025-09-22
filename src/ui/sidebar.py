@@ -14,7 +14,7 @@ def render_sidebar(ff: FileFinder) -> None:
 
     if st.sidebar.button("Start directory scan"):
         if Path(scan_path).is_dir():
-            st.sidebar.info("The scan may take a long time. Please wait.")
+            st.sidebar.info("The scan may take a few minutes. Please wait.")
             with st.spinner(f"Scanning {scan_path}..."):
                 t1 = time.time()
                 ff.Findfiles(scan_path)

@@ -39,7 +39,6 @@ def render_holo_section(combined_df: pd.DataFrame) -> pd.DataFrame:
 
     base_holo_df = combined_df.copy()
 
-    # --- New file uploader for group import ---
     uploaded_file = st.file_uploader(
         "Import group (.txt)",
         type=["txt"],
@@ -75,15 +74,13 @@ def render_holo_section(combined_df: pd.DataFrame) -> pd.DataFrame:
                 condition = (
                     base_holo_df["holo_created_date"] == date_to_match
                 ) & (base_holo_df["measure_tag"] == tag_to_match)
-                mask |= condition  # Add matching rows to the mask
+                mask |= condition
 
-            # Apply the filter and drop the temporary date column
             base_holo_df = base_holo_df[mask].drop(columns=["holo_created_date"])
             st.info(
-                f"Filtered by imported group. Found data for {len(base_holo_df['holo_file'].unique())} of {len(identifiers_to_match)} identifiers."
+                f"Filtered by imported group ({len(identifiers_to_match)} identifiers)."
             )
 
-    # The multiselect now operates on the dataframe that may have been filtered by the file
     unique_tags = sorted(base_holo_df["measure_tag"].dropna().unique())
     selected_tags = st.multiselect(
         "Filter by measure tag", options=unique_tags, default=unique_tags if uploaded_file else None
