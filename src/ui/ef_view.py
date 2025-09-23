@@ -35,6 +35,12 @@ def render_ef_section(filtered_hd_df: pd.DataFrame) -> pd.DataFrame:
                 mime="text/plain",
             )
         return ef_base_df
+
+    if st.checkbox("Latest EF render only", value=True):
+        latest_indices = ef_base_df.loc[
+            ef_base_df.groupby("hd_folder")["ef_render_number"].idxmax()
+        ]
+        ef_base_df = latest_indices.copy()
         
     unique_ef_versions = sorted(ef_base_df["ef_version"].dropna().unique())
     selected_ef_versions = st.multiselect(

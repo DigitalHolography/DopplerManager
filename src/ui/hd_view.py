@@ -37,6 +37,13 @@ def render_hd_section(filtered_holo_df: pd.DataFrame) -> pd.DataFrame:
             )
         return hd_base_df
 
+    if st.checkbox("Latest HD render only", value=True):
+        latest_hd_render_numbers = hd_base_df.groupby("holo_file")[
+            "hd_render_number"
+        ].transform('max')
+        hd_base_df = hd_base_df[hd_base_df["hd_render_number"] == latest_hd_render_numbers]
+
+
     unique_hd_versions = sorted(hd_base_df["hd_version"].dropna().unique())
     selected_hd_versions = st.multiselect(
         "Filter by HoloDoppler version", options=unique_hd_versions

@@ -69,8 +69,10 @@ def main():
             h_data.tag AS measure_tag,
             h_data.created_at AS holo_created_at,
             hd.path AS hd_folder,
+            hd.render_number as hd_render_number,
             hd.version AS hd_version,
             ef.path AS ef_folder,
+            ef.render_number AS ef_render_number,
             ef.version AS ef_version
         FROM
             holo_data AS h_data
@@ -79,7 +81,6 @@ def main():
         LEFT JOIN
             ef_render AS ef ON hd.id = ef.hd_id
     """
-    combined_df = load_data(query, conn)
     combined_df = load_data(query, conn)
 
     if combined_df.empty:
