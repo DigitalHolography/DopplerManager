@@ -79,7 +79,6 @@ def main():
             ef_render AS ef ON hd.id = ef.hd_id
     """
     combined_df = load_data(query, conn)
-    combined_df = load_data(query, conn)
 
     if combined_df.empty:
         st.warning("The database is empty. Please start a scan.")
