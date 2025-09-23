@@ -6,6 +6,7 @@ __pycache__
 # Testing
 test.py
 test_directory/
+local_tests/
 
 test_directory/
 results/

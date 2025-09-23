@@ -1,10 +1,10 @@
 import streamlit as st
 import pandas as pd
+import multiprocessing
 
 from src.FileFinder.FileFinderClass import FileFinder
 from src.Database.DBClass import DB
 from src.Utils.ParamsLoader import ConfigManager
-from src.Logger.LoggerClass import Logger
 
 from src.ui.sidebar import render_sidebar
 from src.ui.holo_view import render_holo_section
@@ -22,14 +22,15 @@ def initialize_database(db_path):
     ff_instance.CreateDB()
     return ff_instance.DB.SQLconnect, ff_instance
 
+
 @st.cache_data
-def load_data(query, _db_connection):
+def load_data(query, _conn):
     """
     Loads data from the database using the provided SQL query.
     Caches the result to avoid redundant database calls.
     """
     try:
-        df = pd.read_sql_query(query, _db_connection)
+        df = pd.read_sql_query(query, _conn)
         return df
     except Exception as e:
         st.error(f"Error while loading data: {e}")
@@ -42,8 +43,9 @@ def main():
     Acts as a conductor, calling rendering functions in order.
     """
     # --- Page Configuration ---
+    multiprocessing.freeze_support()
     st.set_page_config(page_title="DopplerManager", layout="wide")
-    
+
     # --- Initialization ---
     DB_FILE = ConfigManager.get("DB.DB_PATH", "renders.db")
 
@@ -59,7 +61,7 @@ def main():
     render_sidebar(ff)
 
     st.title("DopplerManager")
-    
+
     # --- Data Loading ---
     query = """
         SELECT
@@ -77,6 +79,7 @@ def main():
         LEFT JOIN
             ef_render AS ef ON hd.id = ef.hd_id
     """
+    combined_df = load_data(query, conn)
     combined_df = load_data(query, conn)
 
     if combined_df.empty:

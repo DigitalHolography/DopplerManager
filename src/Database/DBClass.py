@@ -3,6 +3,7 @@ import os
 from src.Logger.LoggerClass import Logger
 from src.Utils.ParamsLoader import ConfigManager
 
+
 class DB:
     # TODO: Implem in_memory DB option
     def __init__(
@@ -12,6 +13,8 @@ class DB:
         check_same_thread: bool = False,
     ):
         self.DB_PATH = DB_PATH
+        self.check_same_thread = check_same_thread
+
         if SQLconnect:
             self.SQLconnect = SQLconnect
         else:
@@ -30,6 +33,9 @@ class DB:
             self.SQLconnect = sqlite3.connect(
                 DB_PATH, check_same_thread=check_same_thread
             )
+
+        # Forces the foreign Keys (duh)
+        self.SQLconnect.execute("PRAGMA foreign_keys = ON;")
 
     def check_table_existance(self, table_name: str) -> bool:
         """Will check if the table exists inside the DB
@@ -63,6 +69,8 @@ class DB:
             table_name (str): The name of the table
             columns (dict[str, str]): The columns of the table
         """
+
+        # Maybe store the tables for easy recreation
 
         # Security check
         if not table_name.isidentifier:
@@ -141,5 +149,50 @@ class DB:
 
         return [dict(row) for row in cursor.fetchall()]
 
-    def close(self):
+    # def close(self):
+    #     self.SQLconnect.close()
+
+    def clear_db(self) -> None:
         self.SQLconnect.close()
+
+        try:
+            if os.path.exists(self.DB_PATH):
+                os.remove(self.DB_PATH)
+            else:
+                Logger.error(f"Error removing database file {self.DB_PATH}", "DATABASE")
+        except OSError as e:
+            Logger.error(
+                f"Error removing database file {self.DB_PATH}: {e}", "DATABASE"
+            )
+
+        self.SQLconnect = sqlite3.connect(
+            self.DB_PATH, check_same_thread=self.check_same_thread
+        )
+
+        Logger.info(f"Successfully cleared DB: {self.DB_PATH}", "DATABASE")
+
+    def upsert(self, table_name: str, data: dict[str, object]) -> int | None:
+        """
+        Inserts data into the table. If a row with the same primary key already exists,
+        it replaces the existing row (INSERT OR REPLACE).
+        """
+        if not table_name.isidentifier():
+            Logger.fatal(
+                f"Table name is not a valid identifier ({table_name})", "DATABASE"
+            )
+            return
+
+        if not self.check_table_existance(table_name):
+            Logger.error(f"{table_name} does not exist", "DATABASE")
+            return
+
+        columns = ", ".join(data.keys())
+        placeholders = ", ".join(["?" for _ in data])
+        SQL_COMMAND = (
+            f"INSERT OR REPLACE INTO {table_name} ({columns}) VALUES ({placeholders})"
+        )
+
+        cursor = self.SQLconnect.execute(SQL_COMMAND, tuple(data.values()))
+        self.SQLconnect.commit()
+
+        return cursor.lastrowid

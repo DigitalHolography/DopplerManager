@@ -4,6 +4,7 @@ Table hd_render {
   path varchar [not null]
   render_number interger [not null]
   rendering_parameters text
+  raw_path varchar
   version varchar
   updated_at timestamp
 }
@@ -16,7 +17,14 @@ Table ef_render {
   input_parameters text
   version varchar
   report_path varchar
+  raw_h5_path varchar
   updated_at timestamp
+}
+
+Table preview_doppler_video {
+  id integer [primary key]
+  holo_id integer [not null]
+  path varchar [not null]
 }
 
 Table holo_data {
@@ -31,3 +39,5 @@ Table holo_data {
 Ref: ef_render.hd_id > hd_render.id // many-to-one
 
 Ref: hd_render.holo_id > holo_data.id
+
+Ref: preview_doppler_video.holo_id > holo_data.id
