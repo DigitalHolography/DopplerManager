@@ -100,29 +100,12 @@ def render_holo_section(combined_df: pd.DataFrame) -> pd.DataFrame:
         .drop_duplicates()
         .reset_index(drop=True)
     )
-    st.markdown(f"**Showing {shown_holo_files} of {total_holo_files} .holo files.**")
-    st.dataframe(holo_display_df, width='stretch')
-
-    # Expander for .holo files without HD renders
-    holo_with_no_hd = filtered_holo_df[filtered_holo_df["hd_folder"].isnull()]
-    if not holo_with_no_hd.empty:
-        with st.expander(
-            f"Show {holo_with_no_hd['holo_file'].nunique()} .holo files with no HoloDoppler renders"
-        ):
-            st.warning(
-                "The following .holo files do not have any associated HoloDoppler renders."
-            )
-            st.dataframe(
-                holo_with_no_hd[["holo_file", "measure_tag", "holo_created_at"]]
-                .drop_duplicates()
-                .reset_index(drop=True),
-                width='stretch',
-            )
-
-            st.download_button(
+    with st.expander(f"**Show {shown_holo_files} of {total_holo_files} .holo files.**"):
+        st.dataframe(holo_display_df, width='stretch')
+        st.download_button(
                 label="Export paths to .txt",
-                data="\n".join(holo_with_no_hd["holo_file"].unique()),
-                file_name="hd_batch_input.txt",
+                data="\n".join(holo_display_df["holo_file"].unique()),
+                file_name="holo_files.txt",
                 mime="text/plain",
             )
 
