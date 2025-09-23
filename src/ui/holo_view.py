@@ -109,5 +109,4 @@ def render_holo_section(combined_df: pd.DataFrame) -> pd.DataFrame:
                 mime="text/plain",
             )
 
-    st.markdown("---")
     return filtered_holo_df
