@@ -5,6 +5,8 @@ from pathlib import Path
 import src.FileFinder.FinderUtils as FinderUtils
 from src.Logger.LoggerClass import Logger
 from src.Database.DBClass import DB
+from src.Utils.ParamsLoader import ConfigManager
+from src.FileFinder.ReportGen import generate_report
 
 
 class FileFinder:
@@ -30,7 +32,7 @@ class FileFinder:
                 "id": "INTEGER PRIMARY KEY AUTOINCREMENT",
                 "holo_id": "INTEGER NOT NULL",
                 "path": "VARCHAR(255) NOT NULL",
-                "render_number": "INTEGER",
+                "render_number": "INTEGER NOT NULL",
                 "rendering_parameters": "TEXT",
                 "raw_h5_path": "VARCHAR(255)",
                 "version": "VARCHAR(255)",
@@ -157,6 +159,16 @@ class FileFinder:
             "All folders scanned. Inserting data into the database...", "DATABASE"
         )
 
+        report = {
+            "headers": {"scan_path": root_dir, "scan_date": datetime.datetime.now()},
+            "data": {
+                "found_holo": sum(len(r[0]) for r in results),
+                "found_hd": sum(len(r[1]) for r in results),
+                "found_ef": sum(len(r[2]) for r in results),
+                "found_preview": sum(len(r[3]) for r in results),
+            },
+        }
+
         holo_id_map = {}  # To map temporary string IDs to final database integer IDs
 
         try:
@@ -206,6 +218,11 @@ class FileFinder:
 
             self.DB.SQLconnect.commit()  # Commit everything in one single transaction
             Logger.info("Database insertion complete.", "DATABASE")
+
+            generate_report(
+                report, self.DB, Path(ConfigManager.get("FINDER.REPORT_PATH") or "")
+            )
+
         except Exception as e:
             self.DB.SQLconnect.rollback()
             Logger.fatal(

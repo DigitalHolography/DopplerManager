@@ -15,3 +15,5 @@ build/
 dist/
 
 *.prof
+
+report.txt

@@ -39,6 +39,22 @@ if os.name == "nt":
 ################################################################################
 
 
+def log_to_file(msg: str, file_path: str) -> None:
+    """This will write the plain log message to a file
+
+    Args:
+        msg (str): the message to log
+        file_path (str): the path to the log file
+    """
+    try:
+        with open(file_path, "a") as f:
+            f.write(msg + "\n")
+    except Exception as e:
+        print(
+            f"{col.bg}{col.RED} ERROR {col.BLU} LOGGER {col.RES}{col.RED}Failed to log to file {file_path}: {e}"
+        )
+
+
 def log(msg: str, colors: list[str], end: str = "\n") -> None:
     for x in colors:
         print(x, end="")
