@@ -243,15 +243,15 @@ def get_last_update(path: Path) -> datetime.datetime | None:
 
 def get_measure_tag(path: Path) -> str | None:
     try:
-        tag = path.name.split("_")[1]
-        return tag
+        path = Path(path)
+        return path.stem.split("_")[1]
     except Exception as _:
         return None
 
 
 def get_render_number(path: Path) -> int | None:
     try:
-        return int(path.name.split("_")[-1])
+        return int(path.stem.split("_")[-1])
     except Exception as _:
         return None
 

@@ -3,7 +3,7 @@
         "DEFAULT_ROOT_DIR": "Y:\\"
     },
     "DB": {
-        "OVERRIDE_DB": false,
+        "OVERRIDE_DB": true,
         "TEMP_DB": false,
         "DB_PATH": "renders.db"
     },
