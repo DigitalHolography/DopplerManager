@@ -1,7 +1,7 @@
 {
     "FINDER": {
         "DEFAULT_ROOT_DIR": "Y:\\",
-        "REPORT_PATH": "."
+        "REPORT_PATH": "reports"
     },
     "DB": {
         "OVERRIDE_DB": true,
@@ -10,6 +10,6 @@
     },
     "LOG": {
         "LOGGING_LEVEL": "",
-        "LOG_PATH": "."
+        "LOG_PATH": "logs"
     }
 }

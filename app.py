@@ -5,6 +5,7 @@ import multiprocessing
 from src.FileFinder.FileFinderClass import FileFinder
 from src.Database.DBClass import DB
 from src.Utils.ParamsLoader import ConfigManager
+from src.Utils.TeeHandler import Tee
 
 from src.ui.sidebar import render_sidebar
 from src.ui.holo_view import render_holo_section
@@ -94,6 +95,23 @@ def main():
 
 
 if __name__ == "__main__":
+    import os
+    import datetime
+    from pathlib import Path
+
     # For Windows compatibility in multiprocessing
     multiprocessing.freeze_support()
-    main()
+
+    LOG_FILE_PATH = Path(ConfigManager.get("LOGGING.FILE_PATH") or "logs")
+
+    LOG_FILE_PATH = (
+        LOG_FILE_PATH / f"log_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+    )
+
+    # Ensure the log directory exists
+    log_dir = os.path.dirname(LOG_FILE_PATH)
+    if log_dir:
+        os.makedirs(log_dir, exist_ok=True)
+
+    with Tee(LOG_FILE_PATH):
+        main()

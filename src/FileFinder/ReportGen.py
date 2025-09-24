@@ -1,4 +1,5 @@
 import datetime
+import os
 from pathlib import Path
 
 from src.Logger.LoggerClass import Logger
@@ -129,6 +130,9 @@ def generate_report(data: dict, DB: DB, report_path: Path | None = None) -> None
 
     if report_path is None:
         report_path = Path(ConfigManager.get("FINDER.REPORT_PATH") or ".")
+
+    if report_path:
+        os.makedirs(report_path, exist_ok=True)
 
     report_path = (
         report_path / f"report_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"

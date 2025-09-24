@@ -1,5 +1,6 @@
 import sys
 import datetime
+from pathlib import Path
 
 # TODO: Could add a method to have a global log_file, and then switch to eatch
 #       sub_log files
@@ -15,11 +16,11 @@ class Tee:
 
     def __init__(
         self,
-        filename: str,
+        filename: str | Path,
         open_mode: str = "a",
         file_encoding: str = "utf-8",
     ):
-        self.filename: str = filename
+        self.filename = filename
         self.open_mode = open_mode
         self.file_encoding = file_encoding
 
@@ -37,7 +38,7 @@ class Tee:
         sys.stderr = self
 
         self.write(
-            f"\n--- SESSION STARTED AT {datetime.datetime.now().strftime('%Y-%-m-%d %H:%M:%S')} ---\n\n"
+            f"\n--- SESSION STARTED AT {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ---\n\n"
         )
 
         return self
