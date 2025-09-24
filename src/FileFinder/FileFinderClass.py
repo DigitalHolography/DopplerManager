@@ -5,7 +5,6 @@ from pathlib import Path
 import src.FileFinder.FinderUtils as FinderUtils
 from src.Logger.LoggerClass import Logger
 from src.Database.DBClass import DB
-from src.Utils.ParamsLoader import ConfigManager
 from src.FileFinder.ReportGen import generate_report
 
 
@@ -238,9 +237,7 @@ class FileFinder:
                 },
             }
 
-            generate_report(
-                report, self.DB, Path(ConfigManager.get("FINDER.REPORT_PATH") or "")
-            )
+            generate_report(report, self.DB)
 
         except Exception as e:
             self.DB.SQLconnect.rollback()

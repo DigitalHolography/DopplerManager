@@ -3,6 +3,7 @@ from pathlib import Path
 
 from src.Logger.LoggerClass import Logger
 from src.Database.DBClass import DB
+from src.Utils.ParamsLoader import ConfigManager
 
 # Data dictionary format:
 # {
@@ -53,14 +54,19 @@ def __get_duration(start, end) -> str:
         return "N/A"
 
     duration = end - start
-    return __format_date(duration)
+
+    return str(duration).split(".")[0]  # Remove microseconds for cleaner output
 
 
 def __parse_data(data: dict, DB: DB, sep: str = "=", width: int = 40) -> str:
     now = datetime.datetime.now()
-    scan_date = __format_date(__s_get_r_dict(data, "headers.scan_date", "N/A"))
-    insert_date = __format_date(__s_get_r_dict(data, "headers.insert_date", "N/A"))
-    end_date = __format_date(__s_get_r_dict(data, "headers.end_date", "N/A"))
+    scan_date = __s_get_r_dict(data, "headers.scan_date")
+    insert_date = __s_get_r_dict(data, "headers.insert_date")
+    end_date = __s_get_r_dict(data, "headers.end_date")
+
+    scan_date_str = __format_date(scan_date)
+    insert_date_str = __format_date(insert_date)
+    end_date_str = __format_date(end_date)
 
     separator = sep * width
 
@@ -72,9 +78,9 @@ def __parse_data(data: dict, DB: DB, sep: str = "=", width: int = 40) -> str:
 Scan Path       : {__s_get_r_dict(data, "headers.scan_path", "N/A")}
 DB Path         : {DB.DB_PATH}
 
-Scan Date       : {scan_date}
-Insert Date     : {insert_date}
-End Date        : {end_date}
+Scan Date       : {scan_date_str}
+Insert Date     : {insert_date_str}
+End Date        : {end_date_str}
 Report Date     : {__format_date(now)}
 
 Scan Duration   : {__get_duration(scan_date, insert_date)}
@@ -109,7 +115,7 @@ Total Preview   : {DB.count("preview_doppler_video")}
 # └───────────────────────────────────┘
 
 
-def generate_report(data: dict, DB: DB, report_path: Path) -> None:
+def generate_report(data: dict, DB: DB, report_path: Path | None = None) -> None:
     """
     Generates a simple text report from the provided data dictionary
     and saves it to the specified report path.
@@ -120,6 +126,13 @@ def generate_report(data: dict, DB: DB, report_path: Path) -> None:
     """
 
     # TODO: think about the possibility of exporting a pdf report with reportlab
+
+    if report_path is None:
+        report_path = Path(ConfigManager.get("FINDER.REPORT_PATH") or ".")
+
+    report_path = (
+        report_path / f"report_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+    )
 
     try:
         with open(report_path, "w") as report_file:
