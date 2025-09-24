@@ -196,3 +196,21 @@ class DB:
         self.SQLconnect.commit()
 
         return cursor.lastrowid
+
+    def count(self, table_name: str) -> int:
+        """Counts the number of rows in a table.
+
+        Args:
+            table_name (str): The name of the table.
+
+        Returns:
+            int: The number of rows in the table.
+        """
+        if not self.check_table_existance(table_name):
+            Logger.error(f"{table_name} does not exist", "DATABASE")
+            return 0
+
+        cursor = self.SQLconnect.execute(f"SELECT COUNT(*) FROM {table_name}")
+        count = cursor.fetchone()
+
+        return count[0] if count else 0

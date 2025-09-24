@@ -130,6 +130,8 @@ class FileFinder:
 
         results = []
 
+        start_scan_date = datetime.datetime.now()
+
         if use_parallelism:
             # Use as many processes as there are CPU cores
             with multiprocessing.Pool() as pool:
@@ -159,15 +161,7 @@ class FileFinder:
             "All folders scanned. Inserting data into the database...", "DATABASE"
         )
 
-        report = {
-            "headers": {"scan_path": root_dir, "scan_date": datetime.datetime.now()},
-            "data": {
-                "found_holo": sum(len(r[0]) for r in results),
-                "found_hd": sum(len(r[1]) for r in results),
-                "found_ef": sum(len(r[2]) for r in results),
-                "found_preview": sum(len(r[3]) for r in results),
-            },
-        }
+        start_insert_date = datetime.datetime.now()
 
         holo_id_map = {}  # To map temporary string IDs to final database integer IDs
 
@@ -218,6 +212,21 @@ class FileFinder:
 
             self.DB.SQLconnect.commit()  # Commit everything in one single transaction
             Logger.info("Database insertion complete.", "DATABASE")
+
+            report = {
+                "headers": {
+                    "scan_path": root_dir,
+                    "scan_date": start_scan_date,
+                    "insert_date": start_insert_date,
+                    "end_date": datetime.datetime.now(),
+                },
+                "data": {
+                    "found_holo": sum(len(r[0]) for r in results),
+                    "found_hd": sum(len(r[1]) for r in results),
+                    "found_ef": sum(len(r[2]) for r in results),
+                    "found_preview": sum(len(r[3]) for r in results),
+                },
+            }
 
             generate_report(
                 report, self.DB, Path(ConfigManager.get("FINDER.REPORT_PATH") or "")

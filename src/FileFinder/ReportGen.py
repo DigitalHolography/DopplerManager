@@ -7,14 +7,16 @@ from src.Database.DBClass import DB
 # Data dictionary format:
 # {
 #       "headers": {
-#           "scan_path": str,
-#           "scan_date": datetime.datetime,
+#           "scan_path"     : str,
+#           "scan_date"     : datetime.datetime,
+#           "insert_date"   : datetime.datetime,
+#           "end_date"      : datetime.datetime,
 #       },
 #       "data": {
-#           "found_holo": str,
-#           "found_hd": str,
-#           "found_ef": str,
-#           "found_preview": str,
+#           "found_holo"    : str,
+#           "found_hd"      : str,
+#           "found_ef"      : str,
+#           "found_preview" : str,
 #       }
 # }
 
@@ -37,6 +39,13 @@ def __s_get_r_dict(data: dict, keys: str, default=None):
     return d
 
 
+def __format_date(date, timespec: str = "seconds") -> str:
+    if not isinstance(date, datetime.datetime):
+        return "N/A"
+
+    return date.isoformat(" ", timespec=timespec)
+
+
 def __get_duration(start, end) -> str:
     if not isinstance(start, datetime.datetime) or not isinstance(
         end, datetime.datetime
@@ -44,12 +53,14 @@ def __get_duration(start, end) -> str:
         return "N/A"
 
     duration = end - start
-    return str(duration).split(".")[0]  # Remove microseconds
+    return __format_date(duration)
 
 
 def __parse_data(data: dict, DB: DB, sep: str = "=", width: int = 40) -> str:
     now = datetime.datetime.now()
-    scan_date = __s_get_r_dict(data, "headers.scan_date", "N/A").split(".")[0]  # type: ignore (will default to "N/A")
+    scan_date = __format_date(__s_get_r_dict(data, "headers.scan_date", "N/A"))
+    insert_date = __format_date(__s_get_r_dict(data, "headers.insert_date", "N/A"))
+    end_date = __format_date(__s_get_r_dict(data, "headers.end_date", "N/A"))
 
     separator = sep * width
 
@@ -59,11 +70,16 @@ def __parse_data(data: dict, DB: DB, sep: str = "=", width: int = 40) -> str:
 {separator}
 
 Scan Path       : {__s_get_r_dict(data, "headers.scan_path", "N/A")}
-Scan Date       : {scan_date}
-Report Date     : {now.strftime("%Y-%m-%d %H:%M:%S")}
-Total Duration  : {__get_duration(__s_get_r_dict(data, "headers.scan_date"), now)}
 DB Path         : {DB.DB_PATH}
 
+Scan Date       : {scan_date}
+Insert Date     : {insert_date}
+End Date        : {end_date}
+Report Date     : {__format_date(now)}
+
+Scan Duration   : {__get_duration(scan_date, insert_date)}
+Insert Duration : {__get_duration(insert_date, end_date)}
+Total Duration  : {__get_duration(scan_date, now)}
 
 {separator}
 {"METRICS":^{width}}
@@ -79,6 +95,11 @@ Found Preview   : {__s_get_r_dict(data, "data.found_preview", "N/A")}
 {separator}
 
 {"CURRENT IN DB":^{width}}
+
+Total Holo      : {DB.count("holo_data")}
+Total HD        : {DB.count("hd_render")}
+Total EF        : {DB.count("ef_render")}
+Total Preview   : {DB.count("preview_doppler_video")}
 
 """
 

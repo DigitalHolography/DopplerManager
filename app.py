@@ -43,7 +43,6 @@ def main():
     Acts as a conductor, calling rendering functions in order.
     """
     # --- Page Configuration ---
-    multiprocessing.freeze_support()
     st.set_page_config(page_title="DopplerManager", layout="wide")
 
     # --- Initialization ---
@@ -93,5 +92,8 @@ def main():
     st.markdown("---")
     render_ef_section(filtered_by_hd)
 
+
 if __name__ == "__main__":
+    # For Windows compatibility in multiprocessing
+    multiprocessing.freeze_support()
     main()
