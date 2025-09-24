@@ -5,6 +5,7 @@ import time
 from src.FileFinder.FileFinderClass import FileFinder
 from src.Logger.LoggerClass import Logger
 
+
 def render_sidebar(ff: FileFinder) -> None:
     """
     Renders the sidebar UI components and handles the associated logic.
@@ -17,7 +18,7 @@ def render_sidebar(ff: FileFinder) -> None:
             st.sidebar.info("The update may take a few minutes. Please wait.")
             with st.spinner(f"Updating database with files from {scan_path}..."):
                 t1 = time.time()
-                ff.Findfiles(scan_path)
+                ff.Findfiles(scan_path, reset_db=True)
                 t2 = time.time()
                 Logger.info(f"Time taken: {t2 - t1:.6f}", "TIME")
                 st.sidebar.success("Database updated successfully!")
