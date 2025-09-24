@@ -124,7 +124,17 @@ class FileFinder:
             },
         )
 
-    def Findfiles(self, root_dir: str, callback_bar=None, use_parallelism=True):
+    def Findfiles(
+        self,
+        root_dir: str,
+        reset_db: bool = False,
+        callback_bar=None,
+        use_parallelism=True,
+    ):
+        if reset_db:
+            self.ClearDB()
+            Logger.info("Database cleared before new scan.", "DATABASE")
+
         date_folders = list(FinderUtils.safe_iterdir(root_dir))
         total_folders = len(date_folders)
 
