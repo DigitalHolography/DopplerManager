@@ -8,7 +8,8 @@ from src.Utils.ParamsLoader import ConfigManager
 
 from src.ui.sidebar import render_sidebar
 from src.ui.holo_view import render_holo_section
-from src.ui.hd_ef_view import render_hd_ef_section
+from src.ui.hd_view import render_hd_section
+from src.ui.ef_view import render_ef_section
 
 
 @st.cache_resource
@@ -68,8 +69,10 @@ def main():
             h_data.tag AS measure_tag,
             h_data.created_at AS holo_created_at,
             hd.path AS hd_folder,
+            hd.render_number as hd_render_number,
             hd.version AS hd_version,
             ef.path AS ef_folder,
+            ef.render_number AS ef_render_number,
             ef.version AS ef_version
         FROM
             holo_data AS h_data
@@ -85,8 +88,10 @@ def main():
         return
 
     filtered_by_holo = render_holo_section(combined_df)
-    render_hd_ef_section(filtered_by_holo)
-
+    st.markdown("---")
+    filtered_by_hd = render_hd_section(filtered_by_holo)
+    st.markdown("---")
+    render_ef_section(filtered_by_hd)
 
 if __name__ == "__main__":
     main()
