@@ -12,8 +12,6 @@ A Streamlit application to find, catalog, and browse HoloDoppler and EyeFlow ren
 
 Follow the instructions for your operating system.
 
-### ► Windows
-
 1.  **Clone the repository:**
     Open Command Prompt or PowerShell and run the following commands.
     ```bash
@@ -31,27 +29,6 @@ Follow the instructions for your operating system.
     ```bash
     pip install -r requirements.txt
     ```
-
-### ► Linux / macOS
-
-1.  **Clone the repository:**
-    Open your terminal and run the following commands.
-    ```bash
-    git clone https://github.com/your-username/dopplermanager.git
-    cd dopplermanager
-    ```
-
-2.  **Create and activate a virtual environment:**
-    ```bash
-    python3 -m venv venv
-    source venv/bin/activate
-    ```
-
-3.  **Install dependencies:**
-    ```bash
-    pip install -r requirements.txt
-    ```
-
 ---
 
 ## Running the Application
