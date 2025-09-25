@@ -38,7 +38,7 @@ A Streamlit application to find, catalog, and browse HoloDoppler and EyeFlow ren
     ```
 
 2.  **Access the application:**
-    After running the command, the application should automatically open in a new tab in your default web browser. If it doesn't, you can access it at the local URL provided in the terminal (usually `http://localhost:8501` by default).
+    After running the command, the application should automatically open in a new tab in your default web browser. If it doesn't, you can access it at the local URL provided in the terminal (usually http://localhost:8501 by default).
 
 ## Usage
 
