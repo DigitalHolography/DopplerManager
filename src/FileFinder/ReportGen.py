@@ -111,6 +111,23 @@ Total Preview   : {DB.count("preview_doppler_video")}
 """
 
 
+def get_report_path() -> Path:
+    tmp_config = ConfigManager.get("FINDER.REPORT_PATH") or ""
+
+    if tmp_config != "":
+        return Path(tmp_config)
+
+    appdata_path = os.getenv("APPDATA")
+
+    if not appdata_path:
+        return Path("reports")
+
+    app_dir = Path(appdata_path) / "DopplerManager"
+    os.makedirs(app_dir, exist_ok=True)
+
+    return app_dir / "reports"
+
+
 # ┌───────────────────────────────────┐
 # │           MAIN FUNCTIONS          │
 # └───────────────────────────────────┘
@@ -129,9 +146,8 @@ def generate_report(data: dict, DB: DB, report_path: Path | None = None) -> None
     # TODO: think about the possibility of exporting a pdf report with reportlab
 
     if report_path is None:
-        report_path = Path(ConfigManager.get("FINDER.REPORT_PATH") or ".")
-
-    if report_path:
+        report_path = get_report_path()
+    else:
         os.makedirs(report_path, exist_ok=True)
 
     report_path = (
