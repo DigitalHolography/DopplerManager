@@ -27,7 +27,7 @@ tags_color = {
 ################################################################################
 
 # Check for Python version
-if sys.version_info <= (3, 9):
+if sys.version_info < (3, 10):
     print(f"{col.BOLD}{col.RED}You are using a Python version before 3.10!")
     print("This could result in failure to load")
     print(f"{col.YEL}Current version {sys.version}")

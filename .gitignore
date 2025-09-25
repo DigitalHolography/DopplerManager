@@ -17,4 +17,8 @@ dist/
 
 *.prof
 
-report*.txt
+
+logs/
+reports/
+# report*.txt
+# log_*.txt
