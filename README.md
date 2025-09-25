@@ -10,20 +10,20 @@ A Streamlit application to find, catalog, and browse HoloDoppler and EyeFlow ren
 
 ## Setup Instructions
 
-1.  **Clone the repository:**
-    Open Command Prompt or PowerShell and run the following commands.
-    ```bash
-    git clone https://github.com/DigitalHolography/DopplerManager.git
-    cd DopplerManager
-    ```
+1.  **Download the latest release or clone the repository**
 
-2.  **Create and activate a virtual environment:**
+2.  **Create a virtual environment:**
+    Open Command Prompt or PowerShell in the DopplerManager directory and run the following commands.
     ```bash
     python -m venv venv
+    ```
+
+3. **Activate the virtual environment:**
+    ```bash
     venv\Scripts\activate
     ```
 
-3.  **Install dependencies:**
+4.  **Install dependencies:**
     ```bash
     pip install -r requirements.txt
     ```
