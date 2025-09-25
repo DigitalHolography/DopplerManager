@@ -10,8 +10,6 @@ A Streamlit application to find, catalog, and browse HoloDoppler and EyeFlow ren
 
 ## Setup Instructions
 
-Follow the instructions for your operating system.
-
 1.  **Clone the repository:**
     Open Command Prompt or PowerShell and run the following commands.
     ```bash
