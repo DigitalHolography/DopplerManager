@@ -1,19 +1,20 @@
 import streamlit as st
 import pandas as pd
 
+
 def render_hd_section(filtered_holo_df: pd.DataFrame) -> pd.DataFrame:
     """
     Renders the HoloDoppler and EyeFlow sections based on the
     pre-filtered holo data.
 
-    Args:   
+    Args:
         filtered_holo_df (pd.DataFrame): DataFrame filtered by Holo selections.
 
     Returns:
         pd.DataFrame: DataFrame further filtered by HoloDoppler selections.
     """
     st.header("HoloDoppler Data")
-    hd_base_df = filtered_holo_df.dropna(subset=['hd_folder']).copy()
+    hd_base_df = filtered_holo_df.dropna(subset=["hd_folder"]).copy()
 
     if hd_base_df.empty:
         st.info("No HoloDoppler data matches the current Holo filters.")
@@ -40,9 +41,10 @@ def render_hd_section(filtered_holo_df: pd.DataFrame) -> pd.DataFrame:
     if st.checkbox("Latest HD render only", value=True):
         latest_hd_render_numbers = hd_base_df.groupby("holo_file")[
             "hd_render_number"
-        ].transform('max')
-        hd_base_df = hd_base_df[hd_base_df["hd_render_number"] == latest_hd_render_numbers]
-
+        ].transform("max")
+        hd_base_df = hd_base_df[
+            hd_base_df["hd_render_number"] == latest_hd_render_numbers
+        ]
 
     unique_hd_versions = sorted(hd_base_df["hd_version"].dropna().unique())
     selected_hd_versions = st.multiselect(
@@ -65,8 +67,8 @@ def render_hd_section(filtered_holo_df: pd.DataFrame) -> pd.DataFrame:
     )
 
     with st.expander(
-            f"**Show {shown_hd_folders} of {total_hd_in_selection} HoloDoppler folders from the selection above.**"
-        ):
+        f"**Show {shown_hd_folders} of {total_hd_in_selection} HoloDoppler folders from the selection above.**"
+    ):
         st.dataframe(hd_display_df, width="stretch")
         st.download_button(
             label="Export paths to .txt",
@@ -82,13 +84,15 @@ def render_hd_section(filtered_holo_df: pd.DataFrame) -> pd.DataFrame:
 
     if not holo_with_no_matching_hd.empty:
         with st.expander(
-            f"**Show {holo_with_no_matching_hd["holo_file"].nunique()} .holo files with no matching HoloDoppler renders**"
+            f"**Show {holo_with_no_matching_hd['holo_file'].nunique()} .holo files with no matching HoloDoppler renders**"
         ):
             st.warning(
                 "The following .holo files do not have any HoloDoppler renders that match the version filter above (or have no renders at all)."
             )
             st.dataframe(
-                holo_with_no_matching_hd[["holo_file", "measure_tag", "holo_created_at"]]
+                holo_with_no_matching_hd[
+                    ["holo_file", "measure_tag", "holo_created_at"]
+                ]
                 .drop_duplicates()
                 .reset_index(drop=True),
                 width="stretch",

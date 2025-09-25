@@ -98,13 +98,20 @@ def main():
 
 if __name__ == "__main__":
     import os
+    import sys
     import datetime
     from pathlib import Path
+
+    if sys.version_info < (3, 13):
+        print("You are using a Python version before 3.13!")
+        print("This could result in failure to load")
+        print(f"Current version {sys.version}")
+        sys.exit(1)
 
     # For Windows compatibility in multiprocessing
     multiprocessing.freeze_support()
 
-    LOG_FILE_PATH = Path(ConfigManager.get("LOG.FILE_PATH") or "logs")
+    LOG_FILE_PATH = Path(ConfigManager.get("LOG.LOG_PATH") or "logs")
 
     LOG_FILE_PATH = (
         LOG_FILE_PATH / f"log_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
