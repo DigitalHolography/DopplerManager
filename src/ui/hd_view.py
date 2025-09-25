@@ -19,7 +19,7 @@ def render_hd_section(filtered_holo_df: pd.DataFrame) -> pd.DataFrame:
     if hd_base_df.empty:
         st.info("No HoloDoppler data matches the current Holo filters.")
         with st.expander(
-            f"Show {filtered_holo_df['holo_file'].nunique()} .holo files with no HoloDoppler renders"
+            f"Show/Export {filtered_holo_df['holo_file'].nunique()} .holo files with no HoloDoppler renders"
         ):
             st.warning(
                 "The following .holo files do not have any associated HoloDoppler renders."
@@ -67,7 +67,7 @@ def render_hd_section(filtered_holo_df: pd.DataFrame) -> pd.DataFrame:
     )
 
     with st.expander(
-        f"**Show {shown_hd_folders} of {total_hd_in_selection} HoloDoppler folders from the selection above.**"
+        f"**Show/Export {shown_hd_folders} of {total_hd_in_selection} HoloDoppler folders from the selection above.**"
     ):
         st.dataframe(hd_display_df, width="stretch")
         st.download_button(
@@ -84,7 +84,7 @@ def render_hd_section(filtered_holo_df: pd.DataFrame) -> pd.DataFrame:
 
     if not holo_with_no_matching_hd.empty:
         with st.expander(
-            f"**Show {holo_with_no_matching_hd['holo_file'].nunique()} .holo files with no matching HoloDoppler renders**"
+            f"**Show/Export {holo_with_no_matching_hd['holo_file'].nunique()} .holo files with no matching HoloDoppler renders**"
         ):
             st.warning(
                 "The following .holo files do not have any HoloDoppler renders that match the version filter above (or have no renders at all)."

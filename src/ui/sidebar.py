@@ -1,9 +1,28 @@
 import streamlit as st
 from pathlib import Path
 import time
+import tkinter as tk
+from tkinter import filedialog
 
 from src.FileFinder.FileFinderClass import FileFinder
 from src.Logger.LoggerClass import Logger
+
+
+def select_directory():
+    """
+    Opens a directory selection dialog and updates the session state.
+    This function is intended to be used as a callback.
+    """
+    # Create a Tkinter root window
+    root = tk.Tk()
+    # Hide the main window
+    root.withdraw()
+    # Open the directory selection dialog
+    folder_path = filedialog.askdirectory()
+    # Destroy the root window
+    root.destroy()
+    if folder_path:
+        st.session_state.scan_path = folder_path
 
 
 def render_sidebar(ff: FileFinder) -> None:
@@ -11,7 +30,18 @@ def render_sidebar(ff: FileFinder) -> None:
     Renders the sidebar UI components and handles the associated logic.
     """
     st.sidebar.title("Database Controls")
-    scan_path = st.sidebar.text_input("Directory to scan", "Y:\\")
+
+    if "scan_path" not in st.session_state:
+        st.session_state.scan_path = "Y:\\"
+
+    st.sidebar.text_input("Directory to scan", key="scan_path")
+
+    st.sidebar.button(
+        "Select Directory",
+        on_click=select_directory,
+    )
+
+    scan_path = st.session_state.scan_path
 
     if st.sidebar.button("Update database"):
         if Path(scan_path).is_dir():
