@@ -47,11 +47,21 @@ def render_sidebar(ff: FileFinder) -> None:
         if Path(scan_path).is_dir():
             st.sidebar.info("The update may take a few minutes. Please wait.")
             with st.spinner(f"Updating database with files from {scan_path}..."):
+                progress_bar = st.sidebar.progress(0, text="Starting scan...")
+
                 t1 = time.time()
-                ff.Findfiles(scan_path, reset_db=True, use_parallelism=False)
+                ff.Findfiles(
+                    scan_path,
+                    reset_db=True,
+                    callback_bar=progress_bar,
+                    use_parallelism=False,
+                )
                 t2 = time.time()
                 Logger.info(f"Time taken: {t2 - t1:.6f}", "TIME")
+                progress_bar.progress(1.0, "Update complete!")
                 st.sidebar.success("Database updated successfully!")
+
+                progress_bar.empty()
                 # Clear the data cache and rerun the app to show new data
                 st.cache_data.clear()
                 st.rerun()

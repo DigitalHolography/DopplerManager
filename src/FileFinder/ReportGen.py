@@ -122,10 +122,10 @@ def get_report_path() -> Path:
     if not appdata_path:
         return Path("reports")
 
-    app_dir = Path(appdata_path) / "DopplerManager"
+    app_dir = Path(appdata_path) / "DopplerManager" / "reports"
     os.makedirs(app_dir, exist_ok=True)
 
-    return app_dir / "reports"
+    return app_dir
 
 
 # ┌───────────────────────────────────┐

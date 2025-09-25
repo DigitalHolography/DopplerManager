@@ -150,7 +150,7 @@ class FileFinder:
                     if callback_bar:
                         progress_text = f"Scanning ({i + 1}/{total_folders})"
                         callback_bar.progress(
-                            (i + 1) / total_folders, text=progress_text
+                            ((i + 1) / total_folders) * 0.5, text=progress_text
                         )
                     results.append(result)
         else:
@@ -160,7 +160,9 @@ class FileFinder:
                     progress_text = (
                         f"Scanning ({i + 1}/{total_folders}): {date_folder.name}"
                     )
-                    callback_bar.progress((i + 1) / total_folders, text=progress_text)
+                    callback_bar.progress(
+                        ((i + 1) / total_folders) * 0.5, text=progress_text
+                    )
 
                 result = FinderUtils.process_date_folder(date_folder)
                 results.append(result)
@@ -170,12 +172,23 @@ class FileFinder:
             "All folders scanned. Inserting data into the database...", "DATABASE"
         )
 
+        if callback_bar:
+            callback_bar.progress(0.5, text="Inserting data into database...")
+
         start_insert_date = datetime.datetime.now()
 
         holo_id_map = {}  # To map temporary string IDs to final database integer IDs
+        total_results_to_insert = len(results)
 
         try:
-            for holo_list, hd_list, ef_list, preview_list in results:
+            for i, (holo_list, hd_list, ef_list, preview_list) in enumerate(results):
+                if callback_bar:
+                    progress_value = 0.5 + (((i + 1) / total_results_to_insert) * 0.5)
+                    progress_text = (
+                        f"Inserting data ({i + 1}/{total_results_to_insert})"
+                    )
+                    callback_bar.progress(progress_value, text=progress_text)
+
                 # Holo data
                 for temp_holo_id, holo_data in holo_list:
                     db_id = self.InsertHoloFile(**holo_data)
