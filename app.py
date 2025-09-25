@@ -21,21 +21,23 @@ def initialize_database(db_path):
     """
     ff_instance = FileFinder(DB(db_path))
     ff_instance.CreateDB()
-    return ff_instance.DB.SQLconnect, ff_instance
+    return ff_instance
 
 
 @st.cache_data
-def load_data(query, _conn):
+def load_data(query, _ff: FileFinder):
     """
     Loads data from the database using the provided SQL query.
     Caches the result to avoid redundant database calls.
     """
-    try:
-        df = pd.read_sql_query(query, _conn)
-        return df
-    except Exception as e:
-        st.error(f"Error while loading data: {e}")
-        return pd.DataFrame()
+    # try:
+    #     df = pd.read_sql_query(query, _conn)
+    #     return df
+    # except Exception as e:
+    #     st.error(f"Error while loading data: {e}")
+    #     return pd.DataFrame()
+
+    return pd.read_sql_query(query, _ff.DB.SQLconnect)
 
 
 def main():
@@ -55,7 +57,7 @@ def main():
         st.session_state.db_initialized = True
         st.toast("Database initialized.")
 
-    conn, ff = initialize_database(DB_FILE)
+    ff = initialize_database(DB_FILE)
 
     # --- UI Rendering ---
     render_sidebar(ff)
@@ -81,7 +83,7 @@ def main():
         LEFT JOIN
             ef_render AS ef ON hd.id = ef.hd_id
     """
-    combined_df = load_data(query, conn)
+    combined_df = load_data(query, ff)
 
     if combined_df.empty:
         st.warning("The database is empty. Please start a scan.")
@@ -102,7 +104,7 @@ if __name__ == "__main__":
     # For Windows compatibility in multiprocessing
     multiprocessing.freeze_support()
 
-    LOG_FILE_PATH = Path(ConfigManager.get("LOGGING.FILE_PATH") or "logs")
+    LOG_FILE_PATH = Path(ConfigManager.get("LOG.FILE_PATH") or "logs")
 
     LOG_FILE_PATH = (
         LOG_FILE_PATH / f"log_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"

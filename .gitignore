@@ -20,5 +20,5 @@ dist/
 
 logs/
 reports/
-# report*.txt
-# log_*.txt
+report*.txt
+log*.txt
