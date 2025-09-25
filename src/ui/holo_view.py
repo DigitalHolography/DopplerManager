@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import datetime
 
+
 def parse_identifier(line: str) -> tuple[datetime.date, str] | None:
     """
     Parses a line like '250910_DOP' into a date object and a tag string.
@@ -69,11 +70,13 @@ def render_holo_section(combined_df: pd.DataFrame) -> pd.DataFrame:
             st.error(f"Error reading or parsing file: {e}")
 
         if identifiers_to_match:
-            mask = pd.Series([False] * len(filtered_holo_df), index=filtered_holo_df.index)
+            mask = pd.Series(
+                [False] * len(filtered_holo_df), index=filtered_holo_df.index
+            )
             for date_to_match, tag_to_match in identifiers_to_match:
-                condition = (
-                    filtered_holo_df["holo_created_date"] == date_to_match
-                ) & (filtered_holo_df["measure_tag"] == tag_to_match)
+                condition = (filtered_holo_df["holo_created_date"] == date_to_match) & (
+                    filtered_holo_df["measure_tag"] == tag_to_match
+                )
                 mask |= condition
             filtered_holo_df = filtered_holo_df[mask]
             st.info(
@@ -93,7 +96,7 @@ def render_holo_section(combined_df: pd.DataFrame) -> pd.DataFrame:
         max_value=max_date,
         disabled=is_disabled,
     )
-    
+
     selected_tags = st.multiselect(
         "Filter by measure tag",
         options=unique_tags,
@@ -106,7 +109,7 @@ def render_holo_section(combined_df: pd.DataFrame) -> pd.DataFrame:
             filtered_holo_df = filtered_holo_df[
                 filtered_holo_df["holo_created_date"].between(start_date, end_date)
             ]
-        
+
         if selected_tags:
             filtered_holo_df = filtered_holo_df[
                 filtered_holo_df["measure_tag"].isin(selected_tags)
@@ -122,7 +125,7 @@ def render_holo_section(combined_df: pd.DataFrame) -> pd.DataFrame:
     )
 
     with st.expander(f"**Show {shown_holo_files} of {total_holo_files} .holo files.**"):
-        st.dataframe(holo_display_df, width='stretch')
+        st.dataframe(holo_display_df, width="stretch")
         st.download_button(
             label="Export paths to .txt",
             data="\n".join(holo_display_df["holo_file"].unique()),

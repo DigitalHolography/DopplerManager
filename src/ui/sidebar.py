@@ -5,6 +5,7 @@ import time
 from src.FileFinder.FileFinderClass import FileFinder
 from src.Logger.LoggerClass import Logger
 
+
 def render_sidebar(ff: FileFinder) -> None:
     """
     Renders the sidebar UI components and handles the associated logic.

@@ -93,5 +93,6 @@ def main():
     st.markdown("---")
     render_ef_section(filtered_by_hd)
 
+
 if __name__ == "__main__":
     main()

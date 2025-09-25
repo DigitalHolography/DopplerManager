@@ -1,10 +1,11 @@
 import streamlit as st
 import pandas as pd
 
+
 def render_ef_section(filtered_hd_df: pd.DataFrame) -> pd.DataFrame:
     """
     Renders the EyeFlow section of the dashboard.
-    
+
     Args:
         filtered_hd_df (pd.DataFrame): DataFrame filtered by HoloDoppler selections.
 
@@ -17,7 +18,7 @@ def render_ef_section(filtered_hd_df: pd.DataFrame) -> pd.DataFrame:
     if ef_base_df.empty:
         st.info("No EyeFlow data matches the current HoloDoppler filters.")
         with st.expander(
-            f"Show {filtered_hd_df["hd_folder"].nunique()} HoloDoppler folders with no EyeFlow renders"
+            f"Show {filtered_hd_df['hd_folder'].nunique()} HoloDoppler folders with no EyeFlow renders"
         ):
             st.warning(
                 "The following HoloDoppler folders do not have any associated EyeFlow renders."
@@ -41,7 +42,7 @@ def render_ef_section(filtered_hd_df: pd.DataFrame) -> pd.DataFrame:
             ef_base_df.groupby("hd_folder")["ef_render_number"].idxmax()
         ]
         ef_base_df = latest_indices.copy()
-        
+
     unique_ef_versions = sorted(ef_base_df["ef_version"].dropna().unique())
     selected_ef_versions = st.multiselect(
         "Filter by EyeFlow version", options=unique_ef_versions
@@ -63,8 +64,8 @@ def render_ef_section(filtered_hd_df: pd.DataFrame) -> pd.DataFrame:
     )
 
     with st.expander(
-            f"**Show {shown_ef_folders} of {total_ef_in_selection} EyeFlow folders from the selection above.**"
-        ):
+        f"**Show {shown_ef_folders} of {total_ef_in_selection} EyeFlow folders from the selection above.**"
+    ):
         st.dataframe(ef_display_df, width="stretch")
         st.download_button(
             label="Export paths to .txt",
@@ -80,7 +81,7 @@ def render_ef_section(filtered_hd_df: pd.DataFrame) -> pd.DataFrame:
 
     if not hd_with_no_matching_ef.empty:
         with st.expander(
-            f"**Show {hd_with_no_matching_ef["hd_folder"].nunique()} HoloDoppler folders with no matching EyeFlow renders**"
+            f"**Show {hd_with_no_matching_ef['hd_folder'].nunique()} HoloDoppler folders with no matching EyeFlow renders**"
         ):
             st.warning(
                 "The following HoloDoppler folders do not have any EyeFlow renders that match the version filter above (or have no renders at all)."
@@ -91,7 +92,7 @@ def render_ef_section(filtered_hd_df: pd.DataFrame) -> pd.DataFrame:
                 .reset_index(drop=True),
                 width="stretch",
             )
-            
+
             st.download_button(
                 label="Export paths to .txt",
                 data="\n".join(hd_with_no_matching_ef["hd_folder"].unique()),
