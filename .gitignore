@@ -1,4 +1,5 @@
 __pycache__
+venv/
 
 # Database
 *.db
@@ -16,4 +17,8 @@ dist/
 
 *.prof
 
-report.txt
+
+logs/
+reports/
+report*.txt
+log*.txt

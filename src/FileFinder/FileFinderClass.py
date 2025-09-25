@@ -5,7 +5,6 @@ from pathlib import Path
 import src.FileFinder.FinderUtils as FinderUtils
 from src.Logger.LoggerClass import Logger
 from src.Database.DBClass import DB
-from src.Utils.ParamsLoader import ConfigManager
 from src.FileFinder.ReportGen import generate_report
 
 
@@ -124,11 +123,23 @@ class FileFinder:
             },
         )
 
-    def Findfiles(self, root_dir: str, callback_bar=None, use_parallelism=True):
+    def Findfiles(
+        self,
+        root_dir: str,
+        reset_db: bool = False,
+        callback_bar=None,
+        use_parallelism=True,
+    ):
+        if reset_db:
+            self.ClearDB()
+            Logger.info("Database cleared before new scan.", "DATABASE")
+
         date_folders = list(FinderUtils.safe_iterdir(root_dir))
         total_folders = len(date_folders)
 
         results = []
+
+        start_scan_date = datetime.datetime.now()
 
         if use_parallelism:
             # Use as many processes as there are CPU cores
@@ -139,7 +150,7 @@ class FileFinder:
                     if callback_bar:
                         progress_text = f"Scanning ({i + 1}/{total_folders})"
                         callback_bar.progress(
-                            (i + 1) / total_folders, text=progress_text
+                            ((i + 1) / total_folders) * 0.5, text=progress_text
                         )
                     results.append(result)
         else:
@@ -149,7 +160,9 @@ class FileFinder:
                     progress_text = (
                         f"Scanning ({i + 1}/{total_folders}): {date_folder.name}"
                     )
-                    callback_bar.progress((i + 1) / total_folders, text=progress_text)
+                    callback_bar.progress(
+                        ((i + 1) / total_folders) * 0.5, text=progress_text
+                    )
 
                 result = FinderUtils.process_date_folder(date_folder)
                 results.append(result)
@@ -159,20 +172,23 @@ class FileFinder:
             "All folders scanned. Inserting data into the database...", "DATABASE"
         )
 
-        report = {
-            "headers": {"scan_path": root_dir, "scan_date": datetime.datetime.now()},
-            "data": {
-                "found_holo": sum(len(r[0]) for r in results),
-                "found_hd": sum(len(r[1]) for r in results),
-                "found_ef": sum(len(r[2]) for r in results),
-                "found_preview": sum(len(r[3]) for r in results),
-            },
-        }
+        if callback_bar:
+            callback_bar.progress(0.5, text="Inserting data into database...")
+
+        start_insert_date = datetime.datetime.now()
 
         holo_id_map = {}  # To map temporary string IDs to final database integer IDs
+        total_results_to_insert = len(results)
 
         try:
-            for holo_list, hd_list, ef_list, preview_list in results:
+            for i, (holo_list, hd_list, ef_list, preview_list) in enumerate(results):
+                if callback_bar:
+                    progress_value = 0.5 + (((i + 1) / total_results_to_insert) * 0.5)
+                    progress_text = (
+                        f"Inserting data ({i + 1}/{total_results_to_insert})"
+                    )
+                    callback_bar.progress(progress_value, text=progress_text)
+
                 # Holo data
                 for temp_holo_id, holo_data in holo_list:
                     db_id = self.InsertHoloFile(**holo_data)
@@ -219,9 +235,22 @@ class FileFinder:
             self.DB.SQLconnect.commit()  # Commit everything in one single transaction
             Logger.info("Database insertion complete.", "DATABASE")
 
-            generate_report(
-                report, self.DB, Path(ConfigManager.get("FINDER.REPORT_PATH") or "")
-            )
+            report = {
+                "headers": {
+                    "scan_path": root_dir,
+                    "scan_date": start_scan_date,
+                    "insert_date": start_insert_date,
+                    "end_date": datetime.datetime.now(),
+                },
+                "data": {
+                    "found_holo": sum(len(r[0]) for r in results),
+                    "found_hd": sum(len(r[1]) for r in results),
+                    "found_ef": sum(len(r[2]) for r in results),
+                    "found_preview": sum(len(r[3]) for r in results),
+                },
+            }
+
+            generate_report(report, self.DB)
 
         except Exception as e:
             self.DB.SQLconnect.rollback()
