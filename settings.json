@@ -6,10 +6,10 @@
     "DB": {
         "OVERRIDE_DB": true,
         "TEMP_DB": false,
-        "DB_PATH": "renders.db"
+        "DB_PATH": ""
     },
     "LOG": {
         "LOGGING_LEVEL": "",
-        "LOG_PATH": "logs"
+        "LOG_PATH": ""
     }
 }

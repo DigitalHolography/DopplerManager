@@ -323,7 +323,7 @@ def process_date_folder(date_folder: Path) -> tuple[list, list, list, list]:
     This function is designed to be run in a separate process.
     It does NOT interact with the database.
     """
-    if not check_folder_name_format(date_folder) or not safe_isdir(date_folder):
+    if not safe_isdir(date_folder):  # or not check_folder_name_format(date_folder)
         Logger.info(f"Skipping: {date_folder}", "SKIP")
         return ([], [], [], [])
 
