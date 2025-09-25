@@ -4,7 +4,7 @@ A Streamlit application to find, catalog, and browse HoloDoppler and EyeFlow ren
 
 ## Prerequisites
 -   **Windows 10/11**
--   **Python 3.13:** You can download Python from the official website: [python.org](https://www.python.org/downloads/)
+-   **Python 3.13:** You can download Python from the official website: (https://www.python.org/downloads/)
 
 ---
 
