@@ -3,7 +3,7 @@
 A Streamlit application to find, catalog, and browse HoloDoppler and EyeFlow render data.
 
 ## Prerequisites
--   **Windows 10/11**
+-   **Windows 11** (Windows 10 is deprecated, use it at your own risk)
 -   **Python 3.13:** You can download Python from the official website: https://www.python.org/downloads/
 
 ---
