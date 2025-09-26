@@ -10,20 +10,26 @@ A Streamlit application to find, catalog, and browse HoloDoppler and EyeFlow ren
 
 ## Setup Instructions
 
-1.  **Download the latest release or clone the repository**
+**Download the latest release or clone the repository**
 
-2.  **Create a virtual environment:**
+### Auto setup
+
+**Double click on `launch.bat`**
+
+### Manual setup
+
+1.  **Create a virtual environment:**
     Open Command Prompt or PowerShell in the DopplerManager directory and run the following commands.
     ```bash
     python -m venv venv
     ```
 
-3. **Activate the virtual environment:**
+2. **Activate the virtual environment:**
     ```bash
     venv\Scripts\activate
     ```
 
-4.  **Install dependencies:**
+3.  **Install dependencies:**
     ```bash
     pip install -r requirements.txt
     ```
