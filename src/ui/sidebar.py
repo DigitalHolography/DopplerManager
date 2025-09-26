@@ -6,6 +6,7 @@ from tkinter import filedialog
 
 from src.FileFinder.FileFinderClass import FileFinder
 from src.Logger.LoggerClass import Logger
+from src.Utils.ParamsLoader import ConfigManager
 
 
 def select_directory():
@@ -54,7 +55,7 @@ def render_sidebar(ff: FileFinder) -> None:
                     scan_path,
                     reset_db=True,
                     callback_bar=progress_bar,
-                    use_parallelism=False,
+                    use_parallelism=ConfigManager.get("FINDER.USE_PARALLISM") or False,
                 )
                 t2 = time.time()
                 Logger.info(f"Time taken: {t2 - t1:.6f}", "TIME")
