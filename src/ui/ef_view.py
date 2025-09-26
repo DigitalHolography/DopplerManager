@@ -13,15 +13,20 @@ def render_ef_section(filtered_hd_df: pd.DataFrame) -> pd.DataFrame:
         pd.DataFrame: DataFrame filtered by EyeFlow selections.
     """
     st.header("EyeFlow Data")
-    ef_base_df = filtered_hd_df.dropna(subset=["ef_folder"]).copy()
+    # Only consider EF renders that have both a report and an h5 output file.
+    ef_base_df = filtered_hd_df.dropna(
+        subset=["ef_folder", "ef_report_path", "ef_h5_output"]
+    ).copy()
 
     if ef_base_df.empty:
-        st.info("No EyeFlow data matches the current HoloDoppler filters.")
+        st.info(
+            "No EyeFlow data with both a report and .h5 output matches the current HoloDoppler filters."
+        )
         with st.expander(
-            f"Show/Export {filtered_hd_df['hd_folder'].nunique()} HoloDoppler folders with no EyeFlow renders"
+            f"Show/Export {filtered_hd_df['hd_folder'].nunique()} HoloDoppler folders with no valid EyeFlow renders"
         ):
             st.warning(
-                "The following HoloDoppler folders do not have any associated EyeFlow renders."
+                "The following HoloDoppler folders do not have any associated EyeFlow renders with both a report and .h5 output file."
             )
             st.dataframe(
                 filtered_hd_df[["hd_folder", "measure_tag", "hd_version"]]
@@ -58,13 +63,15 @@ def render_ef_section(filtered_hd_df: pd.DataFrame) -> pd.DataFrame:
     shown_ef_folders = filtered_ef_df["ef_folder"].nunique()
 
     ef_display_df = (
-        filtered_ef_df[["ef_folder", "measure_tag", "ef_version"]]
+        filtered_ef_df[
+            ["ef_folder", "measure_tag", "ef_version", "ef_report_path", "ef_h5_output"]
+        ]
         .drop_duplicates()
         .reset_index(drop=True)
     )
 
     with st.expander(
-        f"**Show/Export {shown_ef_folders} of {total_ef_in_selection} EyeFlow folders from the selection above.**"
+        f"**Show/Export {shown_ef_folders} of {total_ef_in_selection} valid EyeFlow folders from the selection above.**"
     ):
         st.dataframe(ef_display_df, width="stretch")
         st.download_button(
@@ -84,7 +91,7 @@ def render_ef_section(filtered_hd_df: pd.DataFrame) -> pd.DataFrame:
             f"**Show/Export {hd_with_no_matching_ef['hd_folder'].nunique()} HoloDoppler folders with no matching EyeFlow renders**"
         ):
             st.warning(
-                "The following HoloDoppler folders do not have any EyeFlow renders that match the version filter above (or have no renders at all)."
+                "The following HoloDoppler folders do not have any EyeFlow renders that match the filter above, have no renders at all, or are missing the report/.h5 file."
             )
             st.dataframe(
                 hd_with_no_matching_ef[["hd_folder", "measure_tag", "hd_version"]]
