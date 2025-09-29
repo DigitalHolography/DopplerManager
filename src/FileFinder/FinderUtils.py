@@ -229,7 +229,7 @@ def parse_folder_date(path: Path) -> datetime.date:
             2000 + int(matchs.group(1)), int(matchs.group(2)), int(matchs.group(3))
         )
     except Exception as _:
-        Logger.error(f"Wrong date format: {folder_name} ({matchs.groups})")
+        Logger.error(f"Wrong date format: {folder_name} ({path})")
         return datetime.date.fromtimestamp(os.path.getctime(path))
 
 
