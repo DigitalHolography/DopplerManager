@@ -124,9 +124,12 @@ def main():
             hd.path AS hd_folder,
             hd.render_number as hd_render_number,
             hd.version AS hd_version,
+            hd.raw_h5_path AS hd_raw_h5_path,
             ef.path AS ef_folder,
             ef.render_number AS ef_render_number,
-            ef.version AS ef_version
+            ef.version AS ef_version,
+            ef.report_path AS ef_report_path,
+            ef.h5_output AS ef_h5_output
         FROM
             holo_data AS h_data
         LEFT JOIN

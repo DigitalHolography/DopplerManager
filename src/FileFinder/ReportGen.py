@@ -59,6 +59,14 @@ def __get_duration(start, end) -> str:
     return str(duration).split(".")[0]  # Remove microseconds for cleaner output
 
 
+def __resolve_path(path) -> str:
+    if path is None or path == "N/A":
+        return "N/A"
+
+    path = Path(path)
+    return str(path.resolve())
+
+
 def __parse_data(data: dict, DB: DB, sep: str = "=", width: int = 40) -> str:
     now = datetime.datetime.now()
     scan_date = __s_get_r_dict(data, "headers.scan_date")
@@ -76,8 +84,8 @@ def __parse_data(data: dict, DB: DB, sep: str = "=", width: int = 40) -> str:
 {"DopplerManager Scan Report":^{width}}
 {separator}
 
-Scan Path       : {__s_get_r_dict(data, "headers.scan_path", "N/A")}
-DB Path         : {DB.DB_PATH}
+Scan Path       : {__resolve_path(__s_get_r_dict(data, "headers.scan_path"))}
+DB Path         : {__resolve_path(DB.DB_PATH)}
 
 Scan Date       : {scan_date_str}
 Insert Date     : {insert_date_str}
@@ -111,7 +119,7 @@ Total Preview   : {DB.count("preview_doppler_video")}
 """
 
 
-def get_report_path() -> Path:
+def __get_report_path() -> Path:
     tmp_config = ConfigManager.get("FINDER.REPORT_PATH") or ""
 
     if tmp_config != "":
@@ -146,7 +154,7 @@ def generate_report(data: dict, DB: DB, report_path: Path | None = None) -> None
     # TODO: think about the possibility of exporting a pdf report with reportlab
 
     if report_path is None:
-        report_path = get_report_path()
+        report_path = __get_report_path()
     else:
         os.makedirs(report_path, exist_ok=True)
 

@@ -3,23 +3,29 @@
 A Streamlit application to find, catalog, and browse HoloDoppler and EyeFlow render data.
 
 ## Prerequisites
--   **Windows 10/11**
--   **Python 3.13:** You can download Python from the official website: [python.org](https://www.python.org/downloads/)
+-   **Windows 11** (Windows 10 is deprecated, use it at your own risk)
+-   **Python 3.13:** You can download Python from the official website: https://www.python.org/downloads/
 
 ---
 
 ## Setup Instructions
 
-1.  **Clone the repository:**
-    Open Command Prompt or PowerShell and run the following commands.
-    ```bash
-    git clone https://github.com/DigitalHolography/DopplerManager.git
-    cd DopplerManager
-    ```
+**Download the latest release or clone the repository**
 
-2.  **Create and activate a virtual environment:**
+### Auto setup
+
+**Double click on `launch.bat`**
+
+### Manual setup
+
+1.  **Create a virtual environment:**
+    Open Command Prompt or PowerShell in the DopplerManager directory and run the following commands.
     ```bash
     python -m venv venv
+    ```
+
+2. **Activate the virtual environment:**
+    ```bash
     venv\Scripts\activate
     ```
 
@@ -38,7 +44,7 @@ A Streamlit application to find, catalog, and browse HoloDoppler and EyeFlow ren
     ```
 
 2.  **Access the application:**
-    After running the command, the application should automatically open in a new tab in your default web browser. If it doesn't, you can access it at the local URL provided in the terminal (usually `http://localhost:8501` by default).
+    After running the command, the application should automatically open in a new tab in your default web browser. If it doesn't, you can access it at the local URL provided in the terminal (usually http://localhost:8501 by default).
 
 ## Usage
 

@@ -14,15 +14,18 @@ def render_hd_section(filtered_holo_df: pd.DataFrame) -> pd.DataFrame:
         pd.DataFrame: DataFrame further filtered by HoloDoppler selections.
     """
     st.header("HoloDoppler Data")
-    hd_base_df = filtered_holo_df.dropna(subset=["hd_folder"]).copy()
+    # Only consider HD renders that have a raw h5 file.
+    hd_base_df = filtered_holo_df.dropna(subset=["hd_folder", "hd_raw_h5_path"]).copy()
 
     if hd_base_df.empty:
-        st.info("No HoloDoppler data matches the current Holo filters.")
+        st.info(
+            "No HoloDoppler data with a raw .h5 file matches the current Holo filters."
+        )
         with st.expander(
-            f"Show/Export {filtered_holo_df['holo_file'].nunique()} .holo files with no HoloDoppler renders"
+            f"Show/Export {filtered_holo_df['holo_file'].nunique()} .holo files with no valid HoloDoppler renders"
         ):
             st.warning(
-                "The following .holo files do not have any associated HoloDoppler renders."
+                "The following .holo files do not have any associated HoloDoppler renders with a raw .h5 file."
             )
             st.dataframe(
                 filtered_holo_df[["holo_file", "measure_tag", "holo_created_at"]]
@@ -61,13 +64,13 @@ def render_hd_section(filtered_holo_df: pd.DataFrame) -> pd.DataFrame:
     shown_hd_folders = filtered_hd_df["hd_folder"].nunique()
 
     hd_display_df = (
-        filtered_hd_df[["hd_folder", "measure_tag", "hd_version"]]
+        filtered_hd_df[["hd_folder", "measure_tag", "hd_version", "hd_raw_h5_path"]]
         .drop_duplicates()
         .reset_index(drop=True)
     )
 
     with st.expander(
-        f"**Show/Export {shown_hd_folders} of {total_hd_in_selection} HoloDoppler folders from the selection above.**"
+        f"**Show/Export {shown_hd_folders} of {total_hd_in_selection} valid HoloDoppler folders from the selection above.**"
     ):
         st.dataframe(hd_display_df, width="stretch")
         st.download_button(
@@ -87,7 +90,7 @@ def render_hd_section(filtered_holo_df: pd.DataFrame) -> pd.DataFrame:
             f"**Show/Export {holo_with_no_matching_hd['holo_file'].nunique()} .holo files with no matching HoloDoppler renders**"
         ):
             st.warning(
-                "The following .holo files do not have any HoloDoppler renders that match the version filter above (or have no renders at all)."
+                "The following .holo files do not have any HoloDoppler renders that match the filter above, have no renders at all, or are missing the raw .h5 file."
             )
             st.dataframe(
                 holo_with_no_matching_hd[

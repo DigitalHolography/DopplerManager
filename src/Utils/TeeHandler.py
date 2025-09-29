@@ -37,8 +37,12 @@ class Tee:
         sys.stdout = self
         sys.stderr = self
 
-        self.write(
-            f"\n--- SESSION STARTED AT {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ---\n\n"
+        # self.write(
+        #     f"\n--- SESSION STARTED AT {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ---\n\n"
+        # )
+
+        self.write_to_file_only(
+            f"--- SESSION STARTED AT {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ---\n\n"
         )
 
         return self
@@ -78,6 +82,24 @@ class Tee:
                 "\n[ERROR] (write) Could not write to log file.\n"
             )
             self.original_stdout.write(data)
+
+    def write_to_file_only(self, data: str):
+        """
+        Writes data only to the log file, not to stdout.
+        """
+        if not self.file:
+            self.original_stdout.write(
+                "\n[ERROR] (write_to_file_only) Log file is not initialized\n"
+            )
+            return
+
+        try:
+            self.file.write(data)
+        except (IOError, ValueError):
+            # If logging to file fails, report it to the original stdout
+            self.original_stdout.write(
+                "\n[ERROR] (write_to_file_only) Could not write to log file.\n"
+            )
 
     def flush(self):
         """
