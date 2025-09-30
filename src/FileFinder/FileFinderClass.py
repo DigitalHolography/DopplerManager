@@ -128,7 +128,7 @@ class FileFinder:
         root_dir: str,
         reset_db: bool = False,
         callback_bar=None,
-        use_parallelism=True,
+        use_parallelism=False,
     ):
         if reset_db:
             self.ClearDB()
