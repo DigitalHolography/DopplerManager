@@ -16,6 +16,7 @@ build/
 dist/
 
 *.prof
+*.lprof
 
 
 logs/
