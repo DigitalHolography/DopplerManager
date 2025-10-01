@@ -8,6 +8,7 @@ venv/
 test.py
 test_directory/
 local_tests/
+benchmark/
 
 test_directory/
 results/
