@@ -14,6 +14,7 @@ from src.ui.sidebar import render_sidebar
 from src.ui.holo_view import render_holo_section
 from src.ui.hd_view import render_hd_section
 from src.ui.ef_view import render_ef_section
+from src.ui.export_view import render_export_section
 
 
 def get_appdata_db_path() -> Path:
@@ -147,7 +148,9 @@ def main():
     st.markdown("---")
     filtered_by_hd = render_hd_section(filtered_by_holo)
     st.markdown("---")
-    render_ef_section(filtered_by_hd)
+    filtered_by_ef = render_ef_section(filtered_by_hd)
+    st.markdown("---")
+    render_export_section(filtered_by_ef)
 
 
 if __name__ == "__main__":
