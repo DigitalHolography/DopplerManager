@@ -61,15 +61,9 @@ def get_ef_folders_data(eyeflow_folder: Path) -> list[dict]:
         if not ef_folder.is_dir() or not is_ef_folder(ef_folder.name):
             continue
 
-        png_paths = []
         InputEyeFlowParams = {"path": None, "content": None}
 
         h5_output = None
-
-        png_folder = ef_folder / "png"
-        if png_folder.exists():
-            for sub in png_folder.rglob("*.png"):
-                png_paths.append(str(sub))
 
         json_folder = ef_folder / "json"
         if json_folder.exists() and json_folder.is_dir():
@@ -87,7 +81,6 @@ def get_ef_folders_data(eyeflow_folder: Path) -> list[dict]:
         ef_data.append(
             {
                 "ef_folder": ef_folder,
-                "png_files": png_paths,
                 "InputEyeFlowParams": InputEyeFlowParams,
                 "h5_output": h5_output,
             }
@@ -180,7 +173,8 @@ def find_all_holo_files(root_folder: Path) -> list[Path]:
             for filename in filenames:
                 if filename.endswith(".holo"):
                     # absolute_path = os.path.abspath(os.path.join(dirpath, filename))
-                    absolute_path = (Path(dirpath) / filename).resolve()
+                    # Moved .resolve to export for speed increase
+                    absolute_path = Path(dirpath) / filename
                     found_files.append(absolute_path)
 
     return found_files
@@ -229,7 +223,7 @@ def parse_folder_date(path: Path) -> datetime.date:
             2000 + int(matchs.group(1)), int(matchs.group(2)), int(matchs.group(3))
         )
     except Exception as _:
-        Logger.error(f"Wrong date format: {folder_name} ({matchs.groups})")
+        Logger.error(f"Wrong date format: {folder_name} ({path})")
         return datetime.date.fromtimestamp(os.path.getctime(path))
 
 
@@ -412,4 +406,5 @@ def process_date_folder(date_folder: Path) -> tuple[list, list, list, list]:
 
 
 def parse_path(path: Path | None) -> str | None:
-    return str(path.resolve()) if path else None
+    # Moved .resolve to export for speed increase
+    return str(path) if path else None

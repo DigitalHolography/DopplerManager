@@ -1,10 +1,11 @@
 {
     "FINDER": {
         "DEFAULT_ROOT_DIR": "Y:\\",
-        "REPORT_PATH": ""
+        "REPORT_PATH": "",
+        "USE_PARALLISM": false
     },
     "DB": {
-        "OVERRIDE_DB": true,
+        "OVERRIDE_DB": false,
         "TEMP_DB": false,
         "DB_PATH": ""
     },

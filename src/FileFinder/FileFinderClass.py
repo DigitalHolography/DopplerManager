@@ -128,14 +128,18 @@ class FileFinder:
         root_dir: str,
         reset_db: bool = False,
         callback_bar=None,
-        use_parallelism=True,
+        use_parallelism=False,
     ):
         if reset_db:
             self.ClearDB()
             Logger.info("Database cleared before new scan.", "DATABASE")
 
-        date_folders = list(FinderUtils.safe_iterdir(root_dir))
-        total_folders = len(date_folders)
+        if FinderUtils.get_all_files_extension(Path(root_dir), "holo"):
+            search_folders = [Path(root_dir)]
+        else:
+            search_folders = list(FinderUtils.safe_iterdir(root_dir))
+
+        total_folders = len(search_folders)
 
         results = []
 
@@ -145,7 +149,7 @@ class FileFinder:
             # Use as many processes as there are CPU cores
             with multiprocessing.Pool() as pool:
                 for i, result in enumerate(
-                    pool.imap_unordered(FinderUtils.process_date_folder, date_folders)
+                    pool.imap_unordered(FinderUtils.process_date_folder, search_folders)
                 ):
                     if callback_bar:
                         progress_text = f"Scanning ({i + 1}/{total_folders})"
@@ -155,7 +159,7 @@ class FileFinder:
                     results.append(result)
         else:
             Logger.info("Running scan in sequential mode.", "FILESYSTEM")
-            for i, date_folder in enumerate(date_folders):
+            for i, date_folder in enumerate(search_folders):
                 if callback_bar:
                     progress_text = (
                         f"Scanning ({i + 1}/{total_folders}): {date_folder.name}"

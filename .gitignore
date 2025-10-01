@@ -17,9 +17,14 @@ build/
 dist/
 
 *.prof
+*.lprof
 
 
 logs/
 reports/
 report*.txt
 log*.txt
+
+target/
+
+.vscode/
