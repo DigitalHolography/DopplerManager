@@ -1,7 +1,8 @@
 use colored::*;
-use std::io;
+use std::fs;
+use std::io::{self, Write};
 use std::path::PathBuf;
-use std::process::Command;
+use std::process::{Command, exit};
 
 const MIN_PYTHON_VERSION: &str = "3.13.0";
 
@@ -57,6 +58,26 @@ fn find_python() -> Result<(String, Version), String> {
     Err("Could not find a valid Python installation.".to_string())
 }
 
+fn get_app_version() -> String {
+    match fs::read_to_string("version.txt") {
+        Ok(app_version) => {
+            return format!("Version: {}\n", app_version.trim().bright_magenta());
+        }
+        Err(_) => {
+            return format!("{}\n", "Version: [NOT FOUND]".dimmed());
+        }
+    }
+}
+
+fn pause_on_error(message: &str, exit_code: i32) {
+    println!("\n{}", message.red());
+    print!("Press Enter to exit...");
+    // We need to flush stdout to ensure the message appears before the program waits for input.
+    io::stdout().flush().unwrap();
+    let _ = io::stdin().read_line(&mut String::new());
+    exit(exit_code); // Exit the process with a non-zero exit code to indicate failure.
+}
+
 fn main() -> io::Result<()> {
     // --- Display ASCII Art Banner ---
     let banner = r#"
@@ -82,6 +103,7 @@ fn main() -> io::Result<()> {
                                                 ░░░░░░
     "#;
     println!("{}", banner.yellow());
+    println!("{}", get_app_version());
 
     // ================= PYTHON CHECK =================
 
@@ -101,19 +123,21 @@ fn main() -> io::Result<()> {
                 println!("{}", "Python version check passed.".green());
                 python_executable = executable;
             } else {
-                println!(
-                    "{} Required version: {}, Found version: {}",
-                    "Incompatible Python version.".red(),
+                let error_msg = format!(
+                    "Incompatible Python version. Required: {}, Found: {}",
                     MIN_PYTHON_VERSION.green(),
                     installed_version_str.red()
                 );
+
+                pause_on_error(&error_msg, 1);
+
                 return Ok(());
             }
         }
 
         Err(e) => {
-            println!("{}", e.red());
-            return Ok(());
+            pause_on_error(&e, 1);
+            return Ok(()); // Will not be reached due to exit in pause_on_error
         }
     }
 
@@ -128,8 +152,8 @@ fn main() -> io::Result<()> {
         .status()?;
 
     if !venv_status.success() {
-        println!("{}", "Failed to create virtual environment.".red());
-        return Ok(());
+        pause_on_error("Failed to create virtual environment.", 1);
+        return Ok(()); // Will not be reached due to exit in pause_on_error
     }
 
     println!("{}", "Virtual environment created successfully.\n".green());
@@ -153,7 +177,7 @@ fn main() -> io::Result<()> {
         .status()?;
 
     if !pip_status.success() {
-        println!("{}", "Failed to install dependencies.".red());
+        pause_on_error("Failed to install dependencies.", 1);
         return Ok(());
     }
 
@@ -172,7 +196,7 @@ fn main() -> io::Result<()> {
         .status()?;
 
     if !streamlit_status.success() {
-        println!("{}", "Failed to run the Streamlit application.".red());
+        pause_on_error("Failed to run the Streamlit application.", 1);
     }
 
     Ok(())
