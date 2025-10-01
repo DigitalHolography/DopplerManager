@@ -33,6 +33,25 @@ A Streamlit application to find, catalog, and browse HoloDoppler and EyeFlow ren
     ```bash
     pip install -r requirements.txt
     ```
+
+### Compilation
+
+Prerequisites:
+-   **Rust**: Using `rustc`/`cargo` is recommanded, you can install with `rustup` them at https://rust-lang.org/tools/install/
+
+The Launcher `DopplerManager.exe` is written in **Rust** and can be recompiled on demand using its files located inside `src/Launcher` folder.
+
+You can run the following inside the project root folder:
+-   **Using Windows CMD**
+```cmd
+cargo build --release --manifest-path .\src\Launcher\Cargo.toml && copy .\src\Launcher\target\release\DopplerManager.exe DopplerManager.exe
+```
+
+-   **Using Windows PowerShell**
+```ps
+cargo build --release --manifest-path src\Launcher\Cargo.toml; if ($?) { copy-item -Path src\Launcher\target\release\DopplerManager.exe -Destination DopplerManager.exe }
+```
+
 ---
 
 ## Running the Application

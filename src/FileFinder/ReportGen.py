@@ -67,6 +67,11 @@ def __resolve_path(path) -> str:
     return str(path.resolve())
 
 
+def __get_version() -> str:
+    with open("version.txt", "r") as version_file:
+        return version_file.read().strip()
+
+
 def __parse_data(data: dict, DB: DB, sep: str = "=", width: int = 40) -> str:
     now = datetime.datetime.now()
     scan_date = __s_get_r_dict(data, "headers.scan_date")
@@ -83,6 +88,9 @@ def __parse_data(data: dict, DB: DB, sep: str = "=", width: int = 40) -> str:
 {separator}
 {"DopplerManager Scan Report":^{width}}
 {separator}
+
+App Version     : {__get_version()}
+
 
 Scan Path       : {__resolve_path(__s_get_r_dict(data, "headers.scan_path"))}
 DB Path         : {__resolve_path(DB.DB_PATH)}
