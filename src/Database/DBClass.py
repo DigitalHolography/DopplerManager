@@ -36,6 +36,7 @@ class DB:
 
         # Forces the foreign Keys (duh)
         self.SQLconnect.execute("PRAGMA foreign_keys = ON;")
+        self.SQLconnect.execute("PRAGMA journal_mode = WAL;")
 
     def check_table_existance(self, table_name: str) -> bool:
         """Will check if the table exists inside the DB

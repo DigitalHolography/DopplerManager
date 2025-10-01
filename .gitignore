@@ -23,3 +23,7 @@ logs/
 reports/
 report*.txt
 log*.txt
+
+target/
+
+.vscode/
