@@ -14,7 +14,7 @@ A Streamlit application to find, catalog, and browse HoloDoppler and EyeFlow ren
 
 ### Auto setup
 
-**Double click on `launch.bat`**
+**Double click on `DopplerManager.exe` from inside the root folder of the project**
 
 ### Manual setup
 
