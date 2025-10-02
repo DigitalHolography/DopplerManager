@@ -2,7 +2,10 @@
     "FINDER": {
         "DEFAULT_ROOT_DIR": "Y:\\",
         "REPORT_PATH": "",
-        "USE_PARALLISM": false
+        "USE_PARALLISM": false,
+        "EF": {
+            "GET_INPUT_PARAMS": false
+        }
     },
     "DB": {
         "OVERRIDE_DB": false,

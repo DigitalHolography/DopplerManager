@@ -5,6 +5,7 @@ import datetime
 
 from pathlib import Path
 from src.Logger.LoggerClass import Logger
+from src.Utils.ParamsLoader import ConfigManager
 
 
 def is_ef_folder(name: str):
@@ -54,10 +55,26 @@ def safe_iterdir(path: Path | str) -> list[Path]:
         return []
 
 
-def get_ef_folders_data(eyeflow_folder: Path) -> list[dict]:
+def safe_scandir(path: Path | str) -> list[os.DirEntry]:
+    try:
+        path = Path(path)
+        if safe_isdir(path):
+            return list(os.scandir(path))
+        else:
+            return []
+    except (PermissionError, OSError) as e:
+        Logger.error(
+            f"Access denied or error reading directory: {path} – {e}", tags="FILESYSTEM"
+        )
+        return []
+
+
+def get_ef_folders_data(
+    eyeflow_folder: Path, get_input_params: bool = False
+) -> list[dict]:
     ef_data = []
 
-    for ef_folder in safe_iterdir(eyeflow_folder):
+    for ef_folder in safe_scandir(eyeflow_folder):
         if not ef_folder.is_dir() or not is_ef_folder(ef_folder.name):
             continue
 
@@ -65,14 +82,20 @@ def get_ef_folders_data(eyeflow_folder: Path) -> list[dict]:
 
         h5_output = None
 
-        json_folder = ef_folder / "json"
-        if json_folder.exists() and json_folder.is_dir():
-            input_param = json_folder / "InputEyeFlowParams.json"
-            if input_param.exists():
-                content = safe_json_load(input_param)
+        ef_folder = Path(ef_folder.path)
 
-                if content:
-                    InputEyeFlowParams = {"path": str(input_param), "content": content}
+        json_folder = ef_folder / "json"
+        if json_folder.is_dir():
+            if get_input_params:
+                input_param = json_folder / "InputEyeFlowParams.json"
+                if input_param.exists():
+                    content = safe_json_load(input_param)
+
+                    if content:
+                        InputEyeFlowParams = {
+                            "path": str(input_param),
+                            "content": content,
+                        }
 
             h5_files = get_all_files_extension(json_folder, "h5")
             if h5_files:
@@ -121,7 +144,7 @@ def get_eyeflow_version(ef_folder: Path, hd_folder_name: str) -> str | None:
 
     ef_folder = Path(ef_folder)
     log_folder = ef_folder / "log"
-    if not log_folder.exists() or not log_folder.is_dir():
+    if not log_folder.is_dir():
         Logger.error(
             f"Eyeflow log folder does not exist: {log_folder}", tags="FILESYSTEM"
         )
@@ -328,6 +351,8 @@ def process_date_folder(date_folder: Path) -> tuple[list, list, list, list]:
     ef_data_to_insert = []
     preview_data_to_insert = []
 
+    get_input_params = ConfigManager.get("FINDER.EF.GET_INPUT_PARAMS") or False
+
     holo_files = find_all_holo_files(date_folder)
 
     for holo_file in holo_files:
@@ -381,7 +406,7 @@ def process_date_folder(date_folder: Path) -> tuple[list, list, list, list]:
 
             eyeflow_folder = hd_folder / "eyeflow"
             if eyeflow_folder.exists():
-                ef_renders = get_ef_folders_data(eyeflow_folder)
+                ef_renders = get_ef_folders_data(eyeflow_folder, get_input_params)
                 for ef in ef_renders:
                     ef_entry = {
                         "hd_id": temp_hd_id,
