@@ -97,7 +97,9 @@ class DB:
         self.SQLconnect.execute(SQL_COMMAND)
         self.SQLconnect.commit()
 
-    def insert(self, table_name: str, data: dict[str, object]) -> int | None:
+    def insert(
+        self, table_name: str, data: dict[str, object], do_commit: bool = True
+    ) -> int | None:
         """Inserts `data` inside the `table_name`
 
         Args:
@@ -119,7 +121,9 @@ class DB:
         SQL_COMMAND = f"INSERT INTO {table_name} ({columns}) VALUES ({placeholders})"
 
         cursor = self.SQLconnect.execute(SQL_COMMAND, tuple(data.values()))
-        self.SQLconnect.commit()
+
+        if do_commit:
+            self.SQLconnect.commit()
 
         return cursor.lastrowid
 
