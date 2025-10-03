@@ -1,95 +1,31 @@
-import os
-import json
 import re
-import datetime
 
 from pathlib import Path
 from src.Logger.LoggerClass import Logger
+from src.Utils.ParamsLoader import ConfigManager
+
+from src.Utils.fs_utils import (
+    safe_isdir,
+    get_last_update,
+    get_all_files_by_extension,
+    json_dump_nullable,
+)
+
+from src.FileFinder.utils.path_parser import (
+    get_measure_tag,
+    get_render_number,
+    parse_folder_date,
+)
+
+from src.FileFinder.utils.data_getter import (
+    find_all_holo_files,
+    find_preview_video,
+    gather_all_hd_folders_data_from_holo,
+    gather_ef_folders_data,
+)
 
 
-def is_ef_folder(name: str):
-    return "_EF_" in name
-
-
-def safe_json_load(file_path: Path | str):
-    try:
-        with open(file_path, "r") as f:
-            return json.load(f)
-    except Exception as e:
-        Logger.error(f"{e}", tags="FILESYSTEM")
-        return None
-
-
-def safe_file_read(file_path: Path | str) -> str | None:
-    try:
-        with open(file_path, "r") as f:
-            return f.read()
-    except Exception as e:
-        Logger.error(f"{e}", tags="FILESYSTEM")
-        return None
-
-
-def safe_isdir(path: Path | str) -> bool:
-    try:
-        path = Path(path)
-        return path.is_dir()
-    except (PermissionError, OSError) as e:
-        Logger.error(
-            f"Access denied or error reading directory: {path} – {e}", tags="FILESYSTEM"
-        )
-        return False
-
-
-def safe_iterdir(path: Path | str) -> list[Path]:
-    try:
-        path = Path(path)
-        if safe_isdir(path):
-            return list(path.iterdir())
-        else:
-            return []
-    except (PermissionError, OSError) as e:
-        Logger.error(
-            f"Access denied or error reading directory: {path} – {e}", tags="FILESYSTEM"
-        )
-        return []
-
-
-def get_ef_folders_data(eyeflow_folder: Path) -> list[dict]:
-    ef_data = []
-
-    for ef_folder in safe_iterdir(eyeflow_folder):
-        if not ef_folder.is_dir() or not is_ef_folder(ef_folder.name):
-            continue
-
-        InputEyeFlowParams = {"path": None, "content": None}
-
-        h5_output = None
-
-        json_folder = ef_folder / "json"
-        if json_folder.exists() and json_folder.is_dir():
-            input_param = json_folder / "InputEyeFlowParams.json"
-            if input_param.exists():
-                content = safe_json_load(input_param)
-
-                if content:
-                    InputEyeFlowParams = {"path": str(input_param), "content": content}
-
-            h5_files = get_all_files_extension(json_folder, "h5")
-            if h5_files:
-                h5_output = h5_files[0]
-
-        ef_data.append(
-            {
-                "ef_folder": ef_folder,
-                "InputEyeFlowParams": InputEyeFlowParams,
-                "h5_output": h5_output,
-            }
-        )
-
-    return ef_data
-
-
-def find_version_in_log(file_path: Path) -> str | None:
+def _find_version_in_log(file_path: Path) -> str | None:
     """
     Efficiently finds and extracts a version number from a log file using regex.
     """
@@ -116,18 +52,18 @@ def find_version_in_log(file_path: Path) -> str | None:
     return None
 
 
-def get_eyeflow_version(ef_folder: Path, hd_folder_name: str) -> str | None:
+def _get_eyeflow_version(ef_folder: Path, hd_folder_name: str) -> str | None:
     # TODO: To implement better way
 
     ef_folder = Path(ef_folder)
     log_folder = ef_folder / "log"
-    if not log_folder.exists() or not log_folder.is_dir():
+    if not log_folder.is_dir():
         Logger.error(
             f"Eyeflow log folder does not exist: {log_folder}", tags="FILESYSTEM"
         )
         return None
 
-    file_path_list = get_all_files_extension(log_folder, "txt")
+    file_path_list = get_all_files_by_extension(log_folder, "txt")
 
     if not file_path_list:
         Logger.error(
@@ -145,7 +81,7 @@ def get_eyeflow_version(ef_folder: Path, hd_folder_name: str) -> str | None:
     file_path = file_path_list[0]
     # file_path = log_folder / f"{hd_folder_name}_log.txt"
 
-    version = find_version_in_log(file_path)
+    version = _find_version_in_log(file_path)
 
     if not version:
         Logger.warn(
@@ -155,160 +91,6 @@ def get_eyeflow_version(ef_folder: Path, hd_folder_name: str) -> str | None:
         return None
 
     return version
-
-
-def find_all_holo_files(root_folder: Path) -> list[Path]:
-    """
-    Searches for all .holo files recursively from the root_path.
-    Returns a list of unique, absolute file paths.
-    """
-    found_files = []
-    search_paths = [root_folder]
-
-    for path in search_paths:
-        for dirpath, dirnames, filenames in os.walk(path):
-            # Only keeps the folders that does not contain "_HD_"
-            dirnames[:] = [d for d in dirnames if "_HD_" not in d]
-
-            for filename in filenames:
-                if filename.endswith(".holo"):
-                    # absolute_path = os.path.abspath(os.path.join(dirpath, filename))
-                    # Moved .resolve to export for speed increase
-                    absolute_path = Path(dirpath) / filename
-                    found_files.append(absolute_path)
-
-    return found_files
-
-
-def find_all_hd_folders_from_holo(holo_file_path: Path) -> dict[int, Path]:
-    source_filename = os.path.basename(holo_file_path)
-    base_name = os.path.splitext(source_filename)[0]
-    hd_pattern = re.compile(f"^{re.escape(base_name)}_HD_(\\d+)$")
-
-    hd_folders = {}
-
-    parent_dir = os.path.dirname(holo_file_path)
-    for entry in os.scandir(parent_dir):
-        if not entry.is_dir():
-            continue
-
-        match = hd_pattern.match(entry.name)
-        if match:
-            number = int(match.group(1))
-            hd_folders[number] = Path(entry.path)
-
-    return hd_folders
-
-
-def check_folder_name_format(path: Path) -> bool:
-    folder_name = os.path.basename(path)
-    date_pattern = re.compile(r"^\d{6}.*$")
-
-    return date_pattern.match(folder_name) is not None
-
-
-def parse_folder_date(path: Path) -> datetime.date:
-    folder_name = os.path.basename(path)
-    date_pattern = re.compile(r"^(\d{2})(\d{2})(\d{2}).*$")
-
-    matchs = date_pattern.match(folder_name)
-    if not matchs:  # or len(matchs.groups()) == 3:
-        Logger.error(
-            f"{path} does not match date format, defaulting to creation date of folder"
-        )
-        return datetime.date.fromtimestamp(os.path.getctime(path))
-
-    try:
-        return datetime.date(
-            2000 + int(matchs.group(1)), int(matchs.group(2)), int(matchs.group(3))
-        )
-    except Exception as _:
-        Logger.error(f"Wrong date format: {folder_name} ({path})")
-        return datetime.date.fromtimestamp(os.path.getctime(path))
-
-
-def get_last_update(path: Path) -> datetime.datetime | None:
-    if not path.exists():
-        Logger.error(f"Path does not exists to get its update: {path}")
-        return None
-
-    return datetime.datetime.fromtimestamp(os.path.getmtime(path))
-
-
-def get_measure_tag(path: Path) -> str | None:
-    try:
-        path = Path(path)
-        return path.stem.split("_")[1]
-    except Exception as _:
-        return None
-
-
-def get_render_number(path: Path) -> int | None:
-    try:
-        return int(path.stem.split("_")[-1])
-    except Exception as _:
-        return None
-
-
-def get_report_pdf(ef_folder: Path) -> Path | None:
-    ef_folder = Path(ef_folder)
-    pdf_folder = ef_folder / "pdf"
-
-    if not os.path.isdir(pdf_folder):
-        return None
-
-    pdfs = os.listdir(pdf_folder)
-    if not pdfs or len(pdfs) == 0:
-        return None
-
-    # Need to change in case of more than one pdf
-    return pdf_folder / pdfs[0]
-
-
-def get_raw_h5_file(hd_folder: Path) -> Path | None:
-    # Dummy check
-    hd_folder = Path(hd_folder)
-    raw_folder = hd_folder / "raw"
-
-    if not raw_folder.is_dir():
-        return None
-
-    raw_file = get_all_files_extension(raw_folder, "h5")
-
-    return raw_file[0] if raw_file else None
-
-
-def find_preview_video(holo_file_path: Path) -> Path | None:
-    """Looks for a .avi file with the same base name as the .holo file."""
-    holo_base_name = holo_file_path.stem
-    preview_video_name = f"R_{holo_base_name}_p.avi"
-    avi_path = holo_file_path.parent / preview_video_name
-
-    if avi_path.exists() and avi_path.is_file():
-        return avi_path
-
-    return None
-
-
-def json_dump_nullable(text: str | None):
-    if text:
-        return json.dumps(text)
-
-    return None
-
-
-def get_all_files_extension(folder: Path, extension: str) -> list[Path]:
-    """
-    Retrieves all files with a specified extension from a folder.
-
-    Args:
-        folder (Path): A Path object representing the folder to search in.
-        extension (str): The file extension to search for (e.g., 'txt', 'pdf').
-
-    Returns:
-        list[Path]: A list of Path objects for all files that match the given extension.
-    """
-    return list(folder.glob(f"*.{extension}"))
 
 
 def process_date_folder(date_folder: Path) -> tuple[list, list, list, list]:
@@ -327,6 +109,8 @@ def process_date_folder(date_folder: Path) -> tuple[list, list, list, list]:
     hd_data_to_insert = []
     ef_data_to_insert = []
     preview_data_to_insert = []
+
+    get_input_params = ConfigManager.get("FINDER.EF.GET_INPUT_PARAMS") or False
 
     holo_files = find_all_holo_files(date_folder)
 
@@ -350,38 +134,29 @@ def process_date_folder(date_folder: Path) -> tuple[list, list, list, list]:
             }
             preview_data_to_insert.append(preview_entry)
 
-        hd_folders = find_all_hd_folders_from_holo(holo_file)
+        hd_folders = gather_all_hd_folders_data_from_holo(holo_file)
         for render_number, hd_folder in hd_folders.items():
-            rendering_params_json = (
-                hd_folder / f"{hd_folder.name}_RenderingParameters.json"
-            )
-
-            rendering_params = (
-                safe_json_load(rendering_params_json)
-                if rendering_params_json.exists()
-                else None
-            )
-
-            version_text = safe_file_read(hd_folder / "version.txt")
-
+            hd_folder_path = hd_folder["path"]
             hd_entry = {
                 "holo_id": temp_holo_id,
-                "path": hd_folder,
+                "path": hd_folder_path,
                 "render_number": render_number,
-                "rendering_parameters": json_dump_nullable(rendering_params),
-                "raw_h5_path": get_raw_h5_file(hd_folder),
-                "version": version_text,
-                "updated_at": get_last_update(hd_folder),
+                "rendering_parameters": json_dump_nullable(
+                    hd_folder["rendering_params"]
+                ),
+                "raw_h5_path": hd_folder["raw_h5_path"],
+                "version": hd_folder["version_text"],
+                "updated_at": get_last_update(hd_folder_path),
             }
 
             # We need a temporary ID to link the data before it's in the DB
             # It will be later replaced by the actual Id row of table
-            temp_hd_id = str(hd_folder.absolute())
+            temp_hd_id = str(hd_folder_path.absolute())
             hd_data_to_insert.append((temp_hd_id, hd_entry))
 
-            eyeflow_folder = hd_folder / "eyeflow"
+            eyeflow_folder = hd_folder_path / "eyeflow"
             if eyeflow_folder.exists():
-                ef_renders = get_ef_folders_data(eyeflow_folder)
+                ef_renders = gather_ef_folders_data(eyeflow_folder, get_input_params)
                 for ef in ef_renders:
                     ef_entry = {
                         "hd_id": temp_hd_id,
@@ -390,8 +165,10 @@ def process_date_folder(date_folder: Path) -> tuple[list, list, list, list]:
                         "input_parameters": json_dump_nullable(
                             ef["InputEyeFlowParams"]["content"]
                         ),
-                        "version": get_eyeflow_version(ef["ef_folder"], hd_folder.name),
-                        "report_path": get_report_pdf(ef["ef_folder"]),
+                        "version": _get_eyeflow_version(
+                            ef["ef_folder"], hd_folder_path.name
+                        ),
+                        "report_path": ef["report_path"],
                         "h5_output": ef["h5_output"],
                         "updated_at": get_last_update(ef["ef_folder"]),
                     }
@@ -403,8 +180,3 @@ def process_date_folder(date_folder: Path) -> tuple[list, list, list, list]:
         ef_data_to_insert,
         preview_data_to_insert,
     )
-
-
-def parse_path(path: Path | None) -> str | None:
-    # Moved .resolve to export for speed increase
-    return str(path) if path else None

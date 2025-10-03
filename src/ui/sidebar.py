@@ -113,5 +113,6 @@ def render_sidebar(ff: FileFinder) -> None:
     st.sidebar.markdown("---")
     if st.sidebar.button("Clear database"):
         ff.ClearDB()
+        st.cache_data.clear()
         st.sidebar.success("Database cleared.")
         st.rerun()

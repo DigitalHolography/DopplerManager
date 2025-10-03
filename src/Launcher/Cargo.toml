@@ -2,6 +2,10 @@
 name = "DopplerManager"
 version = "0.1.0"
 edition = "2024"
+build = "build.rs"
 
 [dependencies]
 colored = "3.0.0"
+
+[build-dependencies]
+embed-resource = "3.0.6"

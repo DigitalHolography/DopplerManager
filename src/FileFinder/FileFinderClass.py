@@ -7,6 +7,8 @@ from src.Logger.LoggerClass import Logger
 from src.Database.DBClass import DB
 from src.FileFinder.ReportGen import generate_report
 
+from src.Utils.fs_utils import parse_path, get_all_files_by_extension, safe_iterdir
+
 
 class FileFinder:
     def __init__(self, DB: DB):
@@ -73,10 +75,10 @@ class FileFinder:
             "hd_render",
             {
                 "holo_id": holo_id,
-                "path": FinderUtils.parse_path(path),
+                "path": parse_path(path),
                 "render_number": render_number,
                 "rendering_parameters": rendering_parameters,
-                "raw_h5_path": FinderUtils.parse_path(raw_h5_path),
+                "raw_h5_path": parse_path(raw_h5_path),
                 "version": version,
                 "updated_at": updated_at,
             },
@@ -108,11 +110,11 @@ class FileFinder:
             {
                 "hd_id": hd_id,
                 "render_number": render_number,
-                "path": FinderUtils.parse_path(path),
+                "path": parse_path(path),
                 "input_parameters": input_parameters,
                 "version": version,
-                "report_path": FinderUtils.parse_path(report_path),
-                "h5_output": FinderUtils.parse_path(h5_output),
+                "report_path": parse_path(report_path),
+                "h5_output": parse_path(h5_output),
                 "updated_at": updated_at,
             },
             do_commit=False,
@@ -123,26 +125,36 @@ class FileFinder:
             "preview_doppler_video",
             {
                 "holo_id": holo_id,
-                "path": FinderUtils.parse_path(path),
+                "path": parse_path(path),
             },
             do_commit=False,
         )
 
     def Findfiles(
         self,
-        root_dir: str,
+        root_dir: str | list[str],
         reset_db: bool = False,
         callback_bar=None,
         use_parallelism=False,
+    ):
+        if isinstance(root_dir, list):
+            for single_root in root_dir:
+                self._run_search(single_root, reset_db, callback_bar, use_parallelism)
+                reset_db = False  # Only reset on the first run
+        else:
+            self._run_search(root_dir, reset_db, callback_bar, use_parallelism)
+
+    def _run_search(
+        self, root_dir: str, reset_db: bool, callback_bar, use_parallelism: bool
     ):
         if reset_db:
             self.ClearDB()
             Logger.info("Database cleared before new scan.", "DATABASE")
 
-        if FinderUtils.get_all_files_extension(Path(root_dir), "holo"):
+        if get_all_files_by_extension(Path(root_dir), "holo"):
             search_folders = [Path(root_dir)]
         else:
-            search_folders = list(FinderUtils.safe_iterdir(root_dir))
+            search_folders = list(safe_iterdir(root_dir))
 
         total_folders = len(search_folders)
 
@@ -159,7 +171,7 @@ class FileFinder:
                     if callback_bar:
                         progress_text = f"Scanning ({i + 1}/{total_folders})"
                         callback_bar.progress(
-                            ((i + 1) / total_folders) * 0.5, text=progress_text
+                            ((i + 1) / total_folders), text=progress_text
                         )
                     results.append(result)
         else:
@@ -169,9 +181,7 @@ class FileFinder:
                     progress_text = (
                         f"Scanning ({i + 1}/{total_folders}): {date_folder.name}"
                     )
-                    callback_bar.progress(
-                        ((i + 1) / total_folders) * 0.5, text=progress_text
-                    )
+                    callback_bar.progress(((i + 1) / total_folders), text=progress_text)
 
                 result = FinderUtils.process_date_folder(date_folder)
                 results.append(result)
@@ -187,16 +197,16 @@ class FileFinder:
         start_insert_date = datetime.datetime.now()
 
         holo_id_map = {}  # To map temporary string IDs to final database integer IDs
-        total_results_to_insert = len(results)
+        # total_results_to_insert = len(results)
 
         try:
             for i, (holo_list, hd_list, ef_list, preview_list) in enumerate(results):
-                if callback_bar:
-                    progress_value = 0.5 + (((i + 1) / total_results_to_insert) * 0.5)
-                    progress_text = (
-                        f"Inserting data ({i + 1}/{total_results_to_insert})"
-                    )
-                    callback_bar.progress(progress_value, text=progress_text)
+                # if callback_bar:
+                #     progress_value = 0.5 + (((i + 1) / total_results_to_insert) * 0.5)
+                #     progress_text = (
+                #         f"Inserting data ({i + 1}/{total_results_to_insert})"
+                #     )
+                #     callback_bar.progress(progress_value, text=progress_text)
 
                 # Holo data
                 for temp_holo_id, holo_data in holo_list:
