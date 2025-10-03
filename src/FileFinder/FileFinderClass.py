@@ -132,10 +132,20 @@ class FileFinder:
 
     def Findfiles(
         self,
-        root_dir: str,
+        root_dir: str | list[str],
         reset_db: bool = False,
         callback_bar=None,
         use_parallelism=False,
+    ):
+        if isinstance(root_dir, list):
+            for single_root in root_dir:
+                self._run_search(single_root, reset_db, callback_bar, use_parallelism)
+                reset_db = False  # Only reset on the first run
+        else:
+            self._run_search(root_dir, reset_db, callback_bar, use_parallelism)
+
+    def _run_search(
+        self, root_dir: str, reset_db: bool, callback_bar, use_parallelism: bool
     ):
         if reset_db:
             self.ClearDB()
