@@ -74,30 +74,15 @@ def render_sidebar(ff: FileFinder) -> None:
         with st.spinner("Updating database..."):
             progress_bar = st.sidebar.progress(0, text="Starting scan...")
             t1 = time.time()
-            total_paths = len(scan_paths)
 
-            # Reset the database only before scanning the first directory
-            reset_db_flag = True
-
-            for i, path_str in enumerate(scan_paths):
-                path_obj = Path(path_str)
-                if path_obj.is_dir():
-                    progress_text = f"Scanning {i + 1}/{total_paths}: {path_str}"
-                    progress_bar.progress((i) / total_paths, text=progress_text)
-
-                    ff.Findfiles(
-                        path_str,
-                        reset_db=reset_db_flag,
-                        callback_bar=None,  # Progress within a single dir is complex
-                        use_parallelism=False,
-                    )
-                    # After the first directory, subsequent scans should append
-                    if reset_db_flag:
-                        reset_db_flag = False
-                else:
-                    st.sidebar.error(
-                        f"Path {i + 1} is not a valid directory: {path_str}"
-                    )
+            # Call Findfiles with the entire list of valid paths.
+            # The method now handles iteration and resets the DB only on the first run.
+            ff.Findfiles(
+                scan_paths,
+                reset_db=True,
+                callback_bar=progress_bar,
+                use_parallelism=False,
+            )
 
             t2 = time.time()
             Logger.info(f"Total time taken: {t2 - t1:.6f}", "TIME")
