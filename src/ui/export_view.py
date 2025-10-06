@@ -3,13 +3,163 @@ import pandas as pd
 import zipfile
 import io
 import os
+import json
 from pathlib import Path
 
 
-def render_export_section(filtered_ef_df: pd.DataFrame):
+def _collect_files_to_zip(
+    filtered_df: pd.DataFrame, export_pdfs: bool, export_h5s: bool, export_jsons: bool
+) -> list:
     """
-    Renders the export section for downloading selected files from the
-    EyeFlow dataframe.
+    Scans the filtered DataFrame and collects a list of files to be zipped
+    based on user selections.
+
+    Args:
+        filtered_df (pd.DataFrame): The DataFrame containing file paths.
+        export_pdfs (bool): Whether to include PDF files.
+        export_h5s (bool): Whether to include H5 files.
+        export_jsons (bool): Whether to include JSON files.
+
+    Returns:
+        list: A list of dictionaries, where each dictionary contains the
+              'path' and 'arcname' for a file.
+    """
+    files_to_zip = []
+    seen_paths = set()  # To avoid adding the same file multiple times
+
+    for _, row in filtered_df.iterrows():
+        ef_folder_path_str = row.get("ef_folder")
+        if not ef_folder_path_str or pd.isna(ef_folder_path_str):
+            continue
+
+        base_folder = Path(ef_folder_path_str).name
+
+        # Collect PDF reports
+        if (
+            export_pdfs
+            and row.get("ef_report_path")
+            and pd.notna(row["ef_report_path"])
+        ):
+            file_path = Path(row["ef_report_path"])
+            if file_path not in seen_paths:
+                arcname = os.path.join(base_folder, "pdf", file_path.name)
+                files_to_zip.append({"path": file_path, "arcname": arcname})
+                seen_paths.add(file_path)
+
+        # Collect H5 outputs
+        if export_h5s and row.get("ef_h5_output") and pd.notna(row["ef_h5_output"]):
+            file_path = Path(row["ef_h5_output"])
+            if file_path not in seen_paths:
+                arcname = os.path.join(base_folder, "h5", file_path.name)
+                files_to_zip.append({"path": file_path, "arcname": arcname})
+                seen_paths.add(file_path)
+
+        # Collect all JSON files in the 'json' subdirectory
+        if export_jsons:
+            json_dir = Path(ef_folder_path_str) / "json"
+            if json_dir.exists() and json_dir.is_dir():
+                for json_file in json_dir.glob("*.json"):
+                    if json_file not in seen_paths:
+                        arcname = os.path.join(base_folder, "json", json_file.name)
+                        files_to_zip.append({"path": json_file, "arcname": arcname})
+                        seen_paths.add(json_file)
+
+    return files_to_zip
+
+
+def _create_zip_archive(files_to_zip: list) -> tuple:
+    """
+    Creates a zip archive in an in-memory buffer from a list of files.
+
+    Args:
+        files_to_zip (list): A list of files to include in the zip.
+
+    Returns:
+        tuple: A tuple containing the BytesIO buffer of the zip file and a
+               list of paths for files that were skipped.
+    """
+    progress_bar = st.progress(0, text="Initializing export...")
+    total_files = len(files_to_zip)
+    zip_buffer = io.BytesIO()
+    skipped_files = []
+    files_processed = 0
+
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+        for file_info in files_to_zip:
+            file_path = file_info["path"]
+            arcname = file_info["arcname"]
+
+            if file_path.exists() and file_path.is_file():
+                zf.write(file_path, arcname)
+            else:
+                skipped_files.append(str(file_path))
+
+            files_processed += 1
+            progress_text = (
+                f"Processing file {files_processed} of {total_files}: {file_path.name}"
+            )
+            progress_bar.progress(files_processed / total_files, text=progress_text)
+
+    progress_bar.progress(1.0, text="Export preparation complete!")
+    return zip_buffer, skipped_files
+
+
+def _generate_csv_data(filtered_df: pd.DataFrame) -> bytes | None:
+    """
+    Generates a CSV string by reading and compiling data from JSON files
+    associated with each row in the filtered DataFrame.
+
+    Args:
+        filtered_df (pd.DataFrame): DataFrame filtered by all previous selections.
+
+    Returns:
+        bytes | None: The generated CSV data as a string, or None if no data
+                    could be processed.
+    """
+    all_json_data = []
+    skipped_folders = []
+
+    for _, row in filtered_df.iterrows():
+        ef_folder_str = row.get("ef_folder")
+        if not ef_folder_str or pd.isna(ef_folder_str):
+            continue
+
+        ef_folder_path = Path(ef_folder_str)
+        json_file_path = ef_folder_path / "json" / f"{ef_folder_path.name}output.json"
+
+        if json_file_path.exists() and json_file_path.is_file():
+            try:
+                with open(json_file_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    # Add folder identifier to each record
+                    data["source_ef_folder"] = ef_folder_path.name
+                    all_json_data.append(data)
+            except (json.JSONDecodeError, Exception) as e:
+                st.warning(f"Could not read or parse {json_file_path.name}: {e}")
+                skipped_folders.append(ef_folder_path.name)
+        else:
+            skipped_folders.append(ef_folder_path.name)
+
+    if not all_json_data:
+        st.warning(
+            "No `_output.json` files were found in the selected EyeFlow folders."
+        )
+        return None
+
+    if skipped_folders:
+        st.info(
+            f"Note: No `_output.json` file was found for the following folders: {', '.join(skipped_folders)}"
+        )
+
+    # Normalize the JSON data into a flat table
+    df = pd.json_normalize(all_json_data)
+    return df.to_csv(index=False).encode("utf-8")
+
+
+def render_export_section(filtered_ef_df: pd.DataFrame) -> None:
+    """
+    Renders the export section, allowing users to download selected files
+    as a ZIP archive or to export structured data as a CSV file.
 
     Args:
         filtered_ef_df (pd.DataFrame): DataFrame filtered by all previous selections.
@@ -20,102 +170,62 @@ def render_export_section(filtered_ef_df: pd.DataFrame):
         st.info("No EyeFlow data is selected to be exported.")
         return
 
+    # --- ZIP Export Section ---
+    st.subheader("1. Export selected files as a ZIP package")
     col1, col2, col3 = st.columns(3)
     with col1:
-        export_pdfs = st.checkbox("Export PDF Reports", value=True)
+        export_pdfs = st.checkbox("Export PDF Reports", value=True, key="export_pdfs")
     with col2:
-        export_h5s = st.checkbox("Export H5 Outputs", value=True)
+        export_h5s = st.checkbox("Export H5 Outputs", value=True, key="export_h5s")
     with col3:
-        export_jsons = st.checkbox("Export JSON files", value=True)
+        export_jsons = st.checkbox(
+            "Export all JSON files", value=True, key="export_jsons"
+        )
 
-    if st.button("Prepare Export Package"):
-        # Clear any previous data from the session state
-        if "zip_buffer" in st.session_state:
-            del st.session_state["zip_buffer"]
-
-        files_to_zip = []
-        seen_paths = set()  # To avoid adding the same file multiple times
-
-        # Pre-scan and collect all files to be added to the zip
-        for _, row in filtered_ef_df.iterrows():
-            ef_folder_path_str = row.get("ef_folder")
-            if not ef_folder_path_str or pd.isna(ef_folder_path_str):
-                continue
-
-            base_folder = Path(ef_folder_path_str).name
-
-            # Collect PDF reports
-            if (
-                export_pdfs
-                and row.get("ef_report_path")
-                and pd.notna(row["ef_report_path"])
-            ):
-                file_path = Path(row["ef_report_path"])
-                if file_path not in seen_paths:
-                    arcname = os.path.join(base_folder, "pdf", file_path.name)
-                    files_to_zip.append({"path": file_path, "arcname": arcname})
-                    seen_paths.add(file_path)
-
-            # Collect H5 outputs
-            if export_h5s and row.get("ef_h5_output") and pd.notna(row["ef_h5_output"]):
-                file_path = Path(row["ef_h5_output"])
-                if file_path not in seen_paths:
-                    arcname = os.path.join(base_folder, "h5", file_path.name)
-                    files_to_zip.append({"path": file_path, "arcname": arcname})
-                    seen_paths.add(file_path)
-
-            # Collect JSON files
-            if export_jsons:
-                json_dir = Path(ef_folder_path_str) / "json"
-                if json_dir.exists() and json_dir.is_dir():
-                    for json_file in json_dir.glob("*.json"):
-                        if json_file not in seen_paths:
-                            arcname = os.path.join(base_folder, "json", json_file.name)
-                            files_to_zip.append({"path": json_file, "arcname": arcname})
-                            seen_paths.add(json_file)
+    if st.button("Prepare ZIP Package"):
+        files_to_zip = _collect_files_to_zip(
+            filtered_ef_df, export_pdfs, export_h5s, export_jsons
+        )
 
         if not files_to_zip:
             st.warning("No files were selected or are available to export.")
-            return
+        else:
+            zip_buffer, skipped_files = _create_zip_archive(files_to_zip)
+            st.session_state.zip_buffer = zip_buffer
+            st.session_state.skipped_files = skipped_files
 
-        progress_bar = st.progress(0, text="Initializing export...")
-        files_processed = 0
-        total_files = len(files_to_zip)
-
-        # Create a zip file in an in-memory buffer
-        zip_buffer = io.BytesIO()
-        skipped_files = []
-
-        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
-            for file_info in files_to_zip:
-                file_path = file_info["path"]
-                arcname = file_info["arcname"]
-
-                if file_path.exists() and file_path.is_file():
-                    zf.write(file_path, arcname)
-                else:
-                    skipped_files.append(str(file_path))
-
-                files_processed += 1
-                progress_text = f"Processing file {files_processed} of {total_files}: {file_path.name}"
-                progress_bar.progress(files_processed / total_files, text=progress_text)
-
-        progress_bar.progress(1.0, text="Export preparation complete!")
-        # Store the buffer and any skipped files in the session state
-        st.session_state.zip_buffer = zip_buffer
-        st.session_state.skipped_files = skipped_files
-
-    # Display download button if a zip buffer exists in the session state
     if "zip_buffer" in st.session_state:
         st.success("Your export package is ready to be downloaded.")
         st.download_button(
-            label="Download zip",
+            label="Download ZIP",
             data=st.session_state.zip_buffer.getvalue(),
-            file_name="export.zip",
+            file_name="eyeflow_export.zip",
             mime="application/zip",
-            # Clean up the session state after the download starts
             on_click=lambda: st.session_state.pop("zip_buffer", None),
         )
         if st.session_state.get("skipped_files"):
             st.warning("The following files were not found and were skipped:")
             st.code("\n".join(st.session_state.get("skipped_files", [])))
+
+    st.markdown("---")
+
+    # --- CSV Export Section ---
+    st.subheader("2. Export measurement data as a CSV file")
+    st.info(
+        "This will compile the data from each selected EyeFlow folder into a single CSV."
+    )
+
+    if st.button("Generate CSV"):
+        csv_data = _generate_csv_data(filtered_ef_df)
+        if csv_data:
+            st.session_state.csv_data = csv_data
+
+    if "csv_data" in st.session_state:
+        st.success("Your CSV file is ready to be downloaded.")
+        st.download_button(
+            label="Download CSV",
+            data=st.session_state.csv_data,
+            file_name="eyeflow_data_export.csv",
+            mime="text/csv",
+            on_click=lambda: st.session_state.pop("csv_data", None),
+        )
