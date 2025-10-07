@@ -6,24 +6,27 @@ from tkinter import filedialog
 
 from src.FileFinder.FileFinderClass import FileFinder
 from src.Logger.LoggerClass import Logger
-from src.Utils.ParamsLoader import ConfigManager
 
 
-def select_directory():
+def add_directory_to_scan_list():
     """
-    Opens a directory selection dialog and updates the session state.
-    This function is intended to be used as a callback.
+    Opens a directory selection dialog and adds the selected path
+    to the list in the session state.
     """
-    # Create a Tkinter root window
+    # Create a Tkinter root window and hide it
     root = tk.Tk()
-    # Hide the main window
     root.withdraw()
     # Open the directory selection dialog
     folder_path = filedialog.askdirectory()
     # Destroy the root window
     root.destroy()
+
     if folder_path:
-        st.session_state.scan_path = folder_path
+        # Add the new path if it's not already in the list
+        if folder_path not in st.session_state.scan_paths:
+            st.session_state.scan_paths.append(folder_path)
+        else:
+            st.sidebar.warning("Directory already in the list.")
 
 
 def render_sidebar(ff: FileFinder) -> None:
@@ -32,43 +35,66 @@ def render_sidebar(ff: FileFinder) -> None:
     """
     st.sidebar.title("Database Controls")
 
-    if "scan_path" not in st.session_state:
-        st.session_state.scan_path = "Y:\\"
+    # Initialize scan_paths as a list in the session state if it doesn't exist
+    if "scan_paths" not in st.session_state:
+        st.session_state.scan_paths = ["Y:\\"]
 
-    st.sidebar.text_input("Directory to scan", key="scan_path")
+    st.sidebar.markdown("##### Directories to Scan")
 
-    st.sidebar.button(
-        "Select Directory",
-        on_click=select_directory,
-    )
+    # Display the list of directories to be scanned
+    if not st.session_state.scan_paths:
+        st.sidebar.info("No directories selected for scanning.")
+    else:
+        for path in st.session_state.scan_paths:
+            st.sidebar.code(path, language=None)
 
-    scan_path = st.session_state.scan_path
+    # --- Buttons for Directory Management ---
+    col1, col2 = st.sidebar.columns(2)
+    with col1:
+        st.button(
+            "Add Directory",
+            on_click=add_directory_to_scan_list,
+            help="Add a directory to the scan list.",
+        )
+    with col2:
+        if st.button("Clear List"):
+            st.session_state.scan_paths = []
+            st.rerun()
 
+    st.sidebar.markdown("---")
+
+    # --- Database Update Button ---
     if st.sidebar.button("Update database"):
-        if Path(scan_path).is_dir():
-            st.sidebar.info("The update may take a few minutes. Please wait.")
-            with st.spinner(f"Updating database with files from {scan_path}..."):
-                progress_bar = st.sidebar.progress(0, text="Starting scan...")
+        scan_paths = st.session_state.scan_paths
+        if not scan_paths:
+            st.sidebar.error("No directories to scan. Please add a directory.")
+            return
 
-                t1 = time.time()
-                ff.Findfiles(
-                    scan_path,
-                    reset_db=True,
-                    callback_bar=progress_bar,
-                    use_parallelism=ConfigManager.get("FINDER.USE_PARALLISM") or False,
-                )
-                t2 = time.time()
-                Logger.info(f"Time taken: {t2 - t1:.6f}", "TIME")
-                progress_bar.progress(1.0, "Update complete!")
-                st.sidebar.success("Database updated successfully!")
+        st.sidebar.info("The update may take a few minutes. Please wait.")
+        with st.spinner("Updating database..."):
+            progress_bar = st.sidebar.progress(0, text="Starting scan...")
+            t1 = time.time()
 
-                progress_bar.empty()
-                # Clear the data cache and rerun the app to show new data
-                st.cache_data.clear()
-                st.rerun()
-        else:
-            st.sidebar.error("The specified path is not a valid directory.")
+            # Call Findfiles with the entire list of valid paths.
+            # The method now handles iteration and resets the DB only on the first run.
+            ff.Findfiles(
+                scan_paths,
+                reset_db=True,
+                callback_bar=progress_bar,
+                use_parallelism=False,
+            )
 
+            t2 = time.time()
+            Logger.info(f"Total time taken: {t2 - t1:.6f}", "TIME")
+            progress_bar.progress(1.0, "Update complete!")
+            st.sidebar.success("Database updated successfully!")
+
+            time.sleep(2)  # Give user time to see the success message
+            progress_bar.empty()
+            st.cache_data.clear()
+            st.rerun()
+
+    # --- Clear Database Button ---
     st.sidebar.markdown("---")
     if st.sidebar.button("Clear database"):
         ff.ClearDB()
