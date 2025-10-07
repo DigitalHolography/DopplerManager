@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 def _collect_files_to_zip(
-    filtered_df: pd.DataFrame, export_pdfs: bool, export_h5s: bool, export_jsons: bool
+    filtered_df: pd.DataFrame, export_pdfs, export_h5s, export_jsons
 ) -> list:
     """
     Scans the filtered DataFrame and collects a list of files to be zipped
@@ -107,7 +107,8 @@ def _create_zip_archive(files_to_zip: list) -> tuple:
 def _generate_csv_data(filtered_df: pd.DataFrame) -> bytes | None:
     """
     Generates a CSV string by reading and compiling data from JSON files
-    associated with each row in the filtered DataFrame.
+    associated with each row in the filtered DataFrame. It adds additional metadata
+    from the main DataFrame to each row.
 
     Args:
         filtered_df (pd.DataFrame): DataFrame filtered by all previous selections.
@@ -125,14 +126,25 @@ def _generate_csv_data(filtered_df: pd.DataFrame) -> bytes | None:
             continue
 
         ef_folder_path = Path(ef_folder_str)
-        json_file_path = ef_folder_path / "json" / f"{ef_folder_path.name}output.json"
+        json_dir = ef_folder_path / "json"
 
-        if json_file_path.exists() and json_file_path.is_file():
+        # Find the JSON file containing "output"
+        json_file_path = None
+        if json_dir.exists() and json_dir.is_dir():
+            matching_files = list(json_dir.glob("*output*.json"))
+            if matching_files:
+                json_file_path = matching_files[0]  # Take the first match
+
+        if json_file_path and json_file_path.is_file():
             try:
                 with open(json_file_path, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                    # Add folder identifier to each record
-                    data["source_ef_folder"] = ef_folder_path.name
+                    # Add identifiers from the main DataFrame
+                    data["ef_folder"] = ef_folder_path.name
+                    data["measure_tag"] = row.get("measure_tag")
+                    data["hd_version"] = row.get("hd_version")
+                    data["ef_version"] = row.get("ef_version")
+                    data["creation_date"] = row.get("holo_created_at")
                     all_json_data.append(data)
             except (json.JSONDecodeError, Exception) as e:
                 st.warning(f"Could not read or parse {json_file_path.name}: {e}")
@@ -141,14 +153,13 @@ def _generate_csv_data(filtered_df: pd.DataFrame) -> bytes | None:
             skipped_folders.append(ef_folder_path.name)
 
     if not all_json_data:
-        st.warning(
-            "No `_output.json` files were found in the selected EyeFlow folders."
-        )
+        st.warning("No JSON output files were found in the selected EyeFlow folders.")
         return None
 
     if skipped_folders:
         st.info(
-            f"Note: No `_output.json` file was found for the following folders: {', '.join(skipped_folders)}"
+            "Note: No JSON output file was found for the following folders: "
+            f"{', '.join(skipped_folders)}"
         )
 
     # Normalize the JSON data into a flat table
