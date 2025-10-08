@@ -72,8 +72,18 @@ def __get_version() -> str:
         return version_file.read().strip()
 
 
-def __get_global_headers(DB: DB, sep: str = "=", width: int = 40) -> str:
+def __get_global_headers(
+    DB: DB,
+    now,
+    end,
+    sep: str = "=",
+    width: int = 40,
+) -> str:
     separator = sep * width
+
+    full_time = "N/A"
+    if isinstance(now, datetime.datetime) and isinstance(end, datetime.datetime):
+        full_time = end - now
 
     return f"""
 {separator}
@@ -82,6 +92,9 @@ def __get_global_headers(DB: DB, sep: str = "=", width: int = 40) -> str:
 
 App Version     : {__get_version()}
 DB Path         : {__resolve_path(DB.DB_PATH)}
+
+Report Date     : {__format_date(now)}
+Full Analysis   : {full_time}
 
 """
 
@@ -98,10 +111,12 @@ Total Preview   : {DB.count("preview_doppler_video")}
 
 
 def __parse_data(data: list[dict], DB: DB, sep: str = "=", width: int = 40) -> str:
-    now = datetime.datetime.now()
     separator = sep * width
 
-    res = __get_global_headers(DB, sep, width)
+    now = datetime.datetime.now()
+    true_end = __s_get_r_dict(data[-1], "headers.end_date")
+
+    res = __get_global_headers(DB, now, true_end, sep, width)
 
     for d in data:
         scan_date = __s_get_r_dict(d, "headers.scan_date")
@@ -119,11 +134,10 @@ Scan Path       : {__resolve_path(__s_get_r_dict(d, "headers.scan_path"))}
 Scan Date       : {scan_date_str}
 Insert Date     : {insert_date_str}
 End Date        : {end_date_str}
-Report Date     : {__format_date(now)}
 
 Scan Duration   : {__get_duration(scan_date, insert_date)}
 Insert Duration : {__get_duration(insert_date, end_date)}
-Total Duration  : {__get_duration(scan_date, now)}
+Total Duration  : {__get_duration(scan_date, end_date)}
 
 {"METRICS FOUND":^{width}}
 
