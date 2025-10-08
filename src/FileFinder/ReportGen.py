@@ -72,16 +72,7 @@ def __get_version() -> str:
         return version_file.read().strip()
 
 
-def __parse_data(data: dict, DB: DB, sep: str = "=", width: int = 40) -> str:
-    now = datetime.datetime.now()
-    scan_date = __s_get_r_dict(data, "headers.scan_date")
-    insert_date = __s_get_r_dict(data, "headers.insert_date")
-    end_date = __s_get_r_dict(data, "headers.end_date")
-
-    scan_date_str = __format_date(scan_date)
-    insert_date_str = __format_date(insert_date)
-    end_date_str = __format_date(end_date)
-
+def __get_global_headers(DB: DB, sep: str = "=", width: int = 40) -> str:
     separator = sep * width
 
     return f"""
@@ -90,11 +81,39 @@ def __parse_data(data: dict, DB: DB, sep: str = "=", width: int = 40) -> str:
 {separator}
 
 App Version     : {__get_version()}
-
-
-Scan Path       : {__resolve_path(__s_get_r_dict(data, "headers.scan_path"))}
 DB Path         : {__resolve_path(DB.DB_PATH)}
 
+"""
+
+
+def __get_global_footers(DB: DB, sep: str = "=", width: int = 40) -> str:
+    return f"""\
+{"CURRENT IN DB":^{width}}
+
+Total Holo      : {DB.count("holo_data")}
+Total HD        : {DB.count("hd_render")}
+Total EF        : {DB.count("ef_render")}
+Total Preview   : {DB.count("preview_doppler_video")}
+"""
+
+
+def __parse_data(data: list[dict], DB: DB, sep: str = "=", width: int = 40) -> str:
+    now = datetime.datetime.now()
+    separator = sep * width
+
+    res = __get_global_headers(DB, sep, width)
+
+    for d in data:
+        scan_date = __s_get_r_dict(d, "headers.scan_date")
+        insert_date = __s_get_r_dict(d, "headers.insert_date")
+        end_date = __s_get_r_dict(d, "headers.end_date")
+
+        scan_date_str = __format_date(scan_date)
+        insert_date_str = __format_date(insert_date)
+        end_date_str = __format_date(end_date)
+
+        res += f"""\
+Scan Path       : {__resolve_path(__s_get_r_dict(d, "headers.scan_path"))}
 Scan Date       : {scan_date_str}
 Insert Date     : {insert_date_str}
 End Date        : {end_date_str}
@@ -110,21 +129,17 @@ Total Duration  : {__get_duration(scan_date, now)}
 
 {"WHILE SCANNING":^{width}}
 
-Found Holo      : {__s_get_r_dict(data, "data.found_holo", "N/A")}
-Found HD        : {__s_get_r_dict(data, "data.found_hd", "N/A")}
-Found EF        : {__s_get_r_dict(data, "data.found_ef", "N/A")}
-Found Preview   : {__s_get_r_dict(data, "data.found_preview", "N/A")}
+Found Holo      : {__s_get_r_dict(d, "data.found_holo", "N/A")}
+Found HD        : {__s_get_r_dict(d, "data.found_hd", "N/A")}
+Found EF        : {__s_get_r_dict(d, "data.found_ef", "N/A")}
+Found Preview   : {__s_get_r_dict(d, "data.found_preview", "N/A")}
 
 {separator}
 
-{"CURRENT IN DB":^{width}}
-
-Total Holo      : {DB.count("holo_data")}
-Total HD        : {DB.count("hd_render")}
-Total EF        : {DB.count("ef_render")}
-Total Preview   : {DB.count("preview_doppler_video")}
-
 """
+
+    res += __get_global_footers(DB, sep, width)
+    return res
 
 
 def __get_report_path() -> Path:
@@ -149,7 +164,7 @@ def __get_report_path() -> Path:
 # └───────────────────────────────────┘
 
 
-def generate_report(data: dict, DB: DB, report_path: Path | None = None) -> None:
+def generate_report(data: list[dict], DB: DB, report_path: Path | None = None) -> None:
     """
     Generates a simple text report from the provided data dictionary
     and saves it to the specified report path.
