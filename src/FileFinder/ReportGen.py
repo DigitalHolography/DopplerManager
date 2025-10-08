@@ -113,6 +113,8 @@ def __parse_data(data: list[dict], DB: DB, sep: str = "=", width: int = 40) -> s
         end_date_str = __format_date(end_date)
 
         res += f"""\
+{separator}
+
 Scan Path       : {__resolve_path(__s_get_r_dict(d, "headers.scan_path"))}
 Scan Date       : {scan_date_str}
 Insert Date     : {insert_date_str}
@@ -123,11 +125,7 @@ Scan Duration   : {__get_duration(scan_date, insert_date)}
 Insert Duration : {__get_duration(insert_date, end_date)}
 Total Duration  : {__get_duration(scan_date, now)}
 
-{separator}
-{"METRICS":^{width}}
-{separator}
-
-{"WHILE SCANNING":^{width}}
+{"METRICS FOUND":^{width}}
 
 Found Holo      : {__s_get_r_dict(d, "data.found_holo", "N/A")}
 Found HD        : {__s_get_r_dict(d, "data.found_hd", "N/A")}
