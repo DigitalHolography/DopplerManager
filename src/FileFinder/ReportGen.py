@@ -48,7 +48,7 @@ def __format_date(date, timespec: str = "seconds") -> str:
     return date.isoformat(" ", timespec=timespec)
 
 
-def __get_duration(start, end) -> str:
+def __get_duration(start, end, without_ms: bool = False) -> str:
     if not isinstance(start, datetime.datetime) or not isinstance(
         end, datetime.datetime
     ):
@@ -56,7 +56,10 @@ def __get_duration(start, end) -> str:
 
     duration = end - start
 
-    return str(duration).split(".")[0]  # Remove microseconds for cleaner output
+    if without_ms:
+        return str(duration).split(".")[0]  # Remove microseconds for cleaner output
+    else:
+        return str(duration)
 
 
 def __resolve_path(path) -> str:
@@ -74,7 +77,8 @@ def __get_version() -> str:
 
 def __get_global_headers(
     DB: DB,
-    now,
+    now, 
+    start,
     end,
     sep: str = "=",
     width: int = 40,
@@ -82,8 +86,8 @@ def __get_global_headers(
     separator = sep * width
 
     full_time = "N/A"
-    if isinstance(now, datetime.datetime) and isinstance(end, datetime.datetime):
-        full_time = end - now
+    if isinstance(start, datetime.datetime) and isinstance(end, datetime.datetime):
+        full_time = end - start
 
     return f"""
 {separator}
@@ -96,10 +100,12 @@ DB Path         : {__resolve_path(DB.DB_PATH)}
 Report Date     : {__format_date(now)}
 Full Analysis   : {full_time}
 
+{separator}
+
 """
 
 
-def __get_global_footers(DB: DB, sep: str = "=", width: int = 40) -> str:
+def __get_global_footers(DB: DB, sep: str = "=", width: int = 40) -> str:    
     return f"""\
 {"CURRENT IN DB":^{width}}
 
@@ -114,9 +120,10 @@ def __parse_data(data: list[dict], DB: DB, sep: str = "=", width: int = 40) -> s
     separator = sep * width
 
     now = datetime.datetime.now()
+    true_start = __s_get_r_dict(data[0], "headers.scan_date")
     true_end = __s_get_r_dict(data[-1], "headers.end_date")
 
-    res = __get_global_headers(DB, now, true_end, sep, width)
+    res = __get_global_headers(DB, now, true_start, true_end, sep, width)
 
     for d in data:
         scan_date = __s_get_r_dict(d, "headers.scan_date")
@@ -128,8 +135,6 @@ def __parse_data(data: list[dict], DB: DB, sep: str = "=", width: int = 40) -> s
         end_date_str = __format_date(end_date)
 
         res += f"""\
-{separator}
-
 Scan Path       : {__resolve_path(__s_get_r_dict(d, "headers.scan_path"))}
 Scan Date       : {scan_date_str}
 Insert Date     : {insert_date_str}
