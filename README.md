@@ -6,6 +6,16 @@
 
 A Streamlit application to find, catalog, and browse HoloDoppler and EyeFlow render data.
 
+### ⚠️ Python 3.14 Compatibility Alert
+
+> [!CAUTION]
+> Python 3.14 has recently been released, but **this project does not currently support it**.
+> **Reason:** We are waiting for key upstream dependencies to release their official compatibility updates for Python 3.14.
+>
+> **Action Required:** Please ensure you use a stable, supported version of Python (**3.13**), until this notice is removed.
+>
+> We are actively monitoring the situation and will update this README as soon as 3.14 support is verified!
+
 ## Prerequisites
 
 - **Windows 11** (Windows 10 is deprecated, use it at your own risk)
