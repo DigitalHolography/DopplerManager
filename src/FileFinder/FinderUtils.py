@@ -6,8 +6,8 @@ from src.Utils.ParamsLoader import ConfigManager
 
 from src.Utils.fs_utils import (
     safe_isdir,
+    safe_file_read,
     get_last_update,
-    get_all_files_by_extension,
     json_dump_nullable,
 )
 
@@ -53,44 +53,19 @@ def _find_version_in_log(file_path: Path) -> str | None:
 
 
 def _get_eyeflow_version(ef_folder: Path, hd_folder_name: str) -> str | None:
-    # TODO: To implement better way
-
     ef_folder = Path(ef_folder)
-    log_folder = ef_folder / "log"
-    if not log_folder.is_dir():
-        Logger.error(
-            f"Eyeflow log folder does not exist: {log_folder}", tags="FILESYSTEM"
-        )
-        return None
-
-    file_path_list = get_all_files_by_extension(log_folder, "txt")
-
-    if not file_path_list:
-        Logger.error(
-            f"Eyeflow log file does not exist inside folder: {log_folder}",
-            tags="FILESYSTEM",
-        )
-        return None
-
-    if len(file_path_list) > 1:
+    version_txt = ef_folder / f"{ef_folder.name}_version.txt"
+    if not version_txt.is_file():
         Logger.warn(
-            f"More than one log file found inside {log_folder}", tags="FILESYSTEM"
-        )
-
-    # We take the first found
-    file_path = file_path_list[0]
-    # file_path = log_folder / f"{hd_folder_name}_log.txt"
-
-    version = _find_version_in_log(file_path)
-
-    if not version:
-        Logger.warn(
-            f"No version string in log file: {file_path}",
-            tags="FILESYSTEM",
+            f"Eyeflow version file does not exist: {version_txt}", tags="FILESYSTEM"
         )
         return None
 
-    return version
+    version = safe_file_read(version_txt)
+    if version:
+        return version.strip()
+
+    return None
 
 
 def process_date_folder(date_folder: Path) -> tuple[list, list, list, list]:

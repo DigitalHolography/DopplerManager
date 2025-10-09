@@ -70,12 +70,17 @@ fn get_app_version() -> String {
 }
 
 fn pause_on_error(message: &str, exit_code: i32) {
-    println!("\n{}", message.red());
+    println!("\n{}", message);
     print!("Press Enter to exit...");
     // We need to flush stdout to ensure the message appears before the program waits for input.
     io::stdout().flush().unwrap();
     let _ = io::stdin().read_line(&mut String::new());
     exit(exit_code); // Exit the process with a non-zero exit code to indicate failure.
+}
+
+fn make_a_link(url: &str, text: Option<&str>) -> String {
+    let display_text = text.unwrap_or(url);
+    return format!("\x1B]8;;{}\x07{}\x1B]8;;\x07", url, display_text);
 }
 
 fn main() -> io::Result<()> {
@@ -124,9 +129,10 @@ fn main() -> io::Result<()> {
                 python_executable = executable;
             } else {
                 let error_msg = format!(
-                    "Incompatible Python version. Required: {}, Found: {}",
+                    "Incompatible Python version. Required: {}, Found: {}\nPlease check the installation instruction on the README.md or on {}",
                     MIN_PYTHON_VERSION.green(),
-                    installed_version_str.red()
+                    installed_version_str.red(),
+                    make_a_link(&"https://github.com/DigitalHolography/DopplerManager", None).bright_blue()
                 );
 
                 pause_on_error(&error_msg, 1);
@@ -136,7 +142,7 @@ fn main() -> io::Result<()> {
         }
 
         Err(e) => {
-            pause_on_error(&e, 1);
+            pause_on_error(&e.red(), 1);
             return Ok(()); // Will not be reached due to exit in pause_on_error
         }
     }
@@ -152,7 +158,7 @@ fn main() -> io::Result<()> {
         .status()?;
 
     if !venv_status.success() {
-        pause_on_error("Failed to create virtual environment.", 1);
+        pause_on_error(&"Failed to create virtual environment.".red(), 1);
         return Ok(()); // Will not be reached due to exit in pause_on_error
     }
 
@@ -177,7 +183,7 @@ fn main() -> io::Result<()> {
         .status()?;
 
     if !pip_status.success() {
-        pause_on_error("Failed to install dependencies.", 1);
+        pause_on_error(&"Failed to install dependencies.".red(), 1);
         return Ok(());
     }
 
@@ -196,7 +202,7 @@ fn main() -> io::Result<()> {
         .status()?;
 
     if !streamlit_status.success() {
-        pause_on_error("Failed to run the Streamlit application.", 1);
+        pause_on_error(&"Failed to run the Streamlit application.".red(), 1);
     }
 
     Ok(())

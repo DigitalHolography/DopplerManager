@@ -137,12 +137,22 @@ class FileFinder:
         callback_bar=None,
         use_parallelism=False,
     ):
+        reports = []
+
         if isinstance(root_dir, list):
             for single_root in root_dir:
-                self._run_search(single_root, reset_db, callback_bar, use_parallelism)
+                reports.append(
+                    self._run_search(
+                        single_root, reset_db, callback_bar, use_parallelism
+                    )
+                )
                 reset_db = False  # Only reset on the first run
         else:
-            self._run_search(root_dir, reset_db, callback_bar, use_parallelism)
+            reports.append(
+                self._run_search(root_dir, reset_db, callback_bar, use_parallelism)
+            )
+
+        generate_report(reports, self.DB)
 
     def _run_search(
         self, root_dir: str, reset_db: bool, callback_bar, use_parallelism: bool
@@ -269,7 +279,9 @@ class FileFinder:
                 },
             }
 
-            generate_report(report, self.DB)
+            # generate_report(report, self.DB)
+
+            return report
 
         except Exception as e:
             self.DB.SQLconnect.rollback()
