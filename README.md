@@ -11,6 +11,7 @@ A Streamlit application to find, catalog, and browse HoloDoppler and EyeFlow ren
 
 > [!CAUTION]
 > Python 3.14 has recently been released, but **this project does not currently support it**.
+>
 > **Reason:** We are waiting for key upstream dependencies to release their official compatibility updates for Python 3.14.
 >
 > **Action Required:** Please ensure you use a stable, supported version of Python (**3.13**), until this notice is removed.
