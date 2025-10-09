@@ -1,4 +1,4 @@
-![Python](https://img.shields.io/badge/python-3.13-blue?style=for-the-badge&logo=Python&logoColor=%23FFD43B)
+[![Python](https://img.shields.io/badge/python-3.13-blue?style=for-the-badge&logo=Python&logoColor=%23FFD43B)](https://www.python.org/downloads/release/python-3138/)
 ![Streamlit](https://img.shields.io/badge/streamlit-1.50.0-red?style=for-the-badge&logo=streamlit&logoColor=%23ff4b4b&color=%23ff4b4b)
 ![Rust](https://img.shields.io/badge/rust-1.90.0-red?style=for-the-badge&logo=Rust&logoColor=%23CE422B&color=%23CE422B)
 
