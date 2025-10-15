@@ -112,7 +112,7 @@ def gather_ef_folders_data(
                             "content": content,
                         }
 
-            h5_files = get_all_files_by_extension(json_folder, "h5")
+            h5_files = get_all_files_by_extension(ef_folder / "h5", "h5")
             if h5_files:
                 h5_output = h5_files[0]
 
