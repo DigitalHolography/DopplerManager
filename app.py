@@ -1,4 +1,5 @@
 import os
+import datetime
 from pathlib import Path
 import streamlit as st
 import pandas as pd
@@ -8,7 +9,7 @@ from src.FileFinder.FileFinderClass import FileFinder
 from src.Database.DBClass import DB
 from src.Logger.ColorClass import col
 from src.Utils.ParamsLoader import ConfigManager
-from src.Utils.TeeHandler import Tee
+from src.Utils.TeeHandler import tee_handler
 
 from src.ui.sidebar import render_sidebar
 from src.ui.holo_view import render_holo_section
@@ -99,63 +100,75 @@ def main():
     # --- Page Configuration ---
     st.set_page_config(page_title="DopplerManager", layout="wide")
 
+    # --- Session Log Initialization ---
+    # This block runs only once per user session.
+    if "session_log_started" not in st.session_state:
+        log_path = get_log_path()
+        # Start the global Tee handler for this session
+        tee_handler.start(log_path)
+        st.session_state.session_log_started = True
+        print(f"--- Session log started at: {log_path} ---")
+
     # --- Initialization ---
+    try:
 
-    DB_FILE = get_appdata_db_path()
+        DB_FILE = get_appdata_db_path()
 
-    if "db_initialized" not in st.session_state:
-        with st.spinner("Initializing database connection..."):
-            initialize_database(DB_FILE)
-        st.session_state.db_initialized = True
-        st.toast("Database initialized.")
+        if "db_initialized" not in st.session_state:
+            with st.spinner("Initializing database connection..."):
+                initialize_database(DB_FILE)
+            st.session_state.db_initialized = True
+            st.toast("Database initialized.")
 
-    ff = initialize_database(DB_FILE)
+        ff = initialize_database(DB_FILE)
 
-    # --- UI Rendering ---
-    render_sidebar(ff)
+        # --- UI Rendering ---
+        render_sidebar(ff)
 
-    st.title("DopplerManager")
+        st.title("DopplerManager")
 
-    # --- Data Loading ---
-    query = """
-        SELECT
-            h_data.path AS holo_file,
-            h_data.tag AS measure_tag,
-            h_data.created_at AS holo_created_at,
-            hd.path AS hd_folder,
-            hd.render_number as hd_render_number,
-            hd.version AS hd_version,
-            hd.raw_h5_path AS hd_raw_h5_path,
-            ef.path AS ef_folder,
-            ef.render_number AS ef_render_number,
-            ef.version AS ef_version,
-            ef.report_path AS ef_report_path,
-            ef.h5_output AS ef_h5_output
-        FROM
-            holo_data AS h_data
-        LEFT JOIN
-            hd_render AS hd ON h_data.id = hd.holo_id
-        LEFT JOIN
-            ef_render AS ef ON hd.id = ef.hd_id
-    """
-    combined_df = load_data(query, ff)
+        # --- Data Loading ---
+        query = """
+            SELECT
+                h_data.path AS holo_file,
+                h_data.tag AS measure_tag,
+                h_data.created_at AS holo_created_at,
+                hd.path AS hd_folder,
+                hd.render_number as hd_render_number,
+                hd.version AS hd_version,
+                hd.raw_h5_path AS hd_raw_h5_path,
+                ef.path AS ef_folder,
+                ef.render_number AS ef_render_number,
+                ef.version AS ef_version,
+                ef.report_path AS ef_report_path,
+                ef.h5_output AS ef_h5_output
+            FROM
+                holo_data AS h_data
+            LEFT JOIN
+                hd_render AS hd ON h_data.id = hd.holo_id
+            LEFT JOIN
+                ef_render AS ef ON hd.id = ef.hd_id
+        """
+        combined_df = load_data(query, ff)
 
-    if combined_df.empty:
-        st.warning("The database is empty. Please start a scan.")
-        return
+        if combined_df.empty:
+            st.warning("The database is empty. Please start a scan.")
+            return
 
-    filtered_by_holo = render_holo_section(combined_df)
-    st.markdown("---")
-    filtered_by_hd = render_hd_section(filtered_by_holo)
-    st.markdown("---")
-    filtered_by_ef = render_ef_section(filtered_by_hd)
-    st.markdown("---")
-    render_export_section(filtered_by_ef)
+        filtered_by_holo = render_holo_section(combined_df)
+        st.markdown("---")
+        filtered_by_hd = render_hd_section(filtered_by_holo)
+        st.markdown("---")
+        filtered_by_ef = render_ef_section(filtered_by_hd)
+        st.markdown("---")
+        render_export_section(filtered_by_ef)
+
+    except Exception:
+        tee_handler.log_and_reraise()
 
 
 if __name__ == "__main__":
     import sys
-    import datetime
 
     if sys.version_info < (3, 13):
         print(
@@ -168,12 +181,5 @@ if __name__ == "__main__":
     # For Windows compatibility in multiprocessing
     multiprocessing.freeze_support()
 
-    LOG_FILE_PATH = get_log_path()
-
-    # Ensure the log directory exists
-    log_dir = os.path.dirname(LOG_FILE_PATH)
-    if log_dir:
-        os.makedirs(log_dir, exist_ok=True)
-
-    with Tee(LOG_FILE_PATH):
-        main()
+    # with Tee(LOG_FILE_PATH):
+    main()
