@@ -1,10 +1,22 @@
-![Python](https://img.shields.io/badge/python-3.13-blue?style=for-the-badge&logo=Python&logoColor=%23FFD43B)
-![Streamlit](https://img.shields.io/badge/streamlit-1.50.0-red?style=for-the-badge&logo=streamlit&logoColor=%23ff4b4b&color=%23ff4b4b)
-![Rust](https://img.shields.io/badge/rust-1.90.0-red?style=for-the-badge&logo=Rust&logoColor=%23CE422B&color=%23CE422B)
+[![Python](https://img.shields.io/badge/python-3.13-blue?style=for-the-badge&logo=Python&logoColor=%23FFD43B)](https://www.python.org/downloads/release/python-3138/)
+[![Streamlit](https://img.shields.io/badge/streamlit-1.50.0-red?style=for-the-badge&logo=streamlit&logoColor=%23ff4b4b&color=%23ff4b4b)](https://streamlit.io/)
+[![Rust](https://img.shields.io/badge/rust-1.90.0-red?style=for-the-badge&logo=Rust&logoColor=%23CE422B&color=%23CE422B)](https://blog.rust-lang.org/2025/09/18/Rust-1.90.0/)
+[![Apache2.0](https://img.shields.io/badge/Apache--2.0-green?style=for-the-badge)](https://www.apache.org/licenses/LICENSE-2.0)
 
 # DopplerManager
 
 A Streamlit application to find, catalog, and browse HoloDoppler and EyeFlow render data.
+
+### ⚠️ Python 3.14 Compatibility Alert
+
+> [!CAUTION]
+> Python 3.14 has recently been released, but **this project does not currently support it**.
+>
+> **Reason:** We are waiting for key upstream dependencies to release their official compatibility updates for Python 3.14.
+>
+> **Action Required:** Please ensure you use a stable, supported version of Python (**3.13**), until this notice is removed.
+>
+> We are actively monitoring the situation and will update this README as soon as 3.14 support is verified!
 
 ## Prerequisites
 

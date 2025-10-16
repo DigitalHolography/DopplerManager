@@ -25,7 +25,7 @@ jobs:
           git add version.txt
           git diff --staged --quiet || git commit -m "chore: bump version to $VERSION"
           
-          # Supprime le tag distant
+          git tag -d $TAG
           git push origin --delete $TAG
           
           # Recrée le tag sur le nouveau commit
