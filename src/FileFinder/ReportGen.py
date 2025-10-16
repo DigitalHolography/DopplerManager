@@ -48,7 +48,7 @@ def __format_date(date, timespec: str = "seconds") -> str:
     return date.isoformat(" ", timespec=timespec)
 
 
-def __get_duration(start, end) -> str:
+def __get_duration(start, end, without_ms: bool = False) -> str:
     if not isinstance(start, datetime.datetime) or not isinstance(
         end, datetime.datetime
     ):
@@ -56,7 +56,10 @@ def __get_duration(start, end) -> str:
 
     duration = end - start
 
-    return str(duration).split(".")[0]  # Remove microseconds for cleaner output
+    if without_ms:
+        return str(duration).split(".")[0]  # Remove microseconds for cleaner output
+    else:
+        return str(duration)
 
 
 def __resolve_path(path) -> str:
@@ -72,17 +75,19 @@ def __get_version() -> str:
         return version_file.read().strip()
 
 
-def __parse_data(data: dict, DB: DB, sep: str = "=", width: int = 40) -> str:
-    now = datetime.datetime.now()
-    scan_date = __s_get_r_dict(data, "headers.scan_date")
-    insert_date = __s_get_r_dict(data, "headers.insert_date")
-    end_date = __s_get_r_dict(data, "headers.end_date")
-
-    scan_date_str = __format_date(scan_date)
-    insert_date_str = __format_date(insert_date)
-    end_date_str = __format_date(end_date)
-
+def __get_global_headers(
+    DB: DB,
+    now, 
+    start,
+    end,
+    sep: str = "=",
+    width: int = 40,
+) -> str:
     separator = sep * width
+
+    full_time = "N/A"
+    if isinstance(start, datetime.datetime) and isinstance(end, datetime.datetime):
+        full_time = end - start
 
     return f"""
 {separator}
@@ -90,41 +95,68 @@ def __parse_data(data: dict, DB: DB, sep: str = "=", width: int = 40) -> str:
 {separator}
 
 App Version     : {__get_version()}
-
-
-Scan Path       : {__resolve_path(__s_get_r_dict(data, "headers.scan_path"))}
 DB Path         : {__resolve_path(DB.DB_PATH)}
 
-Scan Date       : {scan_date_str}
-Insert Date     : {insert_date_str}
-End Date        : {end_date_str}
 Report Date     : {__format_date(now)}
-
-Scan Duration   : {__get_duration(scan_date, insert_date)}
-Insert Duration : {__get_duration(insert_date, end_date)}
-Total Duration  : {__get_duration(scan_date, now)}
-
-{separator}
-{"METRICS":^{width}}
-{separator}
-
-{"WHILE SCANNING":^{width}}
-
-Found Holo      : {__s_get_r_dict(data, "data.found_holo", "N/A")}
-Found HD        : {__s_get_r_dict(data, "data.found_hd", "N/A")}
-Found EF        : {__s_get_r_dict(data, "data.found_ef", "N/A")}
-Found Preview   : {__s_get_r_dict(data, "data.found_preview", "N/A")}
+Full Analysis   : {full_time}
 
 {separator}
 
+"""
+
+
+def __get_global_footers(DB: DB, sep: str = "=", width: int = 40) -> str:    
+    return f"""\
 {"CURRENT IN DB":^{width}}
 
 Total Holo      : {DB.count("holo_data")}
 Total HD        : {DB.count("hd_render")}
 Total EF        : {DB.count("ef_render")}
 Total Preview   : {DB.count("preview_doppler_video")}
+"""
+
+
+def __parse_data(data: list[dict], DB: DB, sep: str = "=", width: int = 40) -> str:
+    separator = sep * width
+
+    now = datetime.datetime.now()
+    true_start = __s_get_r_dict(data[0], "headers.scan_date")
+    true_end = __s_get_r_dict(data[-1], "headers.end_date")
+
+    res = __get_global_headers(DB, now, true_start, true_end, sep, width)
+
+    for d in data:
+        scan_date = __s_get_r_dict(d, "headers.scan_date")
+        insert_date = __s_get_r_dict(d, "headers.insert_date")
+        end_date = __s_get_r_dict(d, "headers.end_date")
+
+        scan_date_str = __format_date(scan_date)
+        insert_date_str = __format_date(insert_date)
+        end_date_str = __format_date(end_date)
+
+        res += f"""\
+Scan Path       : {__resolve_path(__s_get_r_dict(d, "headers.scan_path"))}
+Scan Date       : {scan_date_str}
+Insert Date     : {insert_date_str}
+End Date        : {end_date_str}
+
+Scan Duration   : {__get_duration(scan_date, insert_date)}
+Insert Duration : {__get_duration(insert_date, end_date)}
+Total Duration  : {__get_duration(scan_date, end_date)}
+
+{"METRICS FOUND":^{width}}
+
+Found Holo      : {__s_get_r_dict(d, "data.found_holo", "N/A")}
+Found HD        : {__s_get_r_dict(d, "data.found_hd", "N/A")}
+Found EF        : {__s_get_r_dict(d, "data.found_ef", "N/A")}
+Found Preview   : {__s_get_r_dict(d, "data.found_preview", "N/A")}
+
+{separator}
 
 """
+
+    res += __get_global_footers(DB, sep, width)
+    return res
 
 
 def __get_report_path() -> Path:
@@ -149,7 +181,7 @@ def __get_report_path() -> Path:
 # └───────────────────────────────────┘
 
 
-def generate_report(data: dict, DB: DB, report_path: Path | None = None) -> None:
+def generate_report(data: list[dict], DB: DB, report_path: Path | None = None) -> None:
     """
     Generates a simple text report from the provided data dictionary
     and saves it to the specified report path.
