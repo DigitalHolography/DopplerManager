@@ -23,7 +23,7 @@ def render_ef_section(filtered_hd_df: pd.DataFrame) -> pd.DataFrame:
             "No EyeFlow data with both a report and .h5 output matches the current HoloDoppler filters."
         )
         with st.expander(
-            f"Show/Export {filtered_hd_df['hd_folder'].nunique()} HoloDoppler folders with no valid EyeFlow renders"
+            f"Show {filtered_hd_df['hd_folder'].nunique()} HoloDoppler folders with no valid EyeFlow renders"
         ):
             st.warning(
                 "The following HoloDoppler folders do not have any associated EyeFlow renders with both a report and .h5 output file."
@@ -34,12 +34,12 @@ def render_ef_section(filtered_hd_df: pd.DataFrame) -> pd.DataFrame:
                 .reset_index(drop=True),
                 width="stretch",
             )
-            st.download_button(
-                label="Export paths to .txt",
-                data="\n".join(filtered_hd_df["hd_folder"].unique()),
-                file_name="ef_batch_input.txt",
-                mime="text/plain",
-            )
+        st.download_button(
+            label="Export paths to .txt",
+            data="\n".join(filtered_hd_df["hd_folder"].unique()),
+            file_name="ef_batch_input.txt",
+            mime="text/plain",
+        )
         return ef_base_df
 
     if st.checkbox("Latest EF render only", value=True):
@@ -71,15 +71,15 @@ def render_ef_section(filtered_hd_df: pd.DataFrame) -> pd.DataFrame:
     )
 
     with st.expander(
-        f"**Show/Export {shown_ef_folders} of {total_ef_in_selection} valid EyeFlow folders from the selection above.**"
+        f"**Show {shown_ef_folders} of {total_ef_in_selection} valid EyeFlow folders from the selection above.**"
     ):
         st.dataframe(ef_display_df, width="stretch")
-        st.download_button(
-            label="Export paths to .txt",
-            data="\n".join(ef_display_df["ef_folder"].unique()),
-            file_name="ef_folder_paths.txt",
-            mime="text/plain",
-        )
+    st.download_button(
+        label="Export paths to .txt",
+        data="\n".join(ef_display_df["ef_folder"].unique()),
+        file_name="ef_folder_paths.txt",
+        mime="text/plain",
+    )
 
     hd_folders_with_matching_renders = filtered_ef_df["hd_folder"].unique()
     hd_with_no_matching_ef = filtered_hd_df[
@@ -88,7 +88,7 @@ def render_ef_section(filtered_hd_df: pd.DataFrame) -> pd.DataFrame:
 
     if not hd_with_no_matching_ef.empty:
         with st.expander(
-            f"**Show/Export {hd_with_no_matching_ef['hd_folder'].nunique()} HoloDoppler folders with no matching EyeFlow renders**"
+            f"**Show {hd_with_no_matching_ef['hd_folder'].nunique()} HoloDoppler folders with no matching EyeFlow renders**"
         ):
             st.warning(
                 "The following HoloDoppler folders do not have any EyeFlow renders that match the filter above, have no renders at all, or are missing the report/.h5 file."
@@ -100,10 +100,10 @@ def render_ef_section(filtered_hd_df: pd.DataFrame) -> pd.DataFrame:
                 width="stretch",
             )
 
-            st.download_button(
-                label="Export paths to .txt",
-                data="\n".join(hd_with_no_matching_ef["hd_folder"].unique()),
-                file_name="ef_batch_input.txt",
-                mime="text/plain",
-            )
+        st.download_button(
+            label="Export paths to .txt",
+            data="\n".join(hd_with_no_matching_ef["hd_folder"].unique()),
+            file_name="ef_batch_input.txt",
+            mime="text/plain",
+        )
     return filtered_ef_df

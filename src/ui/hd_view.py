@@ -22,7 +22,7 @@ def render_hd_section(filtered_holo_df: pd.DataFrame) -> pd.DataFrame:
             "No HoloDoppler data with a raw .h5 file matches the current Holo filters."
         )
         with st.expander(
-            f"Show/Export {filtered_holo_df['holo_file'].nunique()} .holo files with no valid HoloDoppler renders"
+            f"Show {filtered_holo_df['holo_file'].nunique()} .holo files with no valid HoloDoppler renders"
         ):
             st.warning(
                 "The following .holo files do not have any associated HoloDoppler renders with a raw .h5 file."
@@ -33,12 +33,12 @@ def render_hd_section(filtered_holo_df: pd.DataFrame) -> pd.DataFrame:
                 .reset_index(drop=True),
                 width="stretch",
             )
-            st.download_button(
-                label="Export paths to .txt",
-                data="\n".join(filtered_holo_df["holo_file"].unique()),
-                file_name="hd_batch_input.txt",
-                mime="text/plain",
-            )
+        st.download_button(
+            label="Export paths to .txt",
+            data="\n".join(filtered_holo_df["holo_file"].unique()),
+            file_name="hd_batch_input.txt",
+            mime="text/plain",
+        )
         return hd_base_df
 
     if st.checkbox("Latest HD render only", value=True):
@@ -70,15 +70,15 @@ def render_hd_section(filtered_holo_df: pd.DataFrame) -> pd.DataFrame:
     )
 
     with st.expander(
-        f"**Show/Export {shown_hd_folders} of {total_hd_in_selection} valid HoloDoppler folders from the selection above.**"
+        f"**Show {shown_hd_folders} of {total_hd_in_selection} valid HoloDoppler folders from the selection above.**"
     ):
         st.dataframe(hd_display_df, width="stretch")
-        st.download_button(
-            label="Export paths to .txt",
-            data="\n".join(hd_display_df["hd_folder"].unique()),
-            file_name="hd_folder_paths.txt",
-            mime="text/plain",
-        )
+    st.download_button(
+        label="Export paths to .txt",
+        data="\n".join(hd_display_df["hd_folder"].unique()),
+        file_name="hd_folder_paths.txt",
+        mime="text/plain",
+    )
 
     holo_files_with_matching_renders = filtered_hd_df["holo_file"].unique()
     holo_with_no_matching_hd = filtered_holo_df[
@@ -87,7 +87,7 @@ def render_hd_section(filtered_holo_df: pd.DataFrame) -> pd.DataFrame:
 
     if not holo_with_no_matching_hd.empty:
         with st.expander(
-            f"**Show/Export {holo_with_no_matching_hd['holo_file'].nunique()} .holo files with no matching HoloDoppler renders**"
+            f"**Show {holo_with_no_matching_hd['holo_file'].nunique()} .holo files with no matching HoloDoppler renders**"
         ):
             st.warning(
                 "The following .holo files do not have any HoloDoppler renders that match the filter above, have no renders at all, or are missing the raw .h5 file."
@@ -100,10 +100,10 @@ def render_hd_section(filtered_holo_df: pd.DataFrame) -> pd.DataFrame:
                 .reset_index(drop=True),
                 width="stretch",
             )
-            st.download_button(
-                label="Export paths to .txt",
-                data="\n".join(holo_with_no_matching_hd["holo_file"].unique()),
-                file_name="hd_batch_input.txt",
-                mime="text/plain",
-            )
+        st.download_button(
+            label="Export paths to .txt",
+            data="\n".join(holo_with_no_matching_hd["holo_file"].unique()),
+            file_name="hd_batch_input.txt",
+            mime="text/plain",
+        )
     return filtered_hd_df

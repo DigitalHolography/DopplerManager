@@ -124,15 +124,13 @@ def render_holo_section(combined_df: pd.DataFrame) -> pd.DataFrame:
         .reset_index(drop=True)
     )
 
-    with st.expander(
-        f"**Show/Export {shown_holo_files} of {total_holo_files} .holo files.**"
-    ):
+    with st.expander(f"**Show {shown_holo_files} of {total_holo_files} .holo files.**"):
         st.dataframe(holo_display_df, width="stretch")
-        st.download_button(
-            label="Export paths to .txt",
-            data="\n".join(holo_display_df["holo_file"].unique()),
-            file_name="holo_files.txt",
-            mime="text/plain",
-        )
+    st.download_button(
+        label="Export paths to .txt",
+        data="\n".join(holo_display_df["holo_file"].unique()),
+        file_name="holo_files.txt",
+        mime="text/plain",
+    )
 
     return filtered_holo_df.drop(columns=["holo_created_date"])

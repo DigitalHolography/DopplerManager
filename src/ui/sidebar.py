@@ -36,7 +36,7 @@ def render_sidebar(ff: FileFinder) -> None:
 
     # Initialize scan_paths as a list in the session state if it doesn't exist
     if "scan_paths" not in st.session_state:
-        st.session_state.scan_paths = ["Y:\\"]
+        st.session_state.scan_paths = []
 
     st.sidebar.markdown("##### Directories to Scan")
 
