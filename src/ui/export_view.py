@@ -4,6 +4,7 @@ import zipfile
 import io
 import os
 import json
+import h5py
 from pathlib import Path
 
 
@@ -127,16 +128,35 @@ def _generate_csv_data(filtered_df: pd.DataFrame) -> bytes | None:
 
         ef_folder_path = Path(ef_folder_str)
         json_dir = ef_folder_path / "json"
-
-        # Find the JSON file containing "output"
+        h5_dir = ef_folder_path / "h5"
         json_file_path = None
-        if json_dir.exists() and json_dir.is_dir():
+        h5_file_path = None
+        if (
+            json_dir.exists()
+            and json_dir.is_dir()
+            and h5_dir.exists()
+            and h5_dir.is_dir()
+        ):
             matching_files = list(json_dir.glob("*output*.json"))
             if matching_files:
                 json_file_path = matching_files[0]  # Take the first match
 
-        if json_file_path and json_file_path.is_file():
+            matching_h5_files = list(h5_dir.glob("*output*.h5"))
+            if matching_h5_files:
+                h5_file_path = matching_h5_files[0]  # Take the first match
+
+        if (
+            json_file_path
+            and json_file_path.is_file()
+            and h5_file_path
+            and h5_file_path.is_file()
+        ):
             try:
+                with h5py.File(h5_file_path, "r") as h5_file:
+                    print(
+                        f"H5 file {h5_file_path.name} opened successfully."
+                        f" Keys: {list(h5_file.keys())}"
+                    )
                 with open(json_file_path, "r", encoding="utf-8") as f:
                     data = json.load(f)
                     # Add identifiers from the main DataFrame
