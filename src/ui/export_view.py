@@ -134,24 +134,30 @@ def _collect_files_to_zip(
     return files_to_zip
 
 
-def _create_zip_archive(files_to_zip: list) -> tuple:
+def _create_zip_archive(files_to_zip: list, csv_data: bytes | None) -> tuple:
     """
-    Creates a zip archive in an in-memory buffer from a list of files.
+    Creates a zip archive in an in-memory buffer from a list of files and
+    optionally adds CSV data.
 
     Args:
         files_to_zip (list): A list of files to include in the zip.
+        csv_data (bytes | None): The CSV data to add to the zip.
 
     Returns:
         tuple: A tuple containing the BytesIO buffer of the zip file and a
                list of paths for files that were skipped.
     """
+    total_items = len(files_to_zip) + (1 if csv_data else 0)
+    if total_items == 0:
+        return io.BytesIO(), []
+
     progress_bar = st.progress(0, text="Initializing export...")
-    total_files = len(files_to_zip)
     zip_buffer = io.BytesIO()
     skipped_files = []
-    files_processed = 0
+    items_processed = 0
 
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+        # Add files from disk
         for file_info in files_to_zip:
             file_path = file_info["path"]
             arcname = file_info["arcname"]
@@ -161,11 +167,18 @@ def _create_zip_archive(files_to_zip: list) -> tuple:
             else:
                 skipped_files.append(str(file_path))
 
-            files_processed += 1
+            items_processed += 1
             progress_text = (
-                f"Processing file {files_processed} of {total_files}: {file_path.name}"
+                f"Processing file {items_processed} of {total_items}: {file_path.name}"
             )
-            progress_bar.progress(files_processed / total_files, text=progress_text)
+            progress_bar.progress(items_processed / total_items, text=progress_text)
+
+        # Add CSV data from memory
+        if csv_data:
+            zf.writestr("eyeflow_data_export.csv", csv_data)
+            items_processed += 1
+            progress_text = f"Processing item {items_processed} of {total_items}: eyeflow_data_export.csv"
+            progress_bar.progress(items_processed / total_items, text=progress_text)
 
     progress_bar.progress(1.0, text="Export preparation complete!")
     return zip_buffer, skipped_files
@@ -237,7 +250,7 @@ def _generate_csv_data(filtered_df: pd.DataFrame) -> bytes | None:
 def render_export_section(filtered_ef_df: pd.DataFrame) -> None:
     """
     Renders the export section, allowing users to download selected files
-    as a ZIP archive or to export structured data as a CSV file.
+    as a ZIP archive.
 
     Args:
         filtered_ef_df (pd.DataFrame): DataFrame filtered by all previous selections.
@@ -248,66 +261,70 @@ def render_export_section(filtered_ef_df: pd.DataFrame) -> None:
         st.info("No EyeFlow data is selected to be exported.")
         return
 
-    # --- ZIP Export Section ---
-    st.subheader("1. Export selected files as a ZIP package")
-    col1, col2, col3, col4 = st.columns(4)
+    st.subheader("Create an export package")
+    col1, col2 = st.columns(2)
+
     with col1:
-        export_pdfs = st.checkbox("Export PDF Reports", value=True, key="export_pdfs")
+        if st.button("Export pdf reports + csv data", use_container_width=True):
+            # Clear previous zip from session state to avoid showing old downloads
+            if "zip_buffer" in st.session_state:
+                del st.session_state["zip_buffer"]
+
+            files_to_zip = _collect_files_to_zip(
+                filtered_ef_df,
+                export_pdfs=True,
+                export_h5s=False,
+                export_jsons=False,
+                export_input_params=False,
+            )
+            csv_data = _generate_csv_data(filtered_ef_df)
+
+            if not files_to_zip and not csv_data:
+                st.warning("No PDF reports or CSV data are available to export.")
+            else:
+                zip_buffer, skipped_files = _create_zip_archive(files_to_zip, csv_data)
+                st.session_state.zip_buffer = zip_buffer
+                st.session_state.skipped_files = skipped_files
+                st.session_state.zip_file_name = "eyeflow_pdf_csv_export.zip"
+
     with col2:
-        export_h5s = st.checkbox("Export H5 Outputs", value=True, key="export_h5s")
-    with col3:
-        export_jsons = st.checkbox(
-            "Export all JSON files", value=True, key="export_jsons"
-        )
-    with col4:
-        export_input_params = st.checkbox(
-            "Export Input Parameters", value=True, key="export_input_params"
-        )
+        if st.button(
+            "Export all (pdf reports, csv data, h5 outputs, json outputs and params)",
+            use_container_width=True,
+        ):
+            # Clear previous zip from session state
+            if "zip_buffer" in st.session_state:
+                del st.session_state["zip_buffer"]
 
-    if st.button("Prepare ZIP Package"):
-        files_to_zip = _collect_files_to_zip(
-            filtered_ef_df, export_pdfs, export_h5s, export_jsons, export_input_params
-        )
+            files_to_zip = _collect_files_to_zip(
+                filtered_ef_df,
+                export_pdfs=True,
+                export_h5s=True,
+                export_jsons=True,
+                export_input_params=True,
+            )
+            csv_data = _generate_csv_data(filtered_ef_df)
 
-        if not files_to_zip:
-            st.warning("No files were selected or are available to export.")
-        else:
-            zip_buffer, skipped_files = _create_zip_archive(files_to_zip)
-            st.session_state.zip_buffer = zip_buffer
-            st.session_state.skipped_files = skipped_files
+            if not files_to_zip and not csv_data:
+                st.warning("No files or data are available to export.")
+            else:
+                zip_buffer, skipped_files = _create_zip_archive(files_to_zip, csv_data)
+                st.session_state.zip_buffer = zip_buffer
+                st.session_state.skipped_files = skipped_files
+                st.session_state.zip_file_name = "eyeflow_full_export.zip"
 
+    # --- Download Section ---
+    # This part remains active as long as a zip_buffer is in the session state
     if "zip_buffer" in st.session_state:
         st.success("Your export package is ready to be downloaded.")
         st.download_button(
             label="Download ZIP",
             data=st.session_state.zip_buffer.getvalue(),
-            file_name="eyeflow_export.zip",
+            file_name=st.session_state.get("zip_file_name", "eyeflow_export.zip"),
             mime="application/zip",
+            # Remove the buffer from state after clicking download
             on_click=lambda: st.session_state.pop("zip_buffer", None),
         )
         if st.session_state.get("skipped_files"):
             st.warning("The following files were not found and were skipped:")
             st.code("\n".join(st.session_state.get("skipped_files", [])))
-
-    st.markdown("---")
-
-    # --- CSV Export Section ---
-    st.subheader("2. Export measurement data as a CSV file")
-    st.info(
-        "This will compile the data from each selected EyeFlow folder into a single CSV."
-    )
-
-    if st.button("Generate CSV"):
-        csv_data = _generate_csv_data(filtered_ef_df)
-        if csv_data:
-            st.session_state.csv_data = csv_data
-
-    if "csv_data" in st.session_state:
-        st.success("Your CSV file is ready to be downloaded.")
-        st.download_button(
-            label="Download CSV",
-            data=st.session_state.csv_data,
-            file_name="eyeflow_data_export.csv",
-            mime="text/csv",
-            on_click=lambda: st.session_state.pop("csv_data", None),
-        )
