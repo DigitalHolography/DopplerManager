@@ -61,7 +61,7 @@ def _collect_input_params(
                     file.name.lower() == expected_hd_filename_lower
                     and file not in seen_paths
                 ):
-                    arcname = os.path.join(base_folder, "input_params", file.name)
+                    arcname = os.path.join(base_folder, "json", file.name)
                     files_to_zip.append({"path": file, "arcname": arcname})
                     seen_paths.add(file)
                     break
@@ -71,14 +71,16 @@ def _collect_input_params(
     if ef_folder_str and pd.notna(ef_folder_str):
         ef_folder_path = Path(ef_folder_str)
         json_dir = ef_folder_path / "json"
-        expected_ef_filename_lower = f"{ef_folder_path.name}_input_params.json".lower()
+        expected_ef_filename_lower = (
+            f"{ef_folder_path.name}_input_ef_params.json".lower()
+        )
         if json_dir.is_dir():
             for file in json_dir.iterdir():
                 if (
                     file.name.lower() == expected_ef_filename_lower
                     and file not in seen_paths
                 ):
-                    arcname = os.path.join(base_folder, "input_params", file.name)
+                    arcname = os.path.join(base_folder, "json", file.name)
                     files_to_zip.append({"path": file, "arcname": arcname})
                     seen_paths.add(file)
                     break
@@ -259,7 +261,7 @@ def render_export_section(filtered_ef_df: pd.DataFrame) -> None:
         )
     with col4:
         export_input_params = st.checkbox(
-            "Export Input Parameters", value=False, key="export_input_params"
+            "Export Input Parameters", value=True, key="export_input_params"
         )
 
     if st.button("Prepare ZIP Package"):
