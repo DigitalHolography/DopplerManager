@@ -63,7 +63,7 @@ def render_sidebar(ff: FileFinder) -> None:
     st.sidebar.markdown("---")
 
     # --- Database Update Button ---
-    if st.sidebar.button("Update database"):
+    if st.sidebar.button("Start scan/update"):
         scan_paths = st.session_state.scan_paths
         if not scan_paths:
             st.sidebar.error("No directories to scan. Please add a directory.")

@@ -7,8 +7,89 @@ import json
 from pathlib import Path
 
 
+def _collect_pdf_reports(
+    row: pd.Series, base_folder: str, files_to_zip: list, seen_paths: set
+) -> None:
+    """Collects PDF report files."""
+    if row.get("ef_report_path") and pd.notna(row["ef_report_path"]):
+        file_path = Path(row["ef_report_path"])
+        if file_path not in seen_paths:
+            arcname = os.path.join(base_folder, "pdf", file_path.name)
+            files_to_zip.append({"path": file_path, "arcname": arcname})
+            seen_paths.add(file_path)
+
+
+def _collect_h5_outputs(
+    row: pd.Series, base_folder: str, files_to_zip: list, seen_paths: set
+) -> None:
+    """Collects H5 output files."""
+    if row.get("ef_h5_output") and pd.notna(row["ef_h5_output"]):
+        file_path = Path(row["ef_h5_output"])
+        if file_path not in seen_paths:
+            arcname = os.path.join(base_folder, "h5", file_path.name)
+            files_to_zip.append({"path": file_path, "arcname": arcname})
+            seen_paths.add(file_path)
+
+
+def _collect_json_outputs(
+    ef_folder_path: Path, base_folder: str, files_to_zip: list, seen_paths: set
+) -> None:
+    """Collects all JSON files from the 'json' subdirectory."""
+    json_dir = ef_folder_path / "json"
+    if json_dir.exists() and json_dir.is_dir():
+        for json_file in json_dir.glob("*.json"):
+            if json_file not in seen_paths:
+                arcname = os.path.join(base_folder, "json", json_file.name)
+                files_to_zip.append({"path": json_file, "arcname": arcname})
+                seen_paths.add(json_file)
+
+
+def _collect_input_params(
+    row: pd.Series, base_folder: str, files_to_zip: list, seen_paths: set
+) -> None:
+    """Collects HD and EF input parameter JSON files with case-insensitive search."""
+    # Collect HD input parameters
+    hd_folder_str = row.get("hd_folder")
+    if hd_folder_str and pd.notna(hd_folder_str):
+        hd_folder_path = Path(hd_folder_str)
+        expected_hd_filename_lower = (
+            f"{hd_folder_path.name}_input_hd_params.json".lower()
+        )
+        if hd_folder_path.is_dir():
+            for file in hd_folder_path.iterdir():
+                if (
+                    file.name.lower() == expected_hd_filename_lower
+                    and file not in seen_paths
+                ):
+                    arcname = os.path.join(base_folder, "input_params", file.name)
+                    files_to_zip.append({"path": file, "arcname": arcname})
+                    seen_paths.add(file)
+                    break
+
+    # Collect EF input parameters
+    ef_folder_str = row.get("ef_folder")
+    if ef_folder_str and pd.notna(ef_folder_str):
+        ef_folder_path = Path(ef_folder_str)
+        json_dir = ef_folder_path / "json"
+        expected_ef_filename_lower = f"{ef_folder_path.name}_input_params.json".lower()
+        if json_dir.is_dir():
+            for file in json_dir.iterdir():
+                if (
+                    file.name.lower() == expected_ef_filename_lower
+                    and file not in seen_paths
+                ):
+                    arcname = os.path.join(base_folder, "input_params", file.name)
+                    files_to_zip.append({"path": file, "arcname": arcname})
+                    seen_paths.add(file)
+                    break
+
+
 def _collect_files_to_zip(
-    filtered_df: pd.DataFrame, export_pdfs, export_h5s, export_jsons
+    filtered_df: pd.DataFrame,
+    export_pdfs,
+    export_h5s,
+    export_jsons,
+    export_input_params,
 ) -> list:
     """
     Scans the filtered DataFrame and collects a list of files to be zipped
@@ -19,6 +100,7 @@ def _collect_files_to_zip(
         export_pdfs (bool): Whether to include PDF files.
         export_h5s (bool): Whether to include H5 files.
         export_jsons (bool): Whether to include JSON files.
+        export_input_params (bool): Whether to include input parameter JSON files.
 
     Returns:
         list: A list of dictionaries, where each dictionary contains the
@@ -33,36 +115,19 @@ def _collect_files_to_zip(
             continue
 
         base_folder = Path(ef_folder_path_str).name
+        ef_folder_path = Path(ef_folder_path_str)
 
-        # Collect PDF reports
-        if (
-            export_pdfs
-            and row.get("ef_report_path")
-            and pd.notna(row["ef_report_path"])
-        ):
-            file_path = Path(row["ef_report_path"])
-            if file_path not in seen_paths:
-                arcname = os.path.join(base_folder, "pdf", file_path.name)
-                files_to_zip.append({"path": file_path, "arcname": arcname})
-                seen_paths.add(file_path)
+        if export_pdfs:
+            _collect_pdf_reports(row, base_folder, files_to_zip, seen_paths)
 
-        # Collect H5 outputs
-        if export_h5s and row.get("ef_h5_output") and pd.notna(row["ef_h5_output"]):
-            file_path = Path(row["ef_h5_output"])
-            if file_path not in seen_paths:
-                arcname = os.path.join(base_folder, "h5", file_path.name)
-                files_to_zip.append({"path": file_path, "arcname": arcname})
-                seen_paths.add(file_path)
+        if export_h5s:
+            _collect_h5_outputs(row, base_folder, files_to_zip, seen_paths)
 
-        # Collect all JSON files in the 'json' subdirectory
         if export_jsons:
-            json_dir = Path(ef_folder_path_str) / "json"
-            if json_dir.exists() and json_dir.is_dir():
-                for json_file in json_dir.glob("*.json"):
-                    if json_file not in seen_paths:
-                        arcname = os.path.join(base_folder, "json", json_file.name)
-                        files_to_zip.append({"path": json_file, "arcname": arcname})
-                        seen_paths.add(json_file)
+            _collect_json_outputs(ef_folder_path, base_folder, files_to_zip, seen_paths)
+
+        if export_input_params:
+            _collect_input_params(row, base_folder, files_to_zip, seen_paths)
 
     return files_to_zip
 
@@ -183,7 +248,7 @@ def render_export_section(filtered_ef_df: pd.DataFrame) -> None:
 
     # --- ZIP Export Section ---
     st.subheader("1. Export selected files as a ZIP package")
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
     with col1:
         export_pdfs = st.checkbox("Export PDF Reports", value=True, key="export_pdfs")
     with col2:
@@ -192,10 +257,14 @@ def render_export_section(filtered_ef_df: pd.DataFrame) -> None:
         export_jsons = st.checkbox(
             "Export all JSON files", value=True, key="export_jsons"
         )
+    with col4:
+        export_input_params = st.checkbox(
+            "Export Input Parameters", value=False, key="export_input_params"
+        )
 
     if st.button("Prepare ZIP Package"):
         files_to_zip = _collect_files_to_zip(
-            filtered_ef_df, export_pdfs, export_h5s, export_jsons
+            filtered_ef_df, export_pdfs, export_h5s, export_jsons, export_input_params
         )
 
         if not files_to_zip:
