@@ -265,7 +265,7 @@ def render_export_section(filtered_ef_df: pd.DataFrame) -> None:
     col1, col2 = st.columns(2)
 
     with col1:
-        if st.button("Export PDF + CSV", use_container_width=True):
+        if st.button("Export pdf reports + csv data", use_container_width=True):
             # Clear previous zip from session state to avoid showing old downloads
             if "zip_buffer" in st.session_state:
                 del st.session_state["zip_buffer"]
@@ -288,7 +288,10 @@ def render_export_section(filtered_ef_df: pd.DataFrame) -> None:
                 st.session_state.zip_file_name = "eyeflow_pdf_csv_export.zip"
 
     with col2:
-        if st.button("Export ALL (PDF, CSV, H5, JSON)", use_container_width=True):
+        if st.button(
+            "Export all (pdf reports, csv data, h5 outputs, json outputs and params)",
+            use_container_width=True,
+        ):
             # Clear previous zip from session state
             if "zip_buffer" in st.session_state:
                 del st.session_state["zip_buffer"]
