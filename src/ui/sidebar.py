@@ -12,11 +12,14 @@ def add_directory_to_scan_list():
     Opens a directory selection dialog and adds the selected path
     to the list in the session state.
     """
-    # Create a Tkinter root window and hide it
+    # Create a Tkinter root window
     root = tk.Tk()
+    # Make the root window appear on top
+    root.attributes("-topmost", True)
+    # Hide the root window
     root.withdraw()
     # Open the directory selection dialog
-    folder_path = filedialog.askdirectory()
+    folder_path = filedialog.askdirectory(parent=root)
     # Destroy the root window
     root.destroy()
 
