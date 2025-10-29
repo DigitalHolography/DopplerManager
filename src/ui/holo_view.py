@@ -56,7 +56,7 @@ def render_holo_section(combined_df: pd.DataFrame) -> pd.DataFrame:
     if is_disabled:
         identifiers_to_match = []
         try:
-            content = uploaded_file.getvalue().decode("utf-8")
+            content = uploaded_file.getvalue().decode("utf-8-sig")
             lines = content.splitlines()
 
             for line in lines:
@@ -83,7 +83,6 @@ def render_holo_section(combined_df: pd.DataFrame) -> pd.DataFrame:
                 f"Filtered by imported group ({len(identifiers_to_match)} identifiers)."
             )
 
-    # --- Setup Filter Controls ---
     base_date_col = pd.to_datetime(combined_df["holo_created_at"]).dt.date
     min_date = base_date_col.min() if not base_date_col.empty else datetime.date.today()
     max_date = base_date_col.max() if not base_date_col.empty else datetime.date.today()
