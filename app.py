@@ -111,7 +111,6 @@ def main():
 
     # --- Initialization ---
     try:
-
         DB_FILE = get_appdata_db_path()
 
         if "db_initialized" not in st.session_state:
@@ -152,7 +151,9 @@ def main():
         combined_df = load_data(query, ff)
 
         if combined_df.empty:
-            st.warning("The database is empty. Please start a scan.")
+            st.warning(
+                "The database is empty. Please start by adding a directory in the sidebar and start a scan."
+            )
             return
 
         filtered_by_holo = render_holo_section(combined_df)
