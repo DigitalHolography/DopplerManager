@@ -90,7 +90,7 @@ def render_hd_section(filtered_holo_df: pd.DataFrame) -> pd.DataFrame:
             f"**Show {holo_with_no_matching_hd['holo_file'].nunique()} .holo files with no matching HoloDoppler renders**"
         ):
             st.warning(
-                "The following .holo files do not have any HoloDoppler renders that match the filter above, have no renders at all, or are missing the raw .h5 file."
+                "The following .holo files do not have any HoloDoppler renders that match the filter above, have no renders at all, or are missing the raw .h5 file or the version.txt."
             )
             st.dataframe(
                 holo_with_no_matching_hd[
