@@ -14,8 +14,8 @@ def render_hd_section(filtered_holo_df: pd.DataFrame) -> pd.DataFrame:
         pd.DataFrame: DataFrame further filtered by HoloDoppler selections.
     """
     st.header("HoloDoppler Data")
-    # Only consider HD renders that have a raw h5 file.
-    hd_base_df = filtered_holo_df.dropna(subset=["hd_folder", "hd_raw_h5_path"]).copy()
+    # Only consider HD renders that have a raw h5 file and a version.txt.
+    hd_base_df = filtered_holo_df.dropna(subset=["hd_folder", "hd_raw_h5_path", "version"]).copy()
 
     if hd_base_df.empty:
         st.info(
