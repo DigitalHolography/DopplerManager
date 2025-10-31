@@ -64,9 +64,14 @@ def gather_all_hd_folders_data_from_holo(holo_file_path: Path) -> dict[int, dict
             number = int(match.group(1))
             hd_folder = Path(entry.path)
 
+            # Old rendering json (for compatibility)
             rendering_params_json = (
                 hd_folder / f"{hd_folder.name}_RenderingParameters.json"
             )
+
+            if not rendering_params_json.exists():
+                rendering_params_json = hd_folder / f"{hd_folder.name}_input_HD_params.json"
+
             rendering_params = (
                 safe_json_load(rendering_params_json)
                 if rendering_params_json.exists()
