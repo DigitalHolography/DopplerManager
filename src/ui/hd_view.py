@@ -14,8 +14,8 @@ def render_hd_section(filtered_holo_df: pd.DataFrame) -> pd.DataFrame:
         pd.DataFrame: DataFrame further filtered by HoloDoppler selections.
     """
     st.header("HoloDoppler Data")
-    # Only consider HD renders that have a raw h5 file.
-    hd_base_df = filtered_holo_df.dropna(subset=["hd_folder", "hd_raw_h5_path"]).copy()
+    # Only consider HD renders that have a raw h5 file and a version.txt.
+    hd_base_df = filtered_holo_df.dropna(subset=["hd_folder", "hd_raw_h5_path", "hd_version"]).copy()
 
     if hd_base_df.empty:
         st.info(
@@ -90,7 +90,7 @@ def render_hd_section(filtered_holo_df: pd.DataFrame) -> pd.DataFrame:
             f"**Show {holo_with_no_matching_hd['holo_file'].nunique()} .holo files with no matching HoloDoppler renders**"
         ):
             st.warning(
-                "The following .holo files do not have any HoloDoppler renders that match the filter above, have no renders at all, or are missing the raw .h5 file."
+                "The following .holo files do not have any HoloDoppler renders that match the filter above, have no renders at all, or are missing the raw .h5 file or the version.txt."
             )
             st.dataframe(
                 holo_with_no_matching_hd[
