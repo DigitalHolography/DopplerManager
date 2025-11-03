@@ -136,11 +136,9 @@ fn main() -> io::Result<()> {
                 );
 
                 pause_on_error(&error_msg, 1);
-
                 return Ok(());
             }
         }
-
         Err(e) => {
             pause_on_error(&e.red(), 1);
             return Ok(()); // Will not be reached due to exit in pause_on_error
@@ -153,13 +151,20 @@ fn main() -> io::Result<()> {
 
     println!("{}", "Creating virtual environment...".yellow());
 
-    let venv_status = Command::new(&python_executable)
+    let venv_status_result = Command::new(&python_executable)
         .args(&["-m", "venv", "venv"])
-        .status()?;
+        .status();
 
-    if !venv_status.success() {
-        pause_on_error(&"Failed to create virtual environment.".red(), 1);
-        return Ok(()); // Will not be reached due to exit in pause_on_error
+    match venv_status_result {
+        Ok(status) => {
+            if !status.success() {
+                pause_on_error(&"Failed to create virtual environment.".red(), 1);
+            }
+        }
+        Err(e) => {
+            let error_msg = format!("Error executing python to create virtual environment: {}", e);
+            pause_on_error(&error_msg.red(), 1);
+        }
     }
 
     println!("{}", "Virtual environment created successfully.\n".green());
@@ -178,13 +183,20 @@ fn main() -> io::Result<()> {
         "Installing dependencies from requirements.txt...".yellow()
     );
 
-    let pip_status = Command::new(pip_path)
+    let pip_status_result = Command::new(&pip_path)
         .args(&["install", "-r", "requirements.txt"])
-        .status()?;
+        .status();
 
-    if !pip_status.success() {
-        pause_on_error(&"Failed to install dependencies.".red(), 1);
-        return Ok(());
+    match pip_status_result {
+        Ok(status) => {
+            if !status.success() {
+                pause_on_error(&"Failed to install dependencies.".red(), 1);
+            }
+        }
+        Err(e) => {
+            let error_msg = format!("Failed to run pip. Is 'requirements.txt' present?\nError: {}", e);
+            pause_on_error(&error_msg.red(), 1);
+        }
     }
 
     println!("{}", "Dependencies installed successfully.\n".green());
@@ -196,13 +208,22 @@ fn main() -> io::Result<()> {
         "Running the Streamlit application... (Press Ctrl+C to stop)".yellow()
     );
 
-    let streamlit_status = Command::new(streamlit_path)
+    let streamlit_status_result = Command::new(&streamlit_path)
         .arg("run")
         .arg("app.py")
-        .status()?;
+        .status();
+    
+    match streamlit_status_result {
+        Ok(status) => {
+            if !status.success() {
+                pause_on_error(&"Streamlit application exited with an error.".red(), 1);
+            }
+        }
 
-    if !streamlit_status.success() {
-        pause_on_error(&"Failed to run the Streamlit application.".red(), 1);
+        Err(e) => {
+            let error_msg = format!("Failed to run streamlit. Is 'app.py' present?\nError: {}", e);
+            pause_on_error(&error_msg.red(), 1);
+        }
     }
 
     Ok(())
