@@ -127,6 +127,7 @@ def gather_ef_folders_data(
                 "InputEyeFlowParams": InputEyeFlowParams,
                 "h5_output": h5_output,
                 "report_path": _get_report_pdf(ef_folder),
+                "error_log_path": None
             }
         )
 
