@@ -144,6 +144,7 @@ def process_date_folder(date_folder: Path) -> tuple[list, list, list, list]:
                             ef["ef_folder"], hd_folder_path.name
                         ),
                         "report_path": ef["report_path"],
+                        "error_log_path": ef["error_log_path"],
                         "h5_output": ef["h5_output"],
                         "updated_at": get_last_update(ef["ef_folder"]),
                     }

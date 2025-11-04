@@ -48,6 +48,7 @@ class FileFinder:
                 "input_parameters": "TEXT",
                 "version": "VARCHAR(255)",
                 "report_path": "VARCHAR(255)",
+                "error_log_path": "VARCHAR(255)",
                 "h5_output": "VARCHAR(255)",
                 "updated_at": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
                 "FOREIGN KEY (hd_id)": "REFERENCES hd_render (id) ON DELETE CASCADE",
@@ -102,6 +103,7 @@ class FileFinder:
         input_parameters: str | None,
         version: str | None,
         report_path: Path | None,
+        error_log_path: Path | None,
         h5_output: Path | None,
         updated_at: datetime.datetime | None,
     ) -> int | None:
@@ -114,6 +116,7 @@ class FileFinder:
                 "input_parameters": input_parameters,
                 "version": version,
                 "report_path": parse_path(report_path),
+                "error_log_path": parse_path(error_log_path),
                 "h5_output": parse_path(h5_output),
                 "updated_at": updated_at,
             },
