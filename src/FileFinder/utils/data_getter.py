@@ -120,6 +120,9 @@ def gather_ef_folders_data(
             h5_files = get_all_files_by_extension(ef_folder / "h5", "h5")
             if h5_files:
                 h5_output = h5_files[0]
+        
+        error_log_path = ef_folder / "log" / "error_log.txt"
+
 
         ef_data.append(
             {
@@ -127,7 +130,7 @@ def gather_ef_folders_data(
                 "InputEyeFlowParams": InputEyeFlowParams,
                 "h5_output": h5_output,
                 "report_path": _get_report_pdf(ef_folder),
-                "error_log_path": None
+                "error_log_path": error_log_path if error_log_path.exists() else None,
             }
         )
 
