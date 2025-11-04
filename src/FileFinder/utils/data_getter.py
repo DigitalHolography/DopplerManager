@@ -107,7 +107,7 @@ def gather_ef_folders_data(
         json_folder = ef_folder / "json"
         if json_folder.is_dir():
             if get_input_params:
-                input_param = json_folder / "InputEyeFlowParams.json"
+                input_param = json_folder / f"{json_folder.name}_Input_EF_Params.json"
                 if input_param.exists():
                     content = safe_json_load(input_param)
 
