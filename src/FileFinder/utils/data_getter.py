@@ -70,7 +70,9 @@ def gather_all_hd_folders_data_from_holo(holo_file_path: Path) -> dict[int, dict
             )
 
             if not rendering_params_json.exists():
-                rendering_params_json = hd_folder / f"{hd_folder.name}_input_HD_params.json"
+                rendering_params_json = (
+                    hd_folder / f"{hd_folder.name}_input_HD_params.json"
+                )
 
             rendering_params = (
                 safe_json_load(rendering_params_json)
@@ -120,9 +122,8 @@ def gather_ef_folders_data(
             h5_files = get_all_files_by_extension(ef_folder / "h5", "h5")
             if h5_files:
                 h5_output = h5_files[0]
-        
-        error_log_path = ef_folder / "log" / "error_log.txt"
 
+        error_log_path = ef_folder / "log" / f"{ef_folder.name}_error_log.txt"
 
         ef_data.append(
             {
