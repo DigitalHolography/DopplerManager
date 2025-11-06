@@ -14,9 +14,6 @@ def render_ef_section(filtered_hd_df: pd.DataFrame) -> pd.DataFrame:
     """
     st.header("EyeFlow Data")
 
-    # Separate renders with errors from valid ones.
-    errored_ef_df = filtered_hd_df[filtered_hd_df["error_log_path"].notna()].copy()
-
     # A render is valid if it has its output files and NO error log.
     ef_base_df = filtered_hd_df[
         filtered_hd_df["ef_folder"].notna()
@@ -24,30 +21,6 @@ def render_ef_section(filtered_hd_df: pd.DataFrame) -> pd.DataFrame:
         & filtered_hd_df["ef_h5_output"].notna()
         & filtered_hd_df["error_log_path"].isna()
     ].copy()
-
-    if not errored_ef_df.empty:
-        with st.expander(
-            f"**Show {errored_ef_df['ef_folder'].nunique()} EyeFlow folders with processing errors**"
-        ):
-            st.error(
-                "The following EyeFlow renders failed. The error logs can be found at the specified paths."
-            )
-            errored_display_df = (
-                errored_ef_df[
-                    ["hd_folder", "measure_tag", "ef_version", "error_log_path"]
-                ]
-                .drop_duplicates()
-                .reset_index(drop=True)
-            )
-            st.dataframe(errored_display_df, width="stretch")
-
-        # Export the INPUT HoloDoppler folders for a re-run.
-        st.download_button(
-            label="Export HD paths for re-run (.txt)",
-            data="\n".join(errored_ef_df["hd_folder"].unique()),
-            file_name="ef_rerun_batch_input.txt",
-            mime="text/plain",
-        )
 
     if ef_base_df.empty:
         st.info(
@@ -143,4 +116,32 @@ def render_ef_section(filtered_hd_df: pd.DataFrame) -> pd.DataFrame:
             file_name="ef_batch_input.txt",
             mime="text/plain",
         )
+
+    # Separate renders with errors from valid ones.
+    errored_ef_df = filtered_hd_df[filtered_hd_df["error_log_path"].notna()].copy()
+
+    if not errored_ef_df.empty:
+        with st.expander(
+            f"**Show {errored_ef_df['ef_folder'].nunique()} EyeFlow folders with processing errors**"
+        ):
+            st.error(
+                "The following EyeFlow renders failed. The error logs can be found at the specified paths."
+            )
+            errored_display_df = (
+                errored_ef_df[
+                    ["ef_folder", "measure_tag", "ef_version", "error_log_path"]
+                ]
+                .drop_duplicates()
+                .reset_index(drop=True)
+            )
+            st.dataframe(errored_display_df, width="stretch")
+
+        # Export the INPUT HoloDoppler folders for a re-run.
+        st.download_button(
+            label="Export HD paths for re-run (.txt)",
+            data="\n".join(errored_ef_df["hd_folder"].unique()),
+            file_name="ef_rerun_batch_input.txt",
+            mime="text/plain",
+        )
+
     return filtered_ef_df
