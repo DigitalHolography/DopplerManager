@@ -250,7 +250,7 @@ def _generate_csv_data(filtered_df: pd.DataFrame) -> bytes | None:
 def render_export_section(filtered_ef_df: pd.DataFrame) -> None:
     """
     Renders the export section, allowing users to download selected files
-    as a ZIP archive.
+    as a ZIP archive using a state-driven UI to prevent widget duplication.
 
     Args:
         filtered_ef_df (pd.DataFrame): DataFrame filtered by all previous selections.
@@ -261,15 +261,33 @@ def render_export_section(filtered_ef_df: pd.DataFrame) -> None:
         st.info("No EyeFlow data is selected to be exported.")
         return
 
-    st.subheader("Create an export package")
-    col1, col2 = st.columns(2)
+    # Initialize state if it doesn't exist
+    if "export_status" not in st.session_state:
+        st.session_state.export_status = "ready_to_export"
 
-    with col1:
-        if st.button("Export pdf reports + csv data", use_container_width=True):
-            # Clear previous zip from session state to avoid showing old downloads
-            if "zip_buffer" in st.session_state:
-                del st.session_state["zip_buffer"]
+    # --- STATE 3: Ready to Download ---
+    # If a zip file has been created, show the download button.
+    if st.session_state.export_status == "ready_to_download":
+        st.success("Your export package is ready to be downloaded.")
+        st.download_button(
+            label="Download ZIP",
+            data=st.session_state.zip_buffer.getvalue(),
+            file_name=st.session_state.get("zip_file_name", "eyeflow_export.zip"),
+            mime="application/zip",
+            on_click=lambda: st.session_state.update(export_status="ready_to_export"),
+        )
+        if st.session_state.get("skipped_files"):
+            st.warning("The following files were not found and were skipped:")
+            st.code("\n".join(st.session_state.get("skipped_files", [])))
 
+    # --- STATE 2: Processing ---
+    # If an export has been triggered, run the zipping process.
+    # The buttons from the 'else' block will NOT be rendered.
+    elif st.session_state.export_status == "processing":
+        export_type = st.session_state.get("export_type", "full")
+
+        # Determine which files to collect based on the button clicked
+        if export_type == "pdf_csv":
             files_to_zip = _collect_files_to_zip(
                 filtered_ef_df,
                 export_pdfs=True,
@@ -277,25 +295,8 @@ def render_export_section(filtered_ef_df: pd.DataFrame) -> None:
                 export_jsons=False,
                 export_input_params=False,
             )
-            csv_data = _generate_csv_data(filtered_ef_df)
-
-            if not files_to_zip and not csv_data:
-                st.warning("No PDF reports or CSV data are available to export.")
-            else:
-                zip_buffer, skipped_files = _create_zip_archive(files_to_zip, csv_data)
-                st.session_state.zip_buffer = zip_buffer
-                st.session_state.skipped_files = skipped_files
-                st.session_state.zip_file_name = "eyeflow_pdf_csv_export.zip"
-
-    with col2:
-        if st.button(
-            "Export all (pdf reports, csv data, h5 outputs, json outputs and params)",
-            use_container_width=True,
-        ):
-            # Clear previous zip from session state
-            if "zip_buffer" in st.session_state:
-                del st.session_state["zip_buffer"]
-
+            st.session_state.zip_file_name = "eyeflow_pdf_csv_export.zip"
+        else:  # 'full' export
             files_to_zip = _collect_files_to_zip(
                 filtered_ef_df,
                 export_pdfs=True,
@@ -303,28 +304,45 @@ def render_export_section(filtered_ef_df: pd.DataFrame) -> None:
                 export_jsons=True,
                 export_input_params=True,
             )
-            csv_data = _generate_csv_data(filtered_ef_df)
+            st.session_state.zip_file_name = "eyeflow_full_export.zip"
 
-            if not files_to_zip and not csv_data:
-                st.warning("No files or data are available to export.")
-            else:
-                zip_buffer, skipped_files = _create_zip_archive(files_to_zip, csv_data)
-                st.session_state.zip_buffer = zip_buffer
-                st.session_state.skipped_files = skipped_files
-                st.session_state.zip_file_name = "eyeflow_full_export.zip"
+        csv_data = _generate_csv_data(filtered_ef_df)
 
-    # --- Download Section ---
-    # This part remains active as long as a zip_buffer is in the session state
-    if "zip_buffer" in st.session_state:
-        st.success("Your export package is ready to be downloaded.")
-        st.download_button(
-            label="Download ZIP",
-            data=st.session_state.zip_buffer.getvalue(),
-            file_name=st.session_state.get("zip_file_name", "eyeflow_export.zip"),
-            mime="application/zip",
-            # Remove the buffer from state after clicking download
-            on_click=lambda: st.session_state.pop("zip_buffer", None),
-        )
-        if st.session_state.get("skipped_files"):
-            st.warning("The following files were not found and were skipped:")
-            st.code("\n".join(st.session_state.get("skipped_files", [])))
+        if not files_to_zip and not csv_data:
+            st.warning("No files or data are available to export.")
+            st.session_state.export_status = "ready_to_export"  # Reset state
+            st.rerun()
+        else:
+            zip_buffer, skipped_files = _create_zip_archive(files_to_zip, csv_data)
+            st.session_state.zip_buffer = zip_buffer
+            st.session_state.skipped_files = skipped_files
+
+            # Transition to the next state and rerun
+            st.session_state.export_status = "ready_to_download"
+            st.rerun()
+
+    # --- STATE 1: Ready to Export (Default) ---
+    # Otherwise, show the export buttons.
+    else:
+        st.subheader("Create an export package")
+        col1, col2 = st.columns(2)
+
+        def set_export_type(export_type: str):
+            st.session_state.export_status = "processing"
+            st.session_state.export_type = export_type
+
+        with col1:
+            st.button(
+                "Export pdf reports + csv data",
+                use_container_width=True,
+                on_click=set_export_type,
+                args=("pdf_csv",),
+            )
+
+        with col2:
+            st.button(
+                "Export all (pdf reports, csv data, h5 outputs, json outputs and params)",
+                use_container_width=True,
+                on_click=set_export_type,
+                args=("full",),
+            )
