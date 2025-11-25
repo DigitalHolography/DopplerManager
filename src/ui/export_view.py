@@ -265,7 +265,6 @@ def render_export_section(filtered_ef_df: pd.DataFrame) -> None:
     if "export_status" not in st.session_state:
         st.session_state.export_status = "ready_to_export"
 
-    # --- STATE 3: Ready to Download ---
     # If a zip file has been created, show the download button.
     if st.session_state.export_status == "ready_to_download":
         st.success("Your export package is ready to be downloaded.")
@@ -280,7 +279,6 @@ def render_export_section(filtered_ef_df: pd.DataFrame) -> None:
             st.warning("The following files were not found and were skipped:")
             st.code("\n".join(st.session_state.get("skipped_files", [])))
 
-    # --- STATE 2: Processing ---
     # If an export has been triggered, run the zipping process.
     # The buttons from the 'else' block will NOT be rendered.
     elif st.session_state.export_status == "processing":
@@ -296,7 +294,7 @@ def render_export_section(filtered_ef_df: pd.DataFrame) -> None:
                 export_input_params=False,
             )
             st.session_state.zip_file_name = "eyeflow_pdf_csv_export.zip"
-        else:  # 'full' export
+        else:  # full export
             files_to_zip = _collect_files_to_zip(
                 filtered_ef_df,
                 export_pdfs=True,
@@ -320,8 +318,6 @@ def render_export_section(filtered_ef_df: pd.DataFrame) -> None:
             # Transition to the next state and rerun
             st.session_state.export_status = "ready_to_download"
             st.rerun()
-
-    # --- STATE 1: Ready to Export (Default) ---
     # Otherwise, show the export buttons.
     else:
         st.subheader("Create an export package")
