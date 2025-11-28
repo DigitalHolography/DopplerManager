@@ -8,6 +8,27 @@ from src.Logger.LoggerClass import Logger
 from src.Utils.ParamsLoader import ConfigManager
 
 
+@st.dialog("Scan Summary")
+def show_scan_summary():
+    """
+    Displays a modal popup with the results of the scan.
+    """
+    stats = st.session_state.scan_stats
+    
+    st.write("The scan has finished. New items added to the database:")
+    st.markdown("---")
+
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Holo Files", stats.get("holo", 0))
+    col2.metric("HD Renders", stats.get("hd", 0))
+    col3.metric("EF Renders", stats.get("ef", 0))
+
+    st.markdown("---")
+    
+    if st.button("Close", type="primary", use_container_width=True):
+        del st.session_state.scan_stats
+        st.rerun()
+
 def add_directory_to_scan_list():
     """
     Opens a directory selection dialog and adds the selected path
@@ -36,6 +57,10 @@ def render_sidebar(ff: FileFinder) -> None:
     """
     Renders the sidebar UI components and handles the associated logic.
     """
+
+    if "scan_stats" in st.session_state:
+        show_scan_summary()
+
     st.sidebar.title("Database Controls")
 
     # Initialize scan_paths as a list in the session state if it doesn't exist
@@ -67,9 +92,9 @@ def render_sidebar(ff: FileFinder) -> None:
     st.sidebar.markdown("---")
 
     # --- Database Update Button ---
-    if st.sidebar.button("Start scan/update"):
+    if st.sidebar.button("Full Rescan (Clear DB)", type="primary"):
         # override = ConfigManager.get("DB.OVERRIDE_DB") or False
-        _handle_scan("The update may take a few minutes. Please wait.", ff, False, False)
+        _handle_scan("This will Clear the DB and start from scratch", ff, True, False)
 
     if st.sidebar.button("Scan New folders"):
         _handle_scan("Scanning for new files only...", ff, False, True)
@@ -81,6 +106,8 @@ def render_sidebar(ff: FileFinder) -> None:
         st.cache_data.clear()
         st.sidebar.success("Database cleared.")
         st.rerun()
+
+
 
 def _handle_scan(info_text: str, ff: FileFinder, resetDB: bool, onlyNew: bool):
     scan_paths = st.session_state.scan_paths
@@ -97,7 +124,7 @@ def _handle_scan(info_text: str, ff: FileFinder, resetDB: bool, onlyNew: bool):
 
         parallelism = ConfigManager.get("FINDER.USE_PARALLISM") or False
 
-        ff.Findfiles(
+        stats = ff.Findfiles(
             scan_paths,
             reset_db=resetDB,
             callback_bar=progress_bar,
@@ -110,7 +137,9 @@ def _handle_scan(info_text: str, ff: FileFinder, resetDB: bool, onlyNew: bool):
         progress_bar.progress(1.0, "Scan complete!")
         st.sidebar.success("Database updated successfully!")
 
-        time.sleep(2)
+        st.session_state.scan_stats = stats
+
+        time.sleep(3)
         progress_bar.empty()
         st.cache_data.clear()
         st.rerun()

@@ -141,7 +141,7 @@ class FileFinder:
         callback_bar=None,
         use_parallelism: bool = False,
         only_new: bool = False
-    ):
+    ) -> dict:
         reports = []
 
         if isinstance(root_dir, list):
@@ -158,6 +158,14 @@ class FileFinder:
             )
 
         generate_report(reports, self.DB)
+
+        totals = {
+            "holo": sum(r["data"]["found_holo"] for r in reports),
+            "hd": sum(r["data"]["found_hd"] for r in reports),
+            "ef": sum(r["data"]["found_ef"] for r in reports),
+        }
+        
+        return totals
 
     def _run_search(
         self, root_dir: str, reset_db: bool, callback_bar, use_parallelism: bool, only_new: bool
