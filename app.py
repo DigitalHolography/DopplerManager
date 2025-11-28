@@ -140,7 +140,8 @@ def main():
                 ef.render_number AS ef_render_number,
                 ef.version AS ef_version,
                 ef.report_path AS ef_report_path,
-                ef.h5_output AS ef_h5_output
+                ef.h5_output AS ef_h5_output,
+                ef.error_log_path AS error_log_path
             FROM
                 holo_data AS h_data
             LEFT JOIN
