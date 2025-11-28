@@ -68,7 +68,7 @@ def _get_eyeflow_version(ef_folder: Path, hd_folder_name: str) -> str | None:
     return None
 
 
-def process_date_folder(date_folder: Path) -> tuple[list, list, list, list]:
+def process_date_folder(date_folder: Path, existing_paths: set[str] | None = None) -> tuple[list, list, list, list]:
     """
     Scans a single date folder and gathers data for .holo, HD, and EF files.
     This function is designed to be run in a separate process.
@@ -90,6 +90,11 @@ def process_date_folder(date_folder: Path) -> tuple[list, list, list, list]:
     holo_files = find_all_holo_files(date_folder)
 
     for holo_file in holo_files:
+
+        # To skip all .holo already scanned
+        if existing_paths and str(holo_file) in existing_paths:
+            continue
+
         holo_entry = {
             "path": holo_file,
             "tag": get_measure_tag(holo_file),

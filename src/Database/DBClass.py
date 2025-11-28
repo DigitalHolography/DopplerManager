@@ -219,3 +219,14 @@ class DB:
         count = cursor.fetchone()
 
         return count[0] if count else 0
+    
+    def get_all_columns(self, table_name: str, column: str) -> set[str]:
+        """
+        Retrieves all values from a specific column in a table as a set.
+        Useful for checking existence efficiently.
+        """
+        if not self.check_table_existance(table_name):
+            return set()
+            
+        cursor = self.SQLconnect.execute(f"SELECT {column} FROM {table_name}")
+        return {row[0] for row in cursor.fetchall()}

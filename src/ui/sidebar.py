@@ -5,6 +5,7 @@ from tkinter import filedialog
 
 from src.FileFinder.FileFinderClass import FileFinder
 from src.Logger.LoggerClass import Logger
+from src.Utils.ParamsLoader import ConfigManager
 
 
 def add_directory_to_scan_list():
@@ -67,34 +68,11 @@ def render_sidebar(ff: FileFinder) -> None:
 
     # --- Database Update Button ---
     if st.sidebar.button("Start scan/update"):
-        scan_paths = st.session_state.scan_paths
-        if not scan_paths:
-            st.sidebar.error("No directories to scan. Please add a directory.")
-            return
+        # override = ConfigManager.get("DB.OVERRIDE_DB") or False
+        _handle_scan("The update may take a few minutes. Please wait.", ff, False, False)
 
-        st.sidebar.info("The update may take a few minutes. Please wait.")
-        with st.spinner("Updating database..."):
-            progress_bar = st.sidebar.progress(0, text="Starting scan...")
-            t1 = time.time()
-
-            # Call Findfiles with the entire list of valid paths.
-            # The method now handles iteration and resets the DB only on the first run.
-            ff.Findfiles(
-                scan_paths,
-                reset_db=True,
-                callback_bar=progress_bar,
-                use_parallelism=False,
-            )
-
-            t2 = time.time()
-            Logger.info(f"Total time taken: {t2 - t1:.6f}", "TIME")
-            progress_bar.progress(1.0, "Update complete!")
-            st.sidebar.success("Database updated successfully!")
-
-            time.sleep(2)  # Give user time to see the success message
-            progress_bar.empty()
-            st.cache_data.clear()
-            st.rerun()
+    if st.sidebar.button("Scan New folders"):
+        _handle_scan("Scanning for new files only...", ff, False, True)
 
     # --- Clear Database Button ---
     st.sidebar.markdown("---")
@@ -102,4 +80,37 @@ def render_sidebar(ff: FileFinder) -> None:
         ff.ClearDB()
         st.cache_data.clear()
         st.sidebar.success("Database cleared.")
+        st.rerun()
+
+def _handle_scan(info_text: str, ff: FileFinder, resetDB: bool, onlyNew: bool):
+    scan_paths = st.session_state.scan_paths
+    if not scan_paths:
+        st.sidebar.error("No directories to scan. Please add a directory.")
+        return
+
+    
+
+    st.sidebar.info(info_text)
+    with st.spinner("Updating database..."):
+        progress_bar = st.sidebar.progress(0, text="Starting scan...")
+        t1 = time.time()
+
+        parallelism = ConfigManager.get("FINDER.USE_PARALLISM") or False
+
+        ff.Findfiles(
+            scan_paths,
+            reset_db=resetDB,
+            callback_bar=progress_bar,
+            use_parallelism=parallelism,
+            only_new=onlyNew
+        )
+
+        t2 = time.time()
+        Logger.info(f"Total time taken: {t2 - t1:.6f}", "TIME")
+        progress_bar.progress(1.0, "Scan complete!")
+        st.sidebar.success("Database updated successfully!")
+
+        time.sleep(2)
+        progress_bar.empty()
+        st.cache_data.clear()
         st.rerun()

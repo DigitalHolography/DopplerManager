@@ -1,6 +1,7 @@
 import datetime
 import multiprocessing
 from pathlib import Path
+from functools import partial
 
 import src.FileFinder.FinderUtils as FinderUtils
 from src.Logger.LoggerClass import Logger
@@ -138,7 +139,8 @@ class FileFinder:
         root_dir: str | list[str],
         reset_db: bool = False,
         callback_bar=None,
-        use_parallelism=False,
+        use_parallelism: bool = False,
+        only_new: bool = False
     ):
         reports = []
 
@@ -146,23 +148,30 @@ class FileFinder:
             for single_root in root_dir:
                 reports.append(
                     self._run_search(
-                        single_root, reset_db, callback_bar, use_parallelism
+                        single_root, reset_db, callback_bar, use_parallelism, only_new
                     )
                 )
                 reset_db = False  # Only reset on the first run
         else:
             reports.append(
-                self._run_search(root_dir, reset_db, callback_bar, use_parallelism)
+                self._run_search(root_dir, reset_db, callback_bar, use_parallelism, only_new)
             )
 
         generate_report(reports, self.DB)
 
     def _run_search(
-        self, root_dir: str, reset_db: bool, callback_bar, use_parallelism: bool
+        self, root_dir: str, reset_db: bool, callback_bar, use_parallelism: bool, only_new: bool
     ):
         if reset_db:
             self.ClearDB()
             Logger.info("Database cleared before new scan.", "DATABASE")
+
+        existing_paths = set()
+        if only_new and not reset_db:
+            Logger.info("Fetching existing files from DB to skip them...", "DATABASE")
+            existing_paths = self.DB.get_all_columns("holo_data", "path")
+            Logger.info(f"Found {len(existing_paths)} existing files.", "DATABASE")
+
 
         if get_all_files_by_extension(Path(root_dir), "holo"):
             search_folders = [Path(root_dir)]
@@ -170,16 +179,16 @@ class FileFinder:
             search_folders = list(safe_iterdir(root_dir))
 
         total_folders = len(search_folders)
-
         results = []
-
         start_scan_date = datetime.datetime.now()
+
+        worker_func = partial(FinderUtils.process_date_folder, existing_paths=existing_paths)
 
         if use_parallelism:
             # Use as many processes as there are CPU cores
             with multiprocessing.Pool() as pool:
                 for i, result in enumerate(
-                    pool.imap_unordered(FinderUtils.process_date_folder, search_folders)
+                    pool.imap_unordered(worker_func, search_folders)
                 ):
                     if callback_bar:
                         progress_text = f"Scanning ({i + 1}/{total_folders})"
@@ -196,7 +205,7 @@ class FileFinder:
                     )
                     callback_bar.progress(((i + 1) / total_folders), text=progress_text)
 
-                result = FinderUtils.process_date_folder(date_folder)
+                result = worker_func(date_folder)
                 results.append(result)
 
         # --- Data Insertion Phase ---
