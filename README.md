@@ -7,6 +7,8 @@
 
 A Streamlit application to find, catalog, and browse HoloDoppler and EyeFlow render data.
 
+URL: http://dopplermanager.com/
+
 ### ⚠️ Python 3.14 Compatibility Alert
 
 > [!CAUTION]
