@@ -44,6 +44,19 @@ def _collect_json_outputs(
                 seen_paths.add(json_file)
 
 
+def _collect_log_files(
+    ef_folder_path: Path, base_folder: str, files_to_zip: list, seen_paths: set
+) -> None:
+    """Collects all .txt files from the 'log' subdirectory."""
+    log_dir = ef_folder_path / "log"
+    if log_dir.exists() and log_dir.is_dir():
+        for log_file in log_dir.glob("*.txt"):
+            if log_file not in seen_paths:
+                arcname = os.path.join(base_folder, "log", log_file.name)
+                files_to_zip.append({"path": log_file, "arcname": arcname})
+                seen_paths.add(log_file)
+
+
 def _collect_input_params(
     row: pd.Series, base_folder: str, files_to_zip: list, seen_paths: set
 ) -> None:
@@ -88,21 +101,27 @@ def _collect_input_params(
 
 def _collect_files_to_zip(
     filtered_df: pd.DataFrame,
-    export_pdfs,
-    export_h5s,
-    export_jsons,
-    export_input_params,
+    errored_df: pd.DataFrame,
+    export_pdfs: bool,
+    export_h5s: bool,
+    export_jsons: bool,
+    export_input_params: bool,
+    export_logs: bool,
+    export_failed_ef: bool,
 ) -> list:
     """
-    Scans the filtered DataFrame and collects a list of files to be zipped
-    based on user selections.
+    Scans the filtered DataFrame (and optional errored DataFrame) and collects
+    a list of files to be zipped based on user selections.
 
     Args:
-        filtered_df (pd.DataFrame): The DataFrame containing file paths.
+        filtered_df (pd.DataFrame): The DataFrame containing successful file paths.
+        errored_df (pd.DataFrame): The DataFrame containing failed render paths.
         export_pdfs (bool): Whether to include PDF files.
         export_h5s (bool): Whether to include H5 files.
         export_jsons (bool): Whether to include JSON files.
         export_input_params (bool): Whether to include input parameter JSON files.
+        export_logs (bool): Whether to include log files (.txt).
+        export_failed_ef (bool): Whether to include failed EF renders.
 
     Returns:
         list: A list of dictionaries, where each dictionary contains the
@@ -111,6 +130,7 @@ def _collect_files_to_zip(
     files_to_zip = []
     seen_paths = set()  # To avoid adding the same file multiple times
 
+    # 1. Process Successful Renders
     for _, row in filtered_df.iterrows():
         ef_folder_path_str = row.get("ef_folder")
         if not ef_folder_path_str or pd.isna(ef_folder_path_str):
@@ -130,6 +150,39 @@ def _collect_files_to_zip(
 
         if export_input_params:
             _collect_input_params(row, base_folder, files_to_zip, seen_paths)
+
+        if export_logs:
+            _collect_log_files(ef_folder_path, base_folder, files_to_zip, seen_paths)
+
+    # 2. Process Failed Renders
+    if export_failed_ef and not errored_df.empty:
+        for _, row in errored_df.iterrows():
+            ef_folder_path_str = row.get("ef_folder")
+            if not ef_folder_path_str or pd.isna(ef_folder_path_str):
+                continue
+
+            # Store failed renders in a dedicated subfolder "_failed_renders"
+            folder_name = Path(ef_folder_path_str).name
+            base_folder = os.path.join("_failed_renders", folder_name)
+            ef_folder_path = Path(ef_folder_path_str)
+            if export_pdfs:
+                _collect_pdf_reports(row, base_folder, files_to_zip, seen_paths)
+
+            if export_h5s:
+                _collect_h5_outputs(row, base_folder, files_to_zip, seen_paths)
+
+            if export_logs:
+                _collect_log_files(
+                    ef_folder_path, base_folder, files_to_zip, seen_paths
+                )
+
+            if export_input_params:
+                _collect_input_params(row, base_folder, files_to_zip, seen_paths)
+
+            if export_jsons:
+                _collect_json_outputs(
+                    ef_folder_path, base_folder, files_to_zip, seen_paths
+                )
 
     return files_to_zip
 
@@ -247,17 +300,20 @@ def _generate_csv_data(filtered_df: pd.DataFrame) -> bytes | None:
     return df.to_csv(index=False).encode("utf-8")
 
 
-def render_export_section(filtered_ef_df: pd.DataFrame) -> None:
+def render_export_section(
+    filtered_ef_df: pd.DataFrame, errored_ef_df: pd.DataFrame
+) -> None:
     """
     Renders the export section, allowing users to download selected files
     as a ZIP archive using a state-driven UI to prevent widget duplication.
 
     Args:
         filtered_ef_df (pd.DataFrame): DataFrame filtered by all previous selections.
+        errored_ef_df (pd.DataFrame): DataFrame containing failed renders.
     """
     st.header("Export Data")
 
-    if filtered_ef_df.empty:
+    if filtered_ef_df.empty and errored_ef_df.empty:
         st.info("No EyeFlow data is selected to be exported.")
         return
 
@@ -280,31 +336,38 @@ def render_export_section(filtered_ef_df: pd.DataFrame) -> None:
             st.code("\n".join(st.session_state.get("skipped_files", [])))
 
     # If an export has been triggered, run the zipping process.
-    # The buttons from the 'else' block will NOT be rendered.
     elif st.session_state.export_status == "processing":
         export_type = st.session_state.get("export_type", "full")
 
         # Determine which files to collect based on the button clicked
         if export_type == "pdf_csv":
             files_to_zip = _collect_files_to_zip(
-                filtered_ef_df,
+                filtered_df=filtered_ef_df,
+                errored_df=errored_ef_df,
                 export_pdfs=True,
                 export_h5s=False,
                 export_jsons=False,
                 export_input_params=False,
+                export_logs=True,
+                export_failed_ef=True,
             )
             st.session_state.zip_file_name = "eyeflow_pdf_csv_export.zip"
         else:  # full export
             files_to_zip = _collect_files_to_zip(
-                filtered_ef_df,
+                filtered_df=filtered_ef_df,
+                errored_df=errored_ef_df,
                 export_pdfs=True,
                 export_h5s=True,
                 export_jsons=True,
                 export_input_params=True,
+                export_logs=True,
+                export_failed_ef=True,
             )
             st.session_state.zip_file_name = "eyeflow_full_export.zip"
 
-        csv_data = _generate_csv_data(filtered_ef_df)
+        csv_data = None
+        if not filtered_ef_df.empty:
+            csv_data = _generate_csv_data(filtered_ef_df)
 
         if not files_to_zip and not csv_data:
             st.warning("No files or data are available to export.")
@@ -337,7 +400,7 @@ def render_export_section(filtered_ef_df: pd.DataFrame) -> None:
 
         with col2:
             st.button(
-                "Export all (pdf reports, csv data, h5 outputs, json outputs and params)",
+                "Export all (pdf, csv, h5, json, params, logs + failed renders)",
                 use_container_width=True,
                 on_click=set_export_type,
                 args=("full",),

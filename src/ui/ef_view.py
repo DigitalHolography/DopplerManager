@@ -2,7 +2,9 @@ import streamlit as st
 import pandas as pd
 
 
-def render_ef_section(filtered_hd_df: pd.DataFrame) -> pd.DataFrame:
+def render_ef_section(
+    filtered_hd_df: pd.DataFrame,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Renders the EyeFlow section of the dashboard.
 
@@ -144,4 +146,4 @@ def render_ef_section(filtered_hd_df: pd.DataFrame) -> pd.DataFrame:
             mime="text/plain",
         )
 
-    return filtered_ef_df
+    return filtered_ef_df, errored_ef_df

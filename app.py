@@ -161,9 +161,9 @@ def main():
         st.markdown("---")
         filtered_by_hd = render_hd_section(filtered_by_holo)
         st.markdown("---")
-        filtered_by_ef = render_ef_section(filtered_by_hd)
+        filtered_by_ef, errored_ef = render_ef_section(filtered_by_hd)
         st.markdown("---")
-        render_export_section(filtered_by_ef)
+        render_export_section(filtered_by_ef, errored_ef)
 
     except Exception:
         tee_handler.log_and_reraise()
