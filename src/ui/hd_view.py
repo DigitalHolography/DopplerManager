@@ -72,13 +72,13 @@ def render_hd_section(filtered_holo_df: pd.DataFrame) -> pd.DataFrame:
     )
 
     with st.expander(
-        f"**Show {shown_hd_folders} of {total_hd_in_selection} valid HoloDoppler folders from the selection above.**"
+        f"**Show {shown_hd_folders} of {total_hd_in_selection} valid HoloDoppler renders.**"
     ):
         st.dataframe(hd_display_df, width="stretch")
     st.download_button(
-        label="Export paths to .txt",
+        label="Export valid HD folder paths **(valid_hd_paths.txt)**",
         data="\n".join(hd_display_df["hd_folder"].unique()),
-        file_name="hd_folder_paths.txt",
+        file_name="valid_hd_paths.txt",
         mime="text/plain",
     )
 
@@ -103,7 +103,7 @@ def render_hd_section(filtered_holo_df: pd.DataFrame) -> pd.DataFrame:
                 width="stretch",
             )
         st.download_button(
-            label="Export paths to .txt",
+            label="Export holo paths with missing HD renders **(hd_batch_input.txt)**",
             data="\n".join(holo_with_no_matching_hd["holo_file"].unique()),
             file_name="hd_batch_input.txt",
             mime="text/plain",
