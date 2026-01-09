@@ -24,6 +24,9 @@ def render_ef_section(
         & filtered_hd_df["error_log_path"].isna()
     ].copy()
 
+    # Separate renders with errors from valid ones.
+    errored_ef_df = filtered_hd_df[filtered_hd_df["error_log_path"].notna()].copy()
+
     if ef_base_df.empty:
         st.info(
             "No valid EyeFlow data (with both a report and .h5 output) matches the current HoloDoppler filters."
@@ -46,13 +49,19 @@ def render_ef_section(
             file_name="ef_batch_input.txt",
             mime="text/plain",
         )
-        return ef_base_df
+        return ef_base_df, errored_ef_df
 
     if st.checkbox("Latest EF render only", value=True):
         latest_indices = ef_base_df.loc[
             ef_base_df.groupby("hd_folder")["ef_render_number"].idxmax()
         ]
         ef_base_df = latest_indices
+
+        if not errored_ef_df.empty:
+            latest_error_indices = errored_ef_df.loc[
+                errored_ef_df.groupby("hd_folder")["ef_render_number"].idxmax()
+            ]
+            errored_ef_df = latest_error_indices
 
     unique_ef_versions = sorted(ef_base_df["ef_version"].dropna().unique())
     selected_ef_versions = st.multiselect(
@@ -118,9 +127,6 @@ def render_ef_section(
             file_name="ef_batch_input.txt",
             mime="text/plain",
         )
-
-    # Separate renders with errors from valid ones.
-    errored_ef_df = filtered_hd_df[filtered_hd_df["error_log_path"].notna()].copy()
 
     if not errored_ef_df.empty:
         with st.expander(
