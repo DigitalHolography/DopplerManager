@@ -41,7 +41,7 @@ def render_ef_section(
                 width="stretch",
             )
         st.download_button(
-            label="Export paths to .txt",
+            label="Export HD paths with missing EF renders **(ef_batch_input.txt)**",
             data="\n".join(filtered_hd_df["hd_folder"].unique()),
             file_name="ef_batch_input.txt",
             mime="text/plain",
@@ -83,13 +83,13 @@ def render_ef_section(
     )
 
     with st.expander(
-        f"**Show {shown_ef_folders} of {total_ef_in_selection} valid EyeFlow folders from the selection above.**"
+        f"**Show {shown_ef_folders} of {total_ef_in_selection} valid EyeFlow renders**"
     ):
         st.dataframe(ef_display_df, width="stretch")
     st.download_button(
-        label="Export paths to .txt",
+        label="Export valid EF folder paths **(valid_ef_paths.txt)**",
         data="\n".join(ef_display_df["ef_folder"].unique()),
-        file_name="ef_folder_paths.txt",
+        file_name="valid_ef_paths.txt",
         mime="text/plain",
     )
 
@@ -113,7 +113,7 @@ def render_ef_section(
             )
 
         st.download_button(
-            label="Export paths to .txt",
+            label="Export HD paths with missing EF renders **(ef_batch_input.txt)**",
             data="\n".join(hd_with_no_matching_ef["hd_folder"].unique()),
             file_name="ef_batch_input.txt",
             mime="text/plain",
@@ -124,7 +124,7 @@ def render_ef_section(
 
     if not errored_ef_df.empty:
         with st.expander(
-            f"**Show {errored_ef_df['ef_folder'].nunique()} EyeFlow folders with processing errors**"
+            f"**Show {errored_ef_df['ef_folder'].nunique()} EyeFlow renders with processing errors**"
         ):
             st.error(
                 "The following EyeFlow renders failed. The error logs can be found at the specified paths."
@@ -140,7 +140,7 @@ def render_ef_section(
 
         # Export the INPUT HoloDoppler folders for a re-run.
         st.download_button(
-            label="Export HD paths for re-run (.txt)",
+            label="Export HD paths with EF render errors for re-run **(ef_rerun_batch_input.txt)**",
             data="\n".join(errored_ef_df["hd_folder"].unique()),
             file_name="ef_rerun_batch_input.txt",
             mime="text/plain",
