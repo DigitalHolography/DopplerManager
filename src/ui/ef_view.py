@@ -52,16 +52,23 @@ def render_ef_section(
         return ef_base_df, errored_ef_df
 
     if st.checkbox("Latest EF render only", value=True):
-        latest_indices = ef_base_df.loc[
-            ef_base_df.groupby("hd_folder")["ef_render_number"].idxmax()
-        ]
-        ef_base_df = latest_indices
+        all_ef_rows = pd.concat([ef_base_df, errored_ef_df])
 
-        if not errored_ef_df.empty:
-            latest_error_indices = errored_ef_df.loc[
-                errored_ef_df.groupby("hd_folder")["ef_render_number"].idxmax()
-            ]
-            errored_ef_df = latest_error_indices
+        if not all_ef_rows.empty:
+            latest_versions = (
+                all_ef_rows.groupby("hd_folder")["ef_render_number"].max().reset_index()
+            )
+
+            # Filter valid DataFrame to keep only if it matches the global latest version
+            ef_base_df = ef_base_df.merge(
+                latest_versions, on=["hd_folder", "ef_render_number"], how="inner"
+            )
+
+            # Filter errored DataFrame to keep only if it matches the global latest version
+            if not errored_ef_df.empty:
+                errored_ef_df = errored_ef_df.merge(
+                    latest_versions, on=["hd_folder", "ef_render_number"], how="inner"
+                )
 
     unique_ef_versions = sorted(ef_base_df["ef_version"].dropna().unique())
     selected_ef_versions = st.multiselect(
