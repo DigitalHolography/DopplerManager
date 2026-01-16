@@ -44,7 +44,7 @@ def render_ef_section(
                 width="stretch",
             )
         st.download_button(
-            label="Export HD paths with missing EyeFlow renders **(eyeflow_batch_input.txt)**",
+            label="Export HoloDoppler paths with missing EyeFlow renders **(eyeflow_batch_input.txt)**",
             data="\n".join(filtered_hd_df["hd_folder"].unique()),
             file_name="eyeflow_batch_input.txt",
             mime="text/plain",
@@ -129,7 +129,7 @@ def render_ef_section(
             )
 
         st.download_button(
-            label="Export HD paths with missing EyeFlow renders **(eyeflow_batch_input.txt)**",
+            label="Export HoloDoppler paths with missing EyeFlow renders **(eyeflow_batch_input.txt)**",
             data="\n".join(hd_with_no_matching_ef["hd_folder"].unique()),
             file_name="eyeflow_batch_input.txt",
             mime="text/plain",
@@ -153,7 +153,7 @@ def render_ef_section(
 
         # Export the INPUT HoloDoppler folders for a re-run.
         st.download_button(
-            label="Export HD paths with EyeFlow render errors for re-run **(eyeflow_rerun_batch_input.txt)**",
+            label="Export HoloDoppler paths with EyeFlow render errors for re-run **(eyeflow_rerun_batch_input.txt)**",
             data="\n".join(errored_ef_df["hd_folder"].unique()),
             file_name="eyeflow_rerun_batch_input.txt",
             mime="text/plain",
