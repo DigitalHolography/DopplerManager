@@ -44,14 +44,14 @@ def render_ef_section(
                 width="stretch",
             )
         st.download_button(
-            label="Export HD paths with missing EF renders **(eyeflow_batch_input.txt)**",
+            label="Export HD paths with missing EyeFlow renders **(eyeflow_batch_input.txt)**",
             data="\n".join(filtered_hd_df["hd_folder"].unique()),
             file_name="eyeflow_batch_input.txt",
             mime="text/plain",
         )
         return ef_base_df, errored_ef_df
 
-    if st.checkbox("Latest EF render only", value=True):
+    if st.checkbox("Latest EyeFlow render only", value=True):
         all_ef_rows = pd.concat([ef_base_df, errored_ef_df])
 
         if not all_ef_rows.empty:
@@ -103,7 +103,7 @@ def render_ef_section(
     ):
         st.dataframe(ef_display_df, width="stretch")
     st.download_button(
-        label="Export valid EF folder paths **(valid_ef_paths.txt)**",
+        label="Export valid EyeFlow folder paths **(valid_ef_paths.txt)**",
         data="\n".join(ef_display_df["ef_folder"].unique()),
         file_name="valid_ef_paths.txt",
         mime="text/plain",
@@ -129,7 +129,7 @@ def render_ef_section(
             )
 
         st.download_button(
-            label="Export HD paths with missing EF renders **(eyeflow_batch_input.txt)**",
+            label="Export HD paths with missing EyeFlow renders **(eyeflow_batch_input.txt)**",
             data="\n".join(hd_with_no_matching_ef["hd_folder"].unique()),
             file_name="eyeflow_batch_input.txt",
             mime="text/plain",
@@ -153,9 +153,9 @@ def render_ef_section(
 
         # Export the INPUT HoloDoppler folders for a re-run.
         st.download_button(
-            label="Export HD paths with EF render errors for re-run **(ef_rerun_batch_input.txt)**",
+            label="Export HD paths with EyeFlow render errors for re-run **(eyeflow_rerun_batch_input.txt)**",
             data="\n".join(errored_ef_df["hd_folder"].unique()),
-            file_name="ef_rerun_batch_input.txt",
+            file_name="eyeflow_rerun_batch_input.txt",
             mime="text/plain",
         )
 

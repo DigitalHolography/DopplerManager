@@ -43,7 +43,7 @@ def render_hd_section(filtered_holo_df: pd.DataFrame) -> pd.DataFrame:
         )
         return hd_base_df
 
-    if st.checkbox("Latest HD render only", value=True):
+    if st.checkbox("Latest HoloDoppler render only", value=True):
         latest_hd_render_numbers = hd_base_df.groupby("holo_file")[
             "hd_render_number"
         ].transform("max")
@@ -76,7 +76,7 @@ def render_hd_section(filtered_holo_df: pd.DataFrame) -> pd.DataFrame:
     ):
         st.dataframe(hd_display_df, width="stretch")
     st.download_button(
-        label="Export valid HD folder paths **(valid_hd_paths.txt)**",
+        label="Export valid HoloDoppler folder paths **(valid_hd_paths.txt)**",
         data="\n".join(hd_display_df["hd_folder"].unique()),
         file_name="valid_hd_paths.txt",
         mime="text/plain",
@@ -103,7 +103,7 @@ def render_hd_section(filtered_holo_df: pd.DataFrame) -> pd.DataFrame:
                 width="stretch",
             )
         st.download_button(
-            label="Export holo paths with missing HD renders **(holodoppler_batch_input.txt)**",
+            label="Export holo paths with missing HoloDoppler renders **(holodoppler_batch_input.txt)**",
             data="\n".join(holo_with_no_matching_hd["holo_file"].unique()),
             file_name="holodoppler_batch_input.txt",
             mime="text/plain",
