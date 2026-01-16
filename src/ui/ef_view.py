@@ -44,9 +44,9 @@ def render_ef_section(
                 width="stretch",
             )
         st.download_button(
-            label="Export HD paths with missing EF renders **(ef_batch_input.txt)**",
+            label="Export HD paths with missing EF renders **(eyeflow_batch_input.txt)**",
             data="\n".join(filtered_hd_df["hd_folder"].unique()),
-            file_name="ef_batch_input.txt",
+            file_name="eyeflow_batch_input.txt",
             mime="text/plain",
         )
         return ef_base_df, errored_ef_df
@@ -129,9 +129,9 @@ def render_ef_section(
             )
 
         st.download_button(
-            label="Export HD paths with missing EF renders **(ef_batch_input.txt)**",
+            label="Export HD paths with missing EF renders **(eyeflow_batch_input.txt)**",
             data="\n".join(hd_with_no_matching_ef["hd_folder"].unique()),
-            file_name="ef_batch_input.txt",
+            file_name="eyeflow_batch_input.txt",
             mime="text/plain",
         )
 

@@ -38,7 +38,7 @@ def render_hd_section(filtered_holo_df: pd.DataFrame) -> pd.DataFrame:
         st.download_button(
             label="Export paths to .txt",
             data="\n".join(filtered_holo_df["holo_file"].unique()),
-            file_name="hd_batch_input.txt",
+            file_name="holodoppler_batch_input.txt",
             mime="text/plain",
         )
         return hd_base_df
@@ -103,9 +103,9 @@ def render_hd_section(filtered_holo_df: pd.DataFrame) -> pd.DataFrame:
                 width="stretch",
             )
         st.download_button(
-            label="Export holo paths with missing HD renders **(hd_batch_input.txt)**",
+            label="Export holo paths with missing HD renders **(holodoppler_batch_input.txt)**",
             data="\n".join(holo_with_no_matching_hd["holo_file"].unique()),
-            file_name="hd_batch_input.txt",
+            file_name="holodoppler_batch_input.txt",
             mime="text/plain",
         )
     return filtered_hd_df
