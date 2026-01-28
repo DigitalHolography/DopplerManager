@@ -103,9 +103,9 @@ def render_ef_section(
     ):
         st.dataframe(ef_display_df, width="stretch")
     st.download_button(
-        label="Export valid EyeFlow folder paths **(valid_ef_paths.txt)**",
+        label="Export valid EyeFlow folder paths **(valid_eyeflow_paths.txt)**",
         data="\n".join(ef_display_df["ef_folder"].unique()),
-        file_name="valid_ef_paths.txt",
+        file_name="valid_eyeflow_paths.txt",
         mime="text/plain",
     )
 

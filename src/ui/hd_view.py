@@ -76,9 +76,9 @@ def render_hd_section(filtered_holo_df: pd.DataFrame) -> pd.DataFrame:
     ):
         st.dataframe(hd_display_df, width="stretch")
     st.download_button(
-        label="Export valid HoloDoppler folder paths **(valid_hd_paths.txt)**",
+        label="Export valid HoloDoppler folder paths **(valid_holodoppler_paths.txt)**",
         data="\n".join(hd_display_df["hd_folder"].unique()),
-        file_name="valid_hd_paths.txt",
+        file_name="valid_holodoppler_paths.txt",
         mime="text/plain",
     )
 
