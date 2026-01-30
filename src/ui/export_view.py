@@ -352,6 +352,18 @@ def render_export_section(
                 export_failed_ef=True,
             )
             st.session_state.zip_file_name = "eyeflow_pdf_csv_export.zip"
+        elif export_type == "h5_only":
+            files_to_zip = _collect_files_to_zip(
+                filtered_df=filtered_ef_df,
+                errored_df=errored_ef_df,
+                export_pdfs=False,
+                export_h5s=True,
+                export_jsons=False,
+                export_input_params=False,
+                export_logs=True,
+                export_failed_ef=False,
+            )
+            st.session_state.zip_file_name = "eyeflow_h5_export.zip"
         else:  # full export
             files_to_zip = _collect_files_to_zip(
                 filtered_df=filtered_ef_df,
@@ -384,7 +396,7 @@ def render_export_section(
     # Otherwise, show the export buttons.
     else:
         st.subheader("Create an export package")
-        col1, col2 = st.columns(2)
+        col1, col2, col3 = st.columns(3)
 
         def set_export_type(export_type: str):
             st.session_state.export_status = "processing"
@@ -404,4 +416,12 @@ def render_export_section(
                 use_container_width=True,
                 on_click=set_export_type,
                 args=("full",),
+            )
+
+        with col3:
+            st.button(
+                "Export h5 files only",
+                use_container_width=True,
+                on_click=set_export_type,
+                args=("h5_only",),
             )
