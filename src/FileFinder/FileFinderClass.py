@@ -275,7 +275,10 @@ class FileFinder:
                     temp_parent_hd_id = ef_data["hd_id"]
                     if temp_parent_hd_id in hd_id_map:
                         ef_data["hd_id"] = hd_id_map[temp_parent_hd_id]
-                        self.InsertEFRender(**ef_data)
+                        if ef_data.get("render_number") is None:
+                            Logger.error(f"Missing render_number for ef_data: {ef_data}", "DATABASE") # skip this record
+                        else :
+                            self.InsertEFRender(**ef_data)
                     else:
                         Logger.error(
                             f"HD folder ({temp_parent_hd_id}) is not found for EF_folder: {ef_data['path']}"
