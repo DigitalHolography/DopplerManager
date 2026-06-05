@@ -1,108 +1,225 @@
-[![Python](https://img.shields.io/badge/python-3.13-blue?style=for-the-badge&logo=Python&logoColor=%23FFD43B)](https://www.python.org/downloads/release/python-3138/)
-[![Streamlit](https://img.shields.io/badge/streamlit-1.50.0-red?style=for-the-badge&logo=streamlit&logoColor=%23ff4b4b&color=%23ff4b4b)](https://streamlit.io/)
-[![Rust](https://img.shields.io/badge/rust-1.90.0-red?style=for-the-badge&logo=Rust&logoColor=%23CE422B&color=%23CE422B)](https://blog.rust-lang.org/2025/09/18/Rust-1.90.0/)
-[![Apache2.0](https://img.shields.io/badge/Apache--2.0-green?style=for-the-badge)](https://www.apache.org/licenses/LICENSE-2.0)
+# Doppler Manager
 
-# DopplerManager
+Doppler Manager is a Streamlit application for tracking Doppler acquisitions stored on a NAS or a local drive. It scans a folder tree, checks the processing pipeline state, exposes parameters and tool versions, previews media, exports the acquisition index, and can run or rerun selected processing stages.
 
-A Streamlit application to find, catalog, and browse HoloDoppler and EyeFlow render data.
+The application is an operational MVP. During scans, it does not load large `.holo` or `.h5` files into memory. It indexes paths, sizes, modification dates, small text/JSON files, and preview media.
 
-URL: http://dopplermanager.com/
+## Supported Pipeline
 
-### ⚠️ Python 3.14 Compatibility Alert
+The supported processing chain is:
 
-> [!CAUTION]
-> Python 3.14 has recently been released, but **this project does not currently support it**.
->
-> **Reason:** We are waiting for key upstream dependencies to release their official compatibility updates for Python 3.14.
->
-> **Action Required:** Please ensure you use a stable, supported version of Python (**3.13**).
-
-## Prerequisites
-
-- **Windows 11** (Windows 10 is deprecated, use it at your own risk)
-- **Python 3.13:** You can download Python from the official website: https://www.python.org/downloads/
-
----
-
-## Setup Instructions
-
-**Download the latest release or clone the repository**
-
-### Auto setup
-
-**Double click on `DopplerManager.exe` from inside the root folder of the project**
-
-### Manual setup
-
-1.  **Create a virtual environment:**
-    Open Command Prompt or PowerShell in the DopplerManager directory and run the following commands.
-
-    ```bash
-    python -m venv venv
-    ```
-
-2.  **Activate the virtual environment:**
-
-    ```bash
-    venv\Scripts\activate
-    ```
-
-3.  **Install dependencies:**
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-### Compilation
-
-Prerequisites:
-
-- **Rust**: Using `rustc`/`cargo` is recommanded, you can install with `rustup` them at https://rust-lang.org/tools/install/
-
-The Launcher `DopplerManager.exe` is written in **Rust** and can be recompiled on demand using its files located inside `src/Launcher` folder.
-
-You can run the following inside the project root folder:
-
-- **Using Windows CMD**
-
-```cmd
-cargo build --release --manifest-path .\src\Launcher\Cargo.toml && copy .\src\Launcher\target\release\DopplerManager.exe DopplerManager.exe
+```text
+.holo -> HoloDoppler -> HD .h5 -> DopplerView -> DV .h5 -> EyeFlow -> EF .h5 -> AngioEye -> AE .h5
 ```
 
-- **Using Windows PowerShell**
+| Stage | Tool        | Expected inputs                            | Recognized outputs                                               |
+| ----- | ----------- | ------------------------------------------ | ---------------------------------------------------------------- |
+| HD    | HoloDoppler | Raw `<id>.holo` acquisition and settings JSON | `<id>_HD/h5/<id>_HD_output.h5`, JSON files, version TXT, previews |
+| DV    | DopplerView | Acquisition with an available HD output    | `<id>_DV/h5/<id>_DV.h5`, config JSON, outputs under `output/`    |
+| EF    | EyeFlow     | Acquisition with available HD and DV outputs | `<id>_EF/h5/<id>_EF.h5`, JSON files, previews                    |
+| AE    | AngioEye    | EF `.h5` file                              | `<id>_AE/h5/<id>_AE.h5`                                         |
 
-```ps
-cargo build --release --manifest-path src\Launcher\Cargo.toml; if ($?) { copy-item -Path src\Launcher\target\release\DopplerManager.exe -Destination DopplerManager.exe }
+## Recognized Layout
+
+The scanner can recognize an acquisition from a `.holo` file, an acquisition folder, or stage folders suffixed with `_HD`, `_DV`, `_EF`, or `_AE`.
+
+Typical structure:
+
+```text
+root/
+  251031_ALA_L_1.holo
+  251031_ALA_L_1/
+    251031_ALA_L_1_input_HD_params.json
+    251031_ALA_L_1_HD/
+      h5/
+        251031_ALA_L_1_HD_output.h5
+      json/
+      png/
+      avi/
+      version_holodoppler.txt
+      git_version.txt
+      info_holodoppler.txt
+    251031_ALA_L_1_DV/
+      h5/
+        251031_ALA_L_1_DV.h5
+      config/
+        DV_params.json
+      output/
+    251031_ALA_L_1_EF/
+      h5/
+        251031_ALA_L_1_EF.h5
+      png/
+    251031_ALA_L_1_AE/
+      h5/
+        251031_ALA_L_1_AE.h5
 ```
 
----
+When present, `software_pipeline_validation/` is used as the local validation dataset and proposed as the default scan root.
 
-## Running the Application
+## Status Model
 
-1.  **Run the Streamlit app:**
-    With your virtual environment activated, execute the following command in your terminal.
+Each acquisition has a global status and one status per stage:
 
-    ```bash
-    streamlit run app.py
-    ```
+| Status        | Meaning                                                                                   |
+| ------------- | ----------------------------------------------------------------------------------------- |
+| `not_started` | No artifact was recognized for the stage                                                  |
+| `partial`     | The stage exists, but no usable `.h5` file was found                                      |
+| `complete`    | The expected `.h5` file exists and is not empty                                           |
+| `warning`     | The stage needs review: unexpected `.h5` name, missing source, or incomplete upstream dependency |
+| `error`       | A blocking issue was detected, especially an empty `.h5` file                             |
+| `unknown`     | The state could not be determined                                                         |
 
-2.  **Access the application:**
-    After running the command, the application should automatically open in a new tab in your default web browser. If it doesn't, you can access it at the local URL provided in the terminal (usually http://localhost:8501 by default).
+The global status is derived from stage statuses, warnings, and errors. A downstream output found while its upstream stage is not complete is marked as `warning`.
 
-## Usage
+## User Interface
 
-1.  **Select a Directory:**
-    Use the sidebar to select the root directory you wish to scan for render data. You can either paste the path into the text box or use the "Select Directory" button to open a folder selection dialog.
+The Streamlit application provides three main tabs:
 
-2.  **Update the Database:**
-    Click the "Update database" button in the sidebar. The application will scan the selected directory and its subfolders for `.holo` files and their associated HoloDoppler (HD) and EyeFlow (EF) renders. The progress of the scan will be displayed in the sidebar.
+- `Acquisition Index`: filter by acquisition name, global status, missing HD, missing DV, or missing AE; view HD/DV/EF/AE statuses, warnings, errors, `.holo` presence, and acquisition folder presence.
+- `Acquisition Details`: select a filtered acquisition, view status badges, and inspect `Parameters`, `Versions`, and `Media Preview` tabs.
+- `Processing`: select acquisitions and stages to run or rerun, choose HoloDoppler settings, choose EyeFlow/AngioEye pipelines, follow real-time logs, and refresh the scan automatically after processing.
 
-3.  **Filter and Explore Data:**
-    Once the database is populated, the main panel will display the data in three sections:
+The scan bar accepts a typed or pasted path, a folder selected with `Browse`, and dropped paths when the browser provides a usable local path. Scan options control maximum depth, maximum inspected entries, indexed media per stage, and version-file reading.
 
-    - **Holo Data:** Filter `.holo` files by creation date or by a specific "measure tag". You can also upload a `.txt` file containing a list of identifiers to filter the data.
-    - **HoloDoppler Data:** This section shows the HD renders associated with the filtered `.holo` files. You can further filter these by the HoloDoppler software version.
-    - **EyeFlow Data:** This section displays the EF renders associated with the filtered HD renders, with an option to filter by the EyeFlow version.
+## Media Preview
 
-4.  **Export Data:**
-    Each section has an expandable "Show/Export" area where you can view the filtered data in a table and export the file or folder paths to a `.txt` file.
+Media files are grouped by acquisition and tool. Filters let users choose a subfolder, file type, and filename search query.
+
+The scanner indexes previews found in `png/`, `avi/`, the stage-folder root, and, with a bounded walk, `output/`.
+
+Supported formats:
+
+- Images: `.png`, `.jpg`, `.jpeg`
+- Browser-native videos: `.mp4`, `.mov`, `.m4v`
+- `.avi` videos: automatic cached MP4 conversion through `imageio-ffmpeg`, with a fallback to system `ffmpeg` when available
+
+Generated MP4 files for AVI previews are stored in `.doppler_cache/video_previews/`.
+
+## Exports
+
+The `Acquisition Index` tab exposes two exports:
+
+- Filtered CSV: `doppler_pipeline_scan.csv`
+- Full scan JSON: `doppler_pipeline_scan.json`
+
+## Installation
+
+The project targets Python 3.13 or newer.
+
+Minimal installation for running the interface:
+
+```bash
+uv sync
+```
+
+Installation with processing tools:
+
+```bash
+uv sync --extra processing
+```
+
+The `processing` extra installs upstream dependencies from GitHub:
+
+- `HoloDopplerPython`
+- `DopplerView`
+- `EyeFlowPython`
+- `AngioEye`
+- `onnxruntime`
+
+## Run the Application
+
+```bash
+uv run streamlit run src/doppler_managing/app.py
+```
+
+On first launch, select a NAS or local root folder and click `Scan`.
+
+## Run Processing
+
+In the `Processing` tab:
+
+1. Select one or more acquisitions.
+2. Select the stages to run in `Run or rerun`.
+3. Enable `Only missing or needs review` to skip stages that are already `complete`.
+4. If HD is selected, choose a HoloDoppler settings JSON file.
+5. If EF or AE is selected, choose at least one pipeline.
+6. Click `Run Processing`.
+
+The application always enforces this execution order:
+
+```text
+HD -> DV -> EF -> AE
+```
+
+Before rerunning a stage, the application deletes only the expected result folder for the selected acquisition and stage, for example `<id>/<id>_EF`. After execution, it automatically scans again and keeps the latest logs in the interface.
+
+Default commands:
+
+```text
+python -c "from holodoppler.cli import main; raise SystemExit(main())"
+python -m dopplerview.cli
+python -m doppler_managing._external_cli_runner eyeflow
+python -m doppler_managing._external_cli_runner angioeye
+```
+
+Commands can be overridden with local executable paths:
+
+- `DM_HOLODOPPLER_COMMAND`
+- `DM_DOPPLERVIEW_COMMAND`
+- `DM_EYEFLOW_COMMAND`
+- `DM_ANGIOEYE_COMMAND`
+
+HoloDoppler settings can be preconfigured with:
+
+- `DM_HOLODOPPLER_SETTINGS`: path to a JSON file
+- `DM_HOLODOPPLER_SETTINGS_DIR`: path to a folder containing JSON files
+
+Settings discovery also checks `processing_defaults/holodoppler/`, `parameters/`, `HoloDopplerPython/parameters/`, and matching folders under the scanned root. When multiple files are available, the application prefers a JSON file containing `temporal_transformation`, which is required by the current HoloDoppler CLI.
+
+## EF and AE Pipelines
+
+The default settings included in `processing_defaults/` define which pipelines are visible and which ones are selected by default.
+
+EyeFlow:
+
+- `waveform_shape_metrics` is selected by default.
+- `dual_input_tutorial` is available but not selected by default.
+
+AngioEye:
+
+- `waveform_shape_metrics` is selected by default.
+- `Windkessel_RC`, `lowrank_pulsatility_metrics`, `modal_analysis`, `waveform_harmonic_organization`, and `waveform_harmonic_organization_SVD` are available but not selected by default.
+
+Temporary pipeline-selection files are generated under `.doppler_cache/processing/`.
+
+## Tests
+
+```bash
+uv run pytest
+```
+
+## Code Structure
+
+```text
+src/doppler_managing/
+  app.py                       Streamlit entry point
+  models.py                    Scan data models
+  scanner.py                   Acquisition and status detection
+  processing.py                Job construction and execution
+  _external_cli_runner.py       EyeFlow/AngioEye wrappers
+  _eyeflow_runtime_limits.py    EyeFlow runtime compatibility and limits
+  ui/
+    dashboard.py                Index, filters, and exports
+    detail.py                   Parameters, versions, and acquisition details
+    media.py                    Image/video previews
+    processing.py               Processing tab
+    theme.py                    Streamlit styles
+```
+
+Other useful folders:
+
+- `.streamlit/config.toml`: Streamlit dark theme
+- `processing_defaults/`: short copies of upstream settings used by the app
+- `software_pipeline_validation/`: local validation dataset
+- `.doppler_cache/`: video-preview cache and temporary processing files
+- `tests/`: unit tests for scanner, processing, and CLI wrappers

@@ -1,0 +1,38 @@
+[project]
+name = "doppler-manager"
+version = "0.1.0"
+description = "Streamlit MVP for detecting and verifying Holodoppler processing pipelines on NAS folders."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "imageio-ffmpeg>=0.5",
+    "pandas>=2.0,<3",
+    "pyarrow>=23,<24",
+    "streamlit>=1.35",
+]
+
+[project.optional-dependencies]
+processing = [
+    "holodoppler @ git+https://github.com/DigitalHolography/HoloDopplerPython.git@doppler_managing",
+    "dopplerview @ git+https://github.com/DigitalHolography/DopplerView.git@doppler_managing",
+    "onnxruntime>=1.25,<1.26",
+    "EyeFlow @ git+https://github.com/DigitalHolography/EyeFlowPython.git@doppler_managing",
+    "AngioEye @ git+https://github.com/DigitalHolography/AngioEye.git@doppler_managing",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = ["pytest>=8.0"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/doppler_managing"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

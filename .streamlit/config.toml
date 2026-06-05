@@ -1,6 +1,0 @@
-[client]
-toolbarMode = "viewer"
-
-[server]
-showEmailPrompt = false
-address = "localhost"
