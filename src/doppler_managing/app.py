@@ -4,7 +4,7 @@ from pathlib import Path
 
 import streamlit as st
 
-from doppler_managing.scanner import ScanOptions, scan_root
+from doppler_managing.scanner import ScanOptions, holo_filter_ids_from_text, scan_root
 from doppler_managing.ui.dashboard import (
     render_exports,
     render_filters,
@@ -212,6 +212,7 @@ def main() -> None:
                 scan_options.max_entries,
                 scan_options.preview_limit_per_stage,
                 scan_options.read_versions,
+                _holo_filter_cache_key(scan_options),
             )
 
     if "scan_result" not in st.session_state:
@@ -241,6 +242,7 @@ def main() -> None:
                     scan_options.max_entries,
                     scan_options.preview_limit_per_stage,
                     scan_options.read_versions,
+                    _holo_filter_cache_key(scan_options),
                 )
             st.rerun()
         render_overview_table(frame)
@@ -264,12 +266,14 @@ def _cached_scan(
     max_entries: int,
     preview_limit: int,
     read_versions: bool,
+    holo_filter_ids: tuple[str, ...] | None,
 ):
     options = ScanOptions(
         max_depth=max_depth,
         max_entries=max_entries,
         preview_limit_per_stage=preview_limit,
         read_versions=read_versions,
+        holo_filter_ids=set(holo_filter_ids) if holo_filter_ids is not None else None,
     )
     return scan_root(root, options)
 
@@ -280,9 +284,10 @@ def _refresh_scan(
     max_entries: int,
     preview_limit: int,
     read_versions: bool,
+    holo_filter_ids: tuple[str, ...] | None = None,
 ):
     _cached_scan.clear()
-    return _cached_scan(root, max_depth, max_entries, preview_limit, read_versions)
+    return _cached_scan(root, max_depth, max_entries, preview_limit, read_versions, holo_filter_ids)
 
 
 def _render_scan_bar(default_root: Path):
@@ -313,14 +318,38 @@ def _render_scan_bar(default_root: Path):
                 value=DEFAULT_PREVIEW_LIMIT,
             )
             read_versions = option_cols[3].checkbox("Read version files", value=True)
+            holo_filter_file = st.file_uploader(
+                ".holo filter list",
+                type=["txt"],
+                accept_multiple_files=False,
+            )
+            holo_filter_ids = _uploaded_holo_filter_ids(holo_filter_file)
+            if holo_filter_ids is not None:
+                count = len(holo_filter_ids)
+                suffix = "" if count == 1 else "s"
+                st.caption(f"{count} .holo name{suffix} loaded from filter.")
 
     options = ScanOptions(
         max_depth=int(max_depth),
         max_entries=int(max_entries),
         preview_limit_per_stage=int(preview_limit),
         read_versions=bool(read_versions),
+        holo_filter_ids=holo_filter_ids,
     )
     return root_input, options, run_scan
+
+
+def _uploaded_holo_filter_ids(uploaded_file) -> set[str] | None:
+    if uploaded_file is None:
+        return None
+    text = uploaded_file.getvalue().decode("utf-8-sig", errors="replace")
+    return holo_filter_ids_from_text(text)
+
+
+def _holo_filter_cache_key(options: ScanOptions) -> tuple[str, ...] | None:
+    if options.holo_filter_ids is None:
+        return None
+    return tuple(sorted(options.holo_filter_ids))
 
 
 def _render_scan_root_drop_helper() -> None:

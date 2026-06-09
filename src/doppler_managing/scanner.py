@@ -53,6 +53,15 @@ class ScanOptions:
     read_versions: bool = True
     max_text_bytes: int = 4_096
     skip_dirs: Set[str] = field(default_factory=lambda: set(DEFAULT_SKIP_DIRS))
+    holo_filter_ids: Optional[Set[str]] = None
+
+    def __post_init__(self) -> None:
+        if self.holo_filter_ids is not None:
+            self.holo_filter_ids = {
+                normalized
+                for value in self.holo_filter_ids
+                if (normalized := _normalize_holo_filter_entry(value))
+            }
 
 
 @dataclass
@@ -80,7 +89,7 @@ def scan_root(root: Union[Path, str], options: Optional[ScanOptions] = None) -> 
         return ScanResult(root=str(root_path), acquisitions=[], errors=[f"Path not found: {root_path}"])
 
     discovery = _discover(root_path, options)
-    acquisition_ids = _candidate_ids(discovery)
+    acquisition_ids = _candidate_ids(discovery, options)
     acquisitions = [
         _build_acquisition(acquisition_id, discovery, options)
         for acquisition_id in sorted(acquisition_ids)
@@ -126,6 +135,8 @@ def _discover(root: Path, options: ScanOptions) -> Discovery:
                         stage = _stage_from_dir_name(name)
                         if stage:
                             acquisition_id = name[: -len(STAGE_SUFFIXES[stage])]
+                            if not _holo_filter_allows(acquisition_id, options):
+                                continue
                             discovery.stage_dirs[(acquisition_id, stage)] = entry_path
                             if entry_path.parent.name == acquisition_id:
                                 discovery.acquisition_dirs.setdefault(acquisition_id, entry_path.parent)
@@ -138,6 +149,8 @@ def _discover(root: Path, options: ScanOptions) -> Discovery:
                             queue.append((entry_path, depth + 1))
 
                     elif is_file and name.lower().endswith(".holo"):
+                        if not _holo_filter_allows(entry_path.stem, options):
+                            continue
                         discovery.holo_by_id[entry_path.stem] = entry_path
                         sibling_dir = entry_path.with_suffix("")
                         if sibling_dir.exists() and sibling_dir.is_dir():
@@ -156,11 +169,37 @@ def _stage_from_dir_name(name: str) -> Optional[str]:
     return None
 
 
-def _candidate_ids(discovery: Discovery) -> Set[str]:
+def _candidate_ids(discovery: Discovery, options: ScanOptions) -> Set[str]:
     ids = set(discovery.holo_by_id)
     ids.update(discovery.acquisition_dirs)
     ids.update(acquisition_id for acquisition_id, _stage in discovery.stage_dirs)
+    if options.holo_filter_ids is not None:
+        ids &= options.holo_filter_ids
     return ids
+
+
+def holo_filter_ids_from_text(text: str) -> Set[str]:
+    ids: Set[str] = set()
+    for line in text.splitlines():
+        normalized = _normalize_holo_filter_entry(line)
+        if normalized:
+            ids.add(normalized)
+    return ids
+
+
+def _holo_filter_allows(acquisition_id: str, options: ScanOptions) -> bool:
+    return options.holo_filter_ids is None or acquisition_id in options.holo_filter_ids
+
+
+def _normalize_holo_filter_entry(value: object) -> Optional[str]:
+    candidate = str(value).strip().lstrip("\ufeff").strip("\"'")
+    if not candidate or candidate.startswith("#"):
+        return None
+
+    name = candidate.replace("\\", "/").rsplit("/", 1)[-1].strip()
+    if name.lower().endswith(".holo"):
+        name = name[: -len(".holo")]
+    return name or None
 
 
 def _build_acquisition(

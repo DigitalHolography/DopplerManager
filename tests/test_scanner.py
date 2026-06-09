@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from doppler_managing.scanner import ScanOptions, scan_root
+from doppler_managing.scanner import ScanOptions, holo_filter_ids_from_text, scan_root
 
 
 def _write(path: Path, content: bytes = b"x") -> None:
@@ -58,3 +58,35 @@ def test_scan_marks_zero_byte_h5_as_error(tmp_path: Path) -> None:
     acquisition = result.acquisitions[0]
     assert acquisition.stages["hd"].status == "error"
     assert acquisition.status == "error"
+
+
+def test_holo_filter_text_accepts_holo_filenames_paths_and_comments() -> None:
+    ids = holo_filter_ids_from_text(
+        """
+        # one .holo per line
+        251031_ALA_L_1.holo
+        C:\\data\\260307_VAB_L_3.holo
+        260310_AUZ0752_1
+        """
+    )
+
+    assert ids == {"251031_ALA_L_1", "260307_VAB_L_3", "260310_AUZ0752_1"}
+
+
+def test_scan_can_be_limited_to_holo_filter_list(tmp_path: Path) -> None:
+    included_id = "251031_ALA_L_1"
+    excluded_id = "260307_VAB_L_3"
+    _write(tmp_path / f"{included_id}.holo")
+    _write(tmp_path / included_id / f"{included_id}_HD" / "h5" / f"{included_id}_HD_output.h5")
+    _write(tmp_path / f"{excluded_id}.holo")
+    _write(tmp_path / excluded_id / f"{excluded_id}_HD" / "h5" / f"{excluded_id}_HD_output.h5")
+
+    result = scan_root(
+        tmp_path,
+        ScanOptions(
+            max_depth=4,
+            holo_filter_ids=holo_filter_ids_from_text(f"{included_id}.holo\n"),
+        ),
+    )
+
+    assert [acquisition.acquisition_id for acquisition in result.acquisitions] == [included_id]

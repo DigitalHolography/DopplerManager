@@ -235,6 +235,7 @@ def _run_jobs_and_refresh(
         scan_options.max_entries,
         scan_options.preview_limit_per_stage,
         scan_options.read_versions,
+        _holo_filter_cache_key(scan_options),
     )
     append_log("[SCAN] Refresh complete.")
 
@@ -260,3 +261,9 @@ def _render_previous_log(log_placeholder=None) -> None:
         return
     target = log_placeholder if log_placeholder is not None else st
     target.code("\n".join(log_lines), language="text")
+
+
+def _holo_filter_cache_key(scan_options: ScanOptions) -> tuple[str, ...] | None:
+    if scan_options.holo_filter_ids is None:
+        return None
+    return tuple(sorted(scan_options.holo_filter_ids))
