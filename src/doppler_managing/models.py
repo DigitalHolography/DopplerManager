@@ -87,11 +87,40 @@ class AcquisitionResult:
     def to_dict(self) -> Dict[str, object]:
         return asdict(self)
 
+    def warning_messages(self) -> List[str]:
+        messages: List[str] = []
+        seen: set[str] = set()
+
+        def add(message: str) -> None:
+            normalized = message.strip()
+            if normalized and normalized not in seen:
+                seen.add(normalized)
+                messages.append(normalized)
+
+        for warning in self.warnings:
+            add(warning)
+
+        for stage in STAGE_ORDER:
+            result = self.stages.get(stage)
+            if result is None:
+                continue
+
+            has_stage_detail = False
+            for note in result.notes:
+                normalized_note = note.strip()
+                if not normalized_note:
+                    continue
+                has_stage_detail = True
+                if normalized_note not in seen:
+                    add(f"{stage.upper()}: {normalized_note}")
+
+            if result.status == "warning" and not has_stage_detail:
+                add(f"{stage.upper()}: Needs review.")
+
+        return messages
+
     def to_row(self) -> Dict[str, object]:
-        stage_warning_count = sum(
-            len(stage.notes) + (1 if stage.status == "warning" else 0)
-            for stage in self.stages.values()
-        )
+        warning_messages = self.warning_messages()
         stage_error_count = sum(1 for stage in self.stages.values() if stage.status == "error")
         row: Dict[str, object] = {
             "acquisition": self.acquisition_id,
@@ -99,7 +128,8 @@ class AcquisitionResult:
             "status_label": STATUS_LABELS.get(self.status, self.status),
             "source_holo": self.source_holo.path if self.source_holo else "",
             "acquisition_dir": self.acquisition_dir.path if self.acquisition_dir else "",
-            "warnings": len(self.warnings) + stage_warning_count,
+            "warnings": len(warning_messages),
+            "warning_messages": warning_messages,
             "errors": len(self.errors) + stage_error_count,
         }
         for stage in STAGE_ORDER:
@@ -114,6 +144,7 @@ class AcquisitionResult:
 class ScanResult:
     root: str
     acquisitions: List[AcquisitionResult]
+    all_holo_files: List[FileRef] = field(default_factory=list)
     visited_dirs: int = 0
     visited_entries: int = 0
     truncated: bool = False

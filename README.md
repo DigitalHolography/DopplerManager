@@ -65,11 +65,11 @@ Each acquisition has a global status and one status per stage:
 | `not_started` | No artifact was recognized for the stage                                                  |
 | `partial`     | The stage exists, but no usable `.h5` file was found                                      |
 | `complete`    | The expected `.h5` file exists and is not empty                                           |
-| `warning`     | The stage needs review: unexpected `.h5` name, missing source, or incomplete upstream dependency |
+| `warning`     | The stage needs review: unexpected `.h5` name or missing source |
 | `error`       | A blocking issue was detected, especially an empty `.h5` file                             |
 | `unknown`     | The state could not be determined                                                         |
 
-The global status is derived from stage statuses, warnings, and errors. A downstream output found while its upstream stage is not complete is marked as `warning`.
+The global status is derived from stage statuses, warnings, and errors.
 
 ## User Interface
 
@@ -79,7 +79,7 @@ The Streamlit application provides three main tabs:
 - `Acquisition Details`: select a filtered acquisition, view status badges, and inspect `Parameters`, `Versions`, and `Media Preview` tabs.
 - `Processing`: select acquisitions and stages to run or rerun, choose HoloDoppler settings, choose EyeFlow/AngioEye pipelines, follow real-time logs, and refresh the scan automatically after processing.
 
-The scan bar accepts a typed or pasted path, a folder selected with `Browse`, and dropped paths when the browser provides a usable local path. Scan options control maximum depth, maximum inspected entries, indexed media per stage, version-file reading, and an optional `.txt` filter list. When a filter list is uploaded, each non-empty line is treated as a `.holo` filename, full path, or acquisition ID, and only matching acquisitions are scanned. By default, no filter is applied.
+The scan bar accepts a typed or pasted path, a folder selected with `Browse`, and dropped paths when the browser provides a usable local path. Scan options control maximum depth, maximum inspected entries, indexed media per stage, and version-file reading. The `Input filter` expander accepts an optional `.txt` filter list. When a filter list is uploaded, each non-empty line is treated as a `.holo` filename, full path, or acquisition ID, and only matching acquisitions are scanned. By default, no filter is applied.
 
 ## Media Preview
 
@@ -93,14 +93,23 @@ Supported formats:
 - Browser-native videos: `.mp4`, `.mov`, `.m4v`
 - `.avi` videos: automatic cached MP4 conversion through `imageio-ffmpeg`, with a fallback to system `ffmpeg` when available
 
-Generated MP4 files for AVI previews are stored in `.doppler_cache/video_previews/`.
+Generated MP4 files for AVI previews are stored in `%LOCALAPPDATA%\DopplerManager\.doppler_cache\video_previews\` on Windows, or in the system temp folder when `LOCALAPPDATA` is unavailable.
 
 ## Exports
 
-The `Acquisition Index` tab exposes two exports:
+The `Acquisition Index` tab exposes one scan-list export:
 
-- Filtered CSV: `doppler_pipeline_scan.csv`
-- Full scan JSON: `doppler_pipeline_scan.json`
+- `doppler_pipeline_missing_holo_lists.zip`
+
+The ZIP contains five text files:
+
+- `list_hd.txt`
+- `list_dv.txt`
+- `list_ef.txt`
+- `list_ae.txt`
+- `list_all.txt`
+
+The stage-specific files contain the `.holo` paths, limited to the active dashboard filters, for acquisitions where the corresponding stage is not already `complete`. `list_all.txt` contains every `.holo` path observed during the filesystem scan, without applying the dashboard filters or optional `.holo` filter list.
 
 ## Installation
 
@@ -133,6 +142,66 @@ uv run streamlit run src/doppler_managing/app.py
 ```
 
 On first launch, select a NAS or local root folder and click `Scan`.
+
+## Build the Scan-Only Windows Installer
+
+The scan-only release excludes the `Processing` tab and does not install the optional processing dependencies.
+
+Prerequisites on the Windows build machine:
+
+- `uv`
+- Inno Setup 6
+
+Build the installer:
+
+```powershell
+.\scripts\build_scan_release.ps1
+```
+
+To override the release version:
+
+```powershell
+.\scripts\build_scan_release.ps1 -Version 0.4.0
+```
+
+The script builds `dist\DopplerManagerScan\DopplerManagerScan.exe` with PyInstaller, then creates:
+
+```text
+dist\installer\DopplerManagerScan-<version>-setup.exe
+```
+
+The installer uses Inno Setup and installs the application under:
+
+```text
+C:\Program Files\DopplerManager\<version>\
+```
+
+The packaged entry point is `src\doppler_managing\app_scan.py`, which only renders:
+
+- `Acquisition Index`
+- `Acquisition Details`
+
+The build uses an isolated `.venv-release` environment so the local development environment can still be synced with `uv sync --extra processing` when the full app is needed.
+
+Pushing a tag `v<version>` also builds and uploads this installer through the Windows release workflow:
+
+```powershell
+git tag v0.4.0
+git push origin v0.4.0
+```
+
+If the installed executable does not open a browser on another PC, check the diagnostic log:
+
+```text
+%LOCALAPPDATA%\DopplerManager\logs\DopplerManagerScan.log
+```
+
+The installer also creates Start Menu shortcuts named:
+
+- `Doppler Manager Scan diagnostic log`
+- `Stop Doppler Manager Scan`
+
+Launching the app again while it is already running reopens the existing local Streamlit server instead of starting another copy.
 
 ## Run Processing
 

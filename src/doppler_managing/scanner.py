@@ -23,12 +23,6 @@ STAGE_SUFFIXES = {
     "ae": "_AE",
 }
 
-DOWNSTREAM_REQUIREMENTS = {
-    "dv": "hd",
-    "ef": "dv",
-    "ae": "ef",
-}
-
 DEFAULT_SKIP_DIRS = {
     ".git",
     ".hg",
@@ -67,6 +61,7 @@ class ScanOptions:
 @dataclass
 class Discovery:
     root: Path
+    all_holo_paths: List[Path] = field(default_factory=list)
     holo_by_id: Dict[str, Path] = field(default_factory=dict)
     acquisition_dirs: Dict[str, Path] = field(default_factory=dict)
     stage_dirs: Dict[Tuple[str, str], Path] = field(default_factory=dict)
@@ -98,6 +93,10 @@ def scan_root(root: Union[Path, str], options: Optional[ScanOptions] = None) -> 
     return ScanResult(
         root=str(root_path),
         acquisitions=acquisitions,
+        all_holo_files=[
+            FileRef.from_path(path, "holo")
+            for path in sorted(_dedupe_paths(discovery.all_holo_paths), key=lambda path: str(path).lower())
+        ],
         visited_dirs=discovery.visited_dirs,
         visited_entries=discovery.visited_entries,
         truncated=discovery.truncated,
@@ -149,6 +148,7 @@ def _discover(root: Path, options: ScanOptions) -> Discovery:
                             queue.append((entry_path, depth + 1))
 
                     elif is_file and name.lower().endswith(".holo"):
+                        discovery.all_holo_paths.append(entry_path)
                         if not _holo_filter_allows(entry_path.stem, options):
                             continue
                         discovery.holo_by_id[entry_path.stem] = entry_path
@@ -425,19 +425,6 @@ def _apply_pipeline_consistency(acquisition: AcquisitionResult) -> None:
 
     if not acquisition.acquisition_dir:
         acquisition.warnings.append("Acquisition folder was not detected.")
-
-    for stage, upstream in DOWNSTREAM_REQUIREMENTS.items():
-        current = acquisition.stages[stage]
-        upstream_result = acquisition.stages[upstream]
-        if current.status in {"complete", "warning"} and upstream_result.status != "complete":
-            message = (
-                f"{current.label} is present while upstream stage "
-                f"{upstream_result.label} is not complete."
-            )
-            current.notes.append(message)
-            if current.status == "complete":
-                current.status = "warning"
-            acquisition.warnings.append(message)
 
     for stage in STAGE_ORDER:
         result = acquisition.stages[stage]

@@ -403,8 +403,6 @@ def build_processing_jobs(
             _require_file(holo_path, acquisition_id, "source .holo")
             if "hd" not in acquisition_stage_set:
                 _require_stage_h5(acquisition, "hd")
-            if "dv" not in acquisition_stage_set:
-                _require_stage_h5(acquisition, "dv")
             assert eyeflow_pipeline_file is not None
             temp_root = _eyeflow_temp_root(cache_dir, acquisition_id)
             destination = _stage_output_dir(acquisition_dir, acquisition_id, "ef")

@@ -153,6 +153,23 @@ def test_eyeflow_job_uses_absolute_generated_paths(tmp_path: Path, monkeypatch) 
     assert pipelines_path.is_file()
 
 
+def test_eyeflow_job_does_not_require_dopplerview_h5(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setenv("DM_EYEFLOW_COMMAND", "ef-command")
+    acquisition_id = "251031_ALA_L_1"
+    acquisition = _acquisition(tmp_path, acquisition_id)
+    acquisition.stages["dv"] = StageResult(code="dv", label="DopplerView", status="not_started")
+
+    jobs = build_processing_jobs(
+        [acquisition],
+        [acquisition_id],
+        ["ef"],
+        hd_settings_path=None,
+        cache_dir=tmp_path / ".doppler_cache",
+    )
+
+    assert [job.stage for job in jobs] == ["ef"]
+
+
 def test_angioeye_job_uses_existing_eyeflow_h5_and_absolute_paths(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setenv("DM_ANGIOEYE_COMMAND", "ae-command")
     acquisition_id = "251031_ALA_L_1"

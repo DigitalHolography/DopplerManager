@@ -1,5 +1,6 @@
 software_pipeline_validation/
 .venv/
+.venv-release/
 __pycache__/
 *.py[cod]
 *$py.class

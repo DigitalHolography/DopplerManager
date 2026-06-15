@@ -357,7 +357,7 @@ wheels = [
 
 [[package]]
 name = "doppler-manager"
-version = "0.1.0"
+version = "0.4.0"
 source = { editable = "." }
 dependencies = [
     { name = "imageio-ffmpeg" },
@@ -379,6 +379,9 @@ processing = [
 dev = [
     { name = "pytest" },
 ]
+release = [
+    { name = "pyinstaller" },
+]
 
 [package.metadata]
 requires-dist = [
@@ -396,6 +399,7 @@ provides-extras = ["processing"]
 
 [package.metadata.requires-dev]
 dev = [{ name = "pytest", specifier = ">=8.0" }]
+release = [{ name = "pyinstaller", specifier = ">=6.0,<7" }]
 
 [[package]]
 name = "dopplerview"

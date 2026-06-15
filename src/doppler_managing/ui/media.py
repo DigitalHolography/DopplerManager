@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import hashlib
+import os
 import shutil
 import subprocess
+import tempfile
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -226,7 +228,18 @@ def _video_cache_path(source: Path) -> Path:
     except OSError:
         fingerprint = str(source)
     digest = hashlib.sha256(fingerprint.encode("utf-8")).hexdigest()[:24]
-    return Path.cwd() / ".doppler_cache" / "video_previews" / f"{digest}.mp4"
+    return _video_cache_dir() / f"{digest}.mp4"
+
+
+def _video_cache_dir() -> Path:
+    return _user_cache_root() / "video_previews"
+
+
+def _user_cache_root() -> Path:
+    base = os.getenv("LOCALAPPDATA")
+    if base:
+        return Path(base) / "DopplerManager" / ".doppler_cache"
+    return Path(tempfile.gettempdir()) / "DopplerManager" / ".doppler_cache"
 
 
 def _ffmpeg_executable() -> Optional[str]:
