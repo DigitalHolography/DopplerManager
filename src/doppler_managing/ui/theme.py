@@ -116,6 +116,18 @@ def apply_dark_theme() -> None:
             border-radius: 6px;
         }
 
+        .dm-scan-or {
+            min-height: 2.4rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--dm-muted);
+            font-size: 0.78rem;
+            font-weight: 750;
+            letter-spacing: 0;
+            text-transform: uppercase;
+        }
+
         .dm-index-scroll {
             width: 100%;
             border: 1px solid var(--dm-border);

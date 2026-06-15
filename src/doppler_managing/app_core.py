@@ -7,7 +7,6 @@ import streamlit as st
 
 from doppler_managing.scanner import ScanOptions, holo_filter_ids_from_text, scan_root
 from doppler_managing.ui.dashboard import (
-    render_exports,
     render_filters,
     render_overview_table,
 )
@@ -22,6 +21,8 @@ SCAN_ROOT_KEY = "scan_root_input"
 SCAN_ROOT_DROP_KEY = "scan_root_drop"
 SCAN_ROOT_DROP_ERROR_KEY = "scan_root_drop_error"
 SCAN_ROOT_BROWSE_ERROR_KEY = "scan_root_browse_error"
+SCAN_INPUT_MODE_KEY = "scan_input_mode"
+HOLO_FILTER_UPLOAD_VERSION_KEY = "holo_filter_upload_version"
 
 
 _SCAN_ROOT_DROP_HELPER = (
@@ -240,21 +241,8 @@ def main(processing_renderer: ProcessingRenderer | None = None) -> None:
         )
 
     with index_tab:
-        frame = render_filters(acquisitions)
-        refresh_cols = st.columns([1, 5])
-        if refresh_cols[0].button("Refresh Scan", width="stretch"):
-            with st.spinner("Refreshing acquisition index..."):
-                st.session_state.scan_result = _refresh_scan(
-                    root_input,
-                    scan_options.max_depth,
-                    scan_options.max_entries,
-                    scan_options.preview_limit_per_stage,
-                    scan_options.read_versions,
-                    _holo_filter_cache_key(scan_options),
-                )
-            st.rerun()
+        frame = render_filters(acquisitions, scan_result)
         render_overview_table(frame)
-        render_exports(scan_result, frame)
         st.caption(
             f"{scan_result.visited_entries:,}".replace(",", " ")
             + f" entries inspected across {scan_result.visited_dirs} folders."
@@ -302,43 +290,25 @@ def _refresh_scan(
 def _render_scan_bar(default_root: Path):
     root_default = str(default_root if default_root.exists() else Path.cwd())
     st.session_state.setdefault(SCAN_ROOT_KEY, root_default)
+    st.session_state.setdefault(SCAN_INPUT_MODE_KEY, "browse")
+    st.session_state.setdefault(HOLO_FILTER_UPLOAD_VERSION_KEY, 0)
     with st.container():
-        cols = st.columns([5, 1, 1])
-        root_input = cols[0].text_input("Root path", key=SCAN_ROOT_KEY, label_visibility="collapsed")
+        input_cols = st.columns([5, 1, 0.25, 1.15])
+        root_input = input_cols[0].text_input(
+            "Root path",
+            key=SCAN_ROOT_KEY,
+            label_visibility="collapsed",
+            on_change=_select_scan_root,
+        )
         _render_scan_root_drop_helper()
-        _render_scan_root_widget_messages(cols[0])
-        cols[1].button("Browse", on_click=_browse_scan_root, args=(root_default,), width="stretch")
-        run_scan = cols[2].button("Scan", type="primary", width="stretch")
+        _render_scan_root_widget_messages(input_cols[0])
+        input_cols[1].button("Browse", on_click=_browse_scan_root, args=(root_default,), width="stretch")
+        input_cols[2].markdown('<div class="dm-scan-or">or</div>', unsafe_allow_html=True)
+        holo_filter_ids = _render_holo_filter_upload(input_cols[3])
 
-        with st.expander("Scan options", expanded=False):
-            option_cols = st.columns(4)
-            max_depth = option_cols[0].slider("Max depth", min_value=1, max_value=20, value=DEFAULT_MAX_DEPTH)
-            max_entries = option_cols[1].number_input(
-                "Max entries",
-                min_value=1_000,
-                max_value=2_000_000,
-                value=DEFAULT_MAX_ENTRIES,
-                step=10_000,
-            )
-            preview_limit = option_cols[2].slider(
-                "Media files per stage",
-                min_value=10,
-                max_value=200,
-                value=DEFAULT_PREVIEW_LIMIT,
-            )
-            read_versions = option_cols[3].checkbox("Read version files", value=True)
-
-        with st.expander("Input filter", expanded=False):
-            holo_filter_file = st.file_uploader(
-                ".holo filter list",
-                type=["txt"],
-                accept_multiple_files=False,
-            )
-            holo_filter_ids = _uploaded_holo_filter_ids(holo_filter_file)
-            if holo_filter_ids is not None:
-                count = len(holo_filter_ids)
-                suffix = "" if count == 1 else "s"
-                st.caption(f"{count} .holo name{suffix} loaded from filter.")
+        action_cols = st.columns([1.8, 0.45, 6.4])
+        run_scan = action_cols[0].button("Scan", type="primary", width="stretch")
+        max_depth, max_entries, preview_limit, read_versions = _render_scan_settings(action_cols[1])
 
     options = ScanOptions(
         max_depth=int(max_depth),
@@ -348,6 +318,60 @@ def _render_scan_bar(default_root: Path):
         holo_filter_ids=holo_filter_ids,
     )
     return root_input, options, run_scan
+
+
+def _render_scan_settings(container) -> tuple[int, int, int, bool]:
+    with container:
+        with st.popover(
+            "",
+            icon=":material/settings:",
+            help="Scan settings",
+            use_container_width=True,
+        ):
+            max_depth = st.slider("Max depth", min_value=1, max_value=20, value=DEFAULT_MAX_DEPTH)
+            max_entries = st.number_input(
+                "Max entries",
+                min_value=1_000,
+                max_value=2_000_000,
+                value=DEFAULT_MAX_ENTRIES,
+                step=10_000,
+            )
+            preview_limit = st.slider(
+                "Media files per stage",
+                min_value=10,
+                max_value=200,
+                value=DEFAULT_PREVIEW_LIMIT,
+            )
+            read_versions = st.checkbox("Read version files", value=True)
+    return int(max_depth), int(max_entries), int(preview_limit), bool(read_versions)
+
+
+def _render_holo_filter_upload(container) -> set[str] | None:
+    upload_key = _holo_filter_upload_key()
+    with container:
+        with st.popover("Upload list", use_container_width=True):
+            st.caption("Use a .txt list of .holo paths or names.")
+            holo_filter_file = st.file_uploader(
+                ".holo filter list",
+                type=["txt"],
+                accept_multiple_files=False,
+                key=upload_key,
+                label_visibility="collapsed",
+                on_change=_select_holo_filter_list,
+            )
+            holo_filter_ids = _uploaded_holo_filter_ids(holo_filter_file)
+            if holo_filter_ids is None:
+                return None
+
+            count = len(holo_filter_ids)
+            suffix = "" if count == 1 else "s"
+            st.caption(f"{count} .holo name{suffix} loaded.")
+            return holo_filter_ids if st.session_state.get(SCAN_INPUT_MODE_KEY) == "list" else None
+
+
+def _holo_filter_upload_key() -> str:
+    version = int(st.session_state.get(HOLO_FILTER_UPLOAD_VERSION_KEY, 0))
+    return f"holo_filter_upload_{version}"
 
 
 def _uploaded_holo_filter_ids(uploaded_file) -> set[str] | None:
@@ -384,9 +408,21 @@ def _apply_dropped_scan_root() -> None:
     error = _state_value(state, "error")
     if selected:
         st.session_state[SCAN_ROOT_KEY] = str(selected)
+        _select_scan_root()
         st.session_state.pop(SCAN_ROOT_DROP_ERROR_KEY, None)
     elif error:
         st.session_state[SCAN_ROOT_DROP_ERROR_KEY] = str(error)
+
+
+def _select_scan_root() -> None:
+    st.session_state[SCAN_INPUT_MODE_KEY] = "browse"
+    st.session_state[HOLO_FILTER_UPLOAD_VERSION_KEY] = (
+        int(st.session_state.get(HOLO_FILTER_UPLOAD_VERSION_KEY, 0)) + 1
+    )
+
+
+def _select_holo_filter_list() -> None:
+    st.session_state[SCAN_INPUT_MODE_KEY] = "list"
 
 
 def _browse_scan_root(default_root: str) -> None:
@@ -413,6 +449,7 @@ def _browse_scan_root(default_root: str) -> None:
 
     if selected:
         st.session_state[SCAN_ROOT_KEY] = selected
+        _select_scan_root()
         st.session_state.pop(SCAN_ROOT_BROWSE_ERROR_KEY, None)
 
 
