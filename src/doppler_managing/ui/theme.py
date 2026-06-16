@@ -145,7 +145,8 @@ def apply_dark_theme() -> None:
             color: #fda4af;
         }
 
-        .st-key-detail_main_tabs {
+        .st-key-detail_main_tabs,
+        .st-key-main_mode_tabs {
             background: rgba(17, 24, 39, 0.72);
         }
 
@@ -155,28 +156,34 @@ def apply_dark_theme() -> None:
             background: rgba(17, 24, 39, 0.72);
         }
 
-        .st-key-detail_main_tabs [data-testid="stTabs"] {
+        .st-key-detail_main_tabs [data-testid="stTabs"],
+        .st-key-main_mode_tabs [data-testid="stTabs"] {
             padding-top: 0.1rem;
         }
 
         .st-key-detail_main_tabs [data-baseweb="tab-list"],
-        .st-key-detail_main_tabs div[role="tablist"] {
+        .st-key-detail_main_tabs div[role="tablist"],
+        .st-key-main_mode_tabs [data-baseweb="tab-list"],
+        .st-key-main_mode_tabs div[role="tablist"] {
             background: #0f172a;
             border: 1px solid var(--dm-border);
             border-radius: 6px;
             padding: 0.2rem 0.3rem 0;
         }
 
-        .st-key-detail_main_tabs button[role="tab"] {
+        .st-key-detail_main_tabs button[role="tab"],
+        .st-key-main_mode_tabs button[role="tab"] {
             min-width: 10rem;
         }
 
-        .st-key-detail_main_tabs button[role="tab"] p {
+        .st-key-detail_main_tabs button[role="tab"] p,
+        .st-key-main_mode_tabs button[role="tab"] p {
             font-size: 1.05rem;
             font-weight: 800;
         }
 
-        .st-key-detail_main_tabs [data-testid="stTabs"] > div:not(:first-child) {
+        .st-key-detail_main_tabs [data-testid="stTabs"] > div:not(:first-child),
+        .st-key-main_mode_tabs [data-testid="stTabs"] > div:not(:first-child) {
             padding-top: 0.85rem;
         }
 
@@ -242,17 +249,24 @@ def apply_dark_theme() -> None:
 
         .st-key-run_processing_button button:not(:disabled),
         .st-key-scan_button button:not(:disabled) {
-            background: var(--dm-action-bg) !important;
-            background-color: var(--dm-action-bg) !important;
-            border-color: var(--dm-action-border) !important;
-            color: #ffffff !important;
-        }
-
-        .st-key-run_processing_button button:not(:disabled):hover,
-        .st-key-scan_button button:not(:disabled):hover {
+            background: var(--dm-action-hover) !important;
             background-color: var(--dm-action-hover) !important;
             border-color: var(--dm-action-hover) !important;
             color: #ffffff !important;
+            transition: none !important;
+        }
+
+        .st-key-run_processing_button button:not(:disabled):hover,
+        .st-key-run_processing_button button:not(:disabled):focus,
+        .st-key-run_processing_button button:not(:disabled):active,
+        .st-key-scan_button button:not(:disabled):hover,
+        .st-key-scan_button button:not(:disabled):focus,
+        .st-key-scan_button button:not(:disabled):active {
+            background: var(--dm-action-hover) !important;
+            background-color: var(--dm-action-hover) !important;
+            border-color: var(--dm-action-hover) !important;
+            color: #ffffff !important;
+            transition: none !important;
         }
 
         .st-key-run_processing_button button:disabled,

@@ -227,28 +227,29 @@ def main(processing_renderer: ProcessingRenderer | None = None) -> None:
         st.warning("No compatible acquisition was detected under this root.")
         return
 
-    if processing_renderer is None:
-        index_tab, detail_tab = st.tabs(["Acquisition Index", "Acquisition Details"])
-        processing_tab = None
-    else:
-        index_tab, detail_tab, processing_tab = st.tabs(
-            ["Acquisition Index", "Acquisition Details", "Processing"]
-        )
+    with st.container(border=True, key="main_mode_tabs"):
+        if processing_renderer is None:
+            index_tab, detail_tab = st.tabs(["Acquisition Index", "Acquisition Details"])
+            processing_tab = None
+        else:
+            index_tab, detail_tab, processing_tab = st.tabs(
+                ["Acquisition Index", "Acquisition Details", "Processing"]
+            )
 
-    with index_tab:
-        frame = render_filters(acquisitions, scan_result)
-        render_overview_table(frame)
-        st.caption(
-            f"{scan_result.visited_entries:,}".replace(",", " ")
-            + f" entries inspected across {scan_result.visited_dirs} folders."
-        )
+        with index_tab:
+            frame = render_filters(acquisitions, scan_result)
+            render_overview_table(frame)
+            st.caption(
+                f"{scan_result.visited_entries:,}".replace(",", " ")
+                + f" entries inspected across {scan_result.visited_dirs} folders."
+            )
 
-    with detail_tab:
-        render_acquisition_detail(acquisitions, frame)
+        with detail_tab:
+            render_acquisition_detail(acquisitions, frame)
 
-    if processing_tab is not None and processing_renderer is not None:
-        with processing_tab:
-            processing_renderer(scan_result, frame, root_input, scan_options, _refresh_scan)
+        if processing_tab is not None and processing_renderer is not None:
+            with processing_tab:
+                processing_renderer(scan_result, frame, root_input, scan_options, _refresh_scan)
 
 
 @st.cache_data(show_spinner=False)
