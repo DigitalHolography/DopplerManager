@@ -48,6 +48,7 @@ class ScanOptions:
     max_text_bytes: int = 4_096
     skip_dirs: Set[str] = field(default_factory=lambda: set(DEFAULT_SKIP_DIRS))
     holo_filter_ids: Optional[Set[str]] = None
+    holo_filter_entries: Optional[Tuple[str, ...]] = None
 
     def __post_init__(self) -> None:
         if self.holo_filter_ids is not None:
@@ -56,6 +57,12 @@ class ScanOptions:
                 for value in self.holo_filter_ids
                 if (normalized := _normalize_holo_filter_entry(value))
             }
+        if self.holo_filter_entries is not None:
+            self.holo_filter_entries = tuple(
+                entry
+                for value in self.holo_filter_entries
+                if (entry := _clean_holo_filter_entry(value))
+            )
 
 
 @dataclass
@@ -65,6 +72,7 @@ class Discovery:
     holo_by_id: Dict[str, Path] = field(default_factory=dict)
     acquisition_dirs: Dict[str, Path] = field(default_factory=dict)
     stage_dirs: Dict[Tuple[str, str], Path] = field(default_factory=dict)
+    listed_ids: Set[str] = field(default_factory=set)
     errors: List[str] = field(default_factory=list)
     visited_dirs: int = 0
     visited_entries: int = 0
@@ -79,6 +87,9 @@ def scan_root(root: Union[Path, str], options: Optional[ScanOptions] = None) -> 
         root_path = root_path.resolve()
     except OSError:
         root_path = root_path.absolute()
+
+    if options.holo_filter_entries is not None:
+        return _scan_holo_filter_entries(root_path, options)
 
     if not root_path.exists():
         return ScanResult(root=str(root_path), acquisitions=[], errors=[f"Path not found: {root_path}"])
@@ -162,6 +173,57 @@ def _discover(root: Path, options: ScanOptions) -> Discovery:
     return discovery
 
 
+def _scan_holo_filter_entries(root: Path, options: ScanOptions) -> ScanResult:
+    discovery = Discovery(root=root)
+    entries = options.holo_filter_entries or ()
+    discovery.visited_entries = len(entries)
+
+    for entry in entries:
+        acquisition_id = _normalize_holo_filter_entry(entry)
+        if acquisition_id:
+            discovery.listed_ids.add(acquisition_id)
+
+        holo_path = _holo_filter_entry_path(entry, root)
+        if holo_path is None:
+            continue
+
+        try:
+            resolved_holo_path = holo_path.resolve()
+        except OSError:
+            resolved_holo_path = holo_path.absolute()
+
+        if not resolved_holo_path.is_file():
+            discovery.errors.append(f"Listed .holo file not found: {resolved_holo_path}")
+            continue
+
+        discovered_id = resolved_holo_path.stem
+        discovery.listed_ids.add(discovered_id)
+        discovery.all_holo_paths.append(resolved_holo_path)
+        discovery.holo_by_id[discovered_id] = resolved_holo_path
+        sibling_dir = resolved_holo_path.with_suffix("")
+        if sibling_dir.exists() and sibling_dir.is_dir():
+            discovery.acquisition_dirs.setdefault(discovered_id, sibling_dir)
+
+    acquisition_ids = _candidate_ids(discovery, options)
+    acquisitions = [
+        _build_acquisition(acquisition_id, discovery, options)
+        for acquisition_id in sorted(acquisition_ids)
+    ]
+
+    return ScanResult(
+        root=str(root),
+        acquisitions=acquisitions,
+        all_holo_files=[
+            FileRef.from_path(path, "holo")
+            for path in sorted(_dedupe_paths(discovery.all_holo_paths), key=lambda path: str(path).lower())
+        ],
+        visited_dirs=0,
+        visited_entries=discovery.visited_entries,
+        truncated=False,
+        errors=discovery.errors,
+    )
+
+
 def _stage_from_dir_name(name: str) -> Optional[str]:
     for stage, suffix in STAGE_SUFFIXES.items():
         if name.endswith(suffix) and len(name) > len(suffix):
@@ -170,7 +232,8 @@ def _stage_from_dir_name(name: str) -> Optional[str]:
 
 
 def _candidate_ids(discovery: Discovery, options: ScanOptions) -> Set[str]:
-    ids = set(discovery.holo_by_id)
+    ids = set(discovery.listed_ids)
+    ids.update(discovery.holo_by_id)
     ids.update(discovery.acquisition_dirs)
     ids.update(acquisition_id for acquisition_id, _stage in discovery.stage_dirs)
     if options.holo_filter_ids is not None:
@@ -180,26 +243,60 @@ def _candidate_ids(discovery: Discovery, options: ScanOptions) -> Set[str]:
 
 def holo_filter_ids_from_text(text: str) -> Set[str]:
     ids: Set[str] = set()
-    for line in text.splitlines():
-        normalized = _normalize_holo_filter_entry(line)
+    for entry in holo_filter_entries_from_text(text):
+        normalized = _normalize_holo_filter_entry(entry)
         if normalized:
             ids.add(normalized)
     return ids
+
+
+def holo_filter_entries_from_text(text: str) -> Tuple[str, ...]:
+    return tuple(
+        entry
+        for line in text.splitlines()
+        if (entry := _clean_holo_filter_entry(line))
+    )
 
 
 def _holo_filter_allows(acquisition_id: str, options: ScanOptions) -> bool:
     return options.holo_filter_ids is None or acquisition_id in options.holo_filter_ids
 
 
-def _normalize_holo_filter_entry(value: object) -> Optional[str]:
+def _clean_holo_filter_entry(value: object) -> Optional[str]:
     candidate = str(value).strip().lstrip("\ufeff").strip("\"'")
     if not candidate or candidate.startswith("#"):
+        return None
+    return candidate
+
+
+def _normalize_holo_filter_entry(value: object) -> Optional[str]:
+    candidate = _clean_holo_filter_entry(value)
+    if candidate is None:
         return None
 
     name = candidate.replace("\\", "/").rsplit("/", 1)[-1].strip()
     if name.lower().endswith(".holo"):
         name = name[: -len(".holo")]
     return name or None
+
+
+def _holo_filter_entry_path(entry: str, root: Path) -> Optional[Path]:
+    value = _clean_holo_filter_entry(entry)
+    if value is None:
+        return None
+
+    path_like = (
+        value.lower().endswith(".holo")
+        or "\\" in value
+        or "/" in value
+    )
+    if not path_like:
+        return None
+
+    candidate = Path(value).expanduser()
+    if not candidate.is_absolute():
+        candidate = root / candidate
+    return candidate
 
 
 def _build_acquisition(

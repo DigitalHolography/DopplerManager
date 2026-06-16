@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import html
 import io
+from pathlib import Path
+import re
 from typing import List
 import zipfile
 
@@ -12,34 +14,258 @@ from doppler_managing.models import AcquisitionResult, FileRef, STAGE_ORDER
 from doppler_managing.ui.formatting import status_text
 
 
-def render_filters(acquisitions: List[AcquisitionResult]) -> pd.DataFrame:
+FILTER_REGEX_KEY = "index_filter_acquisition_regex"
+FILTER_REGEX_PATTERNS_KEY = "index_filter_regex_patterns"
+FILTER_STATUSES_KEY = "index_filter_statuses"
+FILTER_MISSING_HD_KEY = "index_filter_missing_hd"
+FILTER_MISSING_DV_KEY = "index_filter_missing_dv"
+FILTER_MISSING_AE_KEY = "index_filter_missing_ae"
+FILTER_DIALOG_REGEX_KEY = "index_filter_dialog_acquisition_regex"
+FILTER_REGEX_FILE_NAME_KEY = "index_filter_regex_file_name"
+FILTER_REGEX_FILE_DISPLAY_KEY = "index_filter_regex_file_display"
+FILTER_REGEX_FILE_TEXT_KEY = "index_filter_regex_file_text"
+FILTER_REGEX_FILE_ERROR_KEY = "index_filter_regex_file_error"
+FILTER_DIALOG_STATUSES_KEY = "index_filter_dialog_statuses"
+FILTER_DIALOG_MISSING_HD_KEY = "index_filter_dialog_missing_hd"
+FILTER_DIALOG_MISSING_DV_KEY = "index_filter_dialog_missing_dv"
+FILTER_DIALOG_MISSING_AE_KEY = "index_filter_dialog_missing_ae"
+
+
+def render_filters(acquisitions: List[AcquisitionResult], scan_result) -> pd.DataFrame:
     frame = pd.DataFrame([acquisition.to_row() for acquisition in acquisitions])
+    status_options = sorted(frame["status"].unique().tolist())
 
     st.subheader("Acquisition Index")
-    cols = st.columns([2, 1.2])
-    query = cols[0].text_input("Filter by acquisition", value="")
-    statuses = cols[1].multiselect(
-        "Global status",
-        options=sorted(frame["status"].unique().tolist()),
-        format_func=status_text,
-    )
-    check_cols = st.columns([1, 1, 1, 3])
-    missing_hd = check_cols[0].checkbox("Missing HD")
-    missing_dv = check_cols[1].checkbox("Missing DV")
-    missing_final = check_cols[2].checkbox("Missing AE")
+    filter_cols = st.columns([1.125, 1.125, 6.4])
+    if filter_cols[0].button(
+        "Filter",
+        icon=":material/filter_list:",
+        width="stretch",
+    ):
+        _render_filter_dialog(status_options)
 
     filtered = frame.copy()
-    if query:
-        filtered = filtered[filtered["acquisition"].str.contains(query, case=False, na=False)]
+    acquisition_regex = str(st.session_state.get(FILTER_REGEX_KEY, "")).strip()
+    if acquisition_regex:
+        filtered = _filter_acquisition_regex(filtered, acquisition_regex)
+    regex_patterns = st.session_state.get(FILTER_REGEX_PATTERNS_KEY, [])
+    if regex_patterns:
+        filtered = _filter_acquisition_regex_list(filtered, regex_patterns)
+    statuses = st.session_state.get(FILTER_STATUSES_KEY, [])
     if statuses:
         filtered = filtered[filtered["status"].isin(statuses)]
-    if missing_hd:
+    if st.session_state.get(FILTER_MISSING_HD_KEY, False):
         filtered = filtered[filtered["hd_status"] != "complete"]
-    if missing_dv:
+    if st.session_state.get(FILTER_MISSING_DV_KEY, False):
         filtered = filtered[filtered["dv_status"] != "complete"]
-    if missing_final:
+    if st.session_state.get(FILTER_MISSING_AE_KEY, False):
         filtered = filtered[filtered["ae_status"] != "complete"]
+
+    _render_export_button(filter_cols[1], scan_result, filtered)
     return filtered
+
+
+@st.dialog("Filter", width="medium", icon=":material/filter_list:", on_dismiss="rerun")
+def _render_filter_dialog(status_options: list[str]) -> None:
+    _prepare_filter_dialog_defaults(status_options)
+    st.markdown("#### Name filters")
+    st.text_input(
+        "Acquisition regex",
+        key=FILTER_DIALOG_REGEX_KEY,
+        on_change=_sync_filter_regex,
+    )
+    st.button(
+        "Browse regex list",
+        icon=":material/folder_open:",
+        help="Browse for a regex list file",
+        width="stretch",
+        on_click=_browse_regex_filter_file,
+    )
+    file_error = st.session_state.pop(FILTER_REGEX_FILE_ERROR_KEY, "")
+    if file_error:
+        st.warning(file_error)
+    file_display = st.session_state.get(FILTER_REGEX_FILE_DISPLAY_KEY)
+    if file_display:
+        count = len(st.session_state.get(FILTER_REGEX_PATTERNS_KEY, []))
+        suffix = "" if count == 1 else "s"
+        file_cols = st.columns([0.9, 0.1], vertical_alignment="center")
+        file_cols[0].info(f"Active regex list: {file_display} ({count} pattern{suffix}).")
+        if file_cols[1].button(
+            "",
+            icon=":material/close:",
+            help="Clear regex list",
+            width="stretch",
+            key="clear_regex_list_button",
+            on_click=_clear_regex_file_state,
+        ):
+            st.rerun()
+
+    st.divider()
+    st.markdown("#### Status filters")
+    st.multiselect(
+        "Global status",
+        options=status_options,
+        format_func=status_text,
+        key=FILTER_DIALOG_STATUSES_KEY,
+        on_change=_sync_filter_statuses,
+    )
+    missing_cols = st.columns(3)
+    missing_cols[0].checkbox("Missing HD", key=FILTER_DIALOG_MISSING_HD_KEY, on_change=_sync_filter_flags)
+    missing_cols[1].checkbox("Missing DV", key=FILTER_DIALOG_MISSING_DV_KEY, on_change=_sync_filter_flags)
+    missing_cols[2].checkbox("Missing AE", key=FILTER_DIALOG_MISSING_AE_KEY, on_change=_sync_filter_flags)
+
+    actions = st.columns(2)
+    if actions[0].button(
+        "Clear",
+        icon=":material/filter_alt_off:",
+        width="stretch",
+        on_click=_clear_filter_state,
+    ):
+        st.rerun()
+    if actions[1].button("Apply", type="primary", icon=":material/check:", width="stretch"):
+        st.rerun()
+
+
+def _prepare_filter_dialog_defaults(status_options: list[str]) -> None:
+    st.session_state.setdefault(FILTER_REGEX_KEY, "")
+    st.session_state.setdefault(FILTER_REGEX_PATTERNS_KEY, [])
+    st.session_state.setdefault(FILTER_STATUSES_KEY, [])
+    st.session_state.setdefault(FILTER_MISSING_HD_KEY, False)
+    st.session_state.setdefault(FILTER_MISSING_DV_KEY, False)
+    st.session_state.setdefault(FILTER_MISSING_AE_KEY, False)
+
+    valid_statuses = [
+        status
+        for status in st.session_state.get(FILTER_STATUSES_KEY, [])
+        if status in status_options
+    ]
+    st.session_state[FILTER_STATUSES_KEY] = valid_statuses
+
+    st.session_state.setdefault(FILTER_DIALOG_REGEX_KEY, st.session_state[FILTER_REGEX_KEY])
+    dialog_statuses = [
+        status
+        for status in st.session_state.get(FILTER_DIALOG_STATUSES_KEY, valid_statuses)
+        if status in status_options
+    ]
+    st.session_state[FILTER_DIALOG_STATUSES_KEY] = dialog_statuses
+    st.session_state.setdefault(FILTER_DIALOG_MISSING_HD_KEY, st.session_state[FILTER_MISSING_HD_KEY])
+    st.session_state.setdefault(FILTER_DIALOG_MISSING_DV_KEY, st.session_state[FILTER_MISSING_DV_KEY])
+    st.session_state.setdefault(FILTER_DIALOG_MISSING_AE_KEY, st.session_state[FILTER_MISSING_AE_KEY])
+
+
+def _sync_filter_regex() -> None:
+    st.session_state[FILTER_REGEX_KEY] = str(st.session_state.get(FILTER_DIALOG_REGEX_KEY, ""))
+
+
+def _remember_regex_file_text(file_name: str, display_path: str, text: str) -> None:
+    st.session_state[FILTER_REGEX_FILE_NAME_KEY] = file_name
+    st.session_state[FILTER_REGEX_FILE_DISPLAY_KEY] = display_path or file_name
+    st.session_state[FILTER_REGEX_FILE_TEXT_KEY] = text
+    st.session_state[FILTER_REGEX_PATTERNS_KEY] = _regex_patterns_from_text(text)
+
+
+def _browse_regex_filter_file() -> None:
+    try:
+        import tkinter as tk
+        from tkinter import filedialog
+
+        dialog_root = tk.Tk()
+        dialog_root.withdraw()
+        dialog_root.attributes("-topmost", True)
+        dialog_root.update()
+        selected = filedialog.askopenfilename(
+            title="Select regex list",
+            filetypes=[("Text files", "*.txt"), ("All files", "*.*")],
+        )
+    except Exception as exc:
+        st.session_state[FILTER_REGEX_FILE_ERROR_KEY] = f"Unable to open file picker: {exc}"
+        return
+    finally:
+        if "dialog_root" in locals():
+            dialog_root.destroy()
+
+    if not selected:
+        return
+
+    path = Path(selected)
+    try:
+        text = path.read_text(encoding="utf-8-sig", errors="replace")
+    except OSError as exc:
+        st.session_state[FILTER_REGEX_FILE_ERROR_KEY] = f"Unable to read regex list: {exc}"
+        return
+
+    _remember_regex_file_text(path.name, str(path), text)
+
+
+def _sync_filter_statuses() -> None:
+    st.session_state[FILTER_STATUSES_KEY] = list(st.session_state.get(FILTER_DIALOG_STATUSES_KEY, []))
+
+
+def _sync_filter_flags() -> None:
+    st.session_state[FILTER_MISSING_HD_KEY] = bool(st.session_state.get(FILTER_DIALOG_MISSING_HD_KEY, False))
+    st.session_state[FILTER_MISSING_DV_KEY] = bool(st.session_state.get(FILTER_DIALOG_MISSING_DV_KEY, False))
+    st.session_state[FILTER_MISSING_AE_KEY] = bool(st.session_state.get(FILTER_DIALOG_MISSING_AE_KEY, False))
+
+
+def _clear_filter_state() -> None:
+    st.session_state[FILTER_REGEX_KEY] = ""
+    _clear_regex_file_state()
+    st.session_state[FILTER_STATUSES_KEY] = []
+    st.session_state[FILTER_MISSING_HD_KEY] = False
+    st.session_state[FILTER_MISSING_DV_KEY] = False
+    st.session_state[FILTER_MISSING_AE_KEY] = False
+    st.session_state[FILTER_DIALOG_REGEX_KEY] = ""
+    st.session_state[FILTER_DIALOG_STATUSES_KEY] = []
+    st.session_state[FILTER_DIALOG_MISSING_HD_KEY] = False
+    st.session_state[FILTER_DIALOG_MISSING_DV_KEY] = False
+    st.session_state[FILTER_DIALOG_MISSING_AE_KEY] = False
+
+
+def _clear_regex_file_state() -> None:
+    st.session_state[FILTER_REGEX_PATTERNS_KEY] = []
+    st.session_state.pop(FILTER_REGEX_FILE_NAME_KEY, None)
+    st.session_state.pop(FILTER_REGEX_FILE_DISPLAY_KEY, None)
+    st.session_state.pop(FILTER_REGEX_FILE_TEXT_KEY, None)
+
+
+def _filter_acquisition_regex(frame: pd.DataFrame, pattern: str) -> pd.DataFrame:
+    try:
+        matcher = re.compile(pattern, flags=re.IGNORECASE)
+    except re.error as exc:
+        st.warning(f"Invalid acquisition regex: {exc}")
+        return frame.iloc[0:0]
+
+    mask = frame["acquisition"].astype(str).map(lambda value: bool(matcher.search(value)))
+    return frame[mask]
+
+
+def _filter_acquisition_regex_list(frame: pd.DataFrame, patterns: list[str]) -> pd.DataFrame:
+    compiled = []
+    invalid = 0
+    for pattern in patterns:
+        try:
+            compiled.append(re.compile(pattern, flags=re.IGNORECASE))
+        except re.error:
+            invalid += 1
+
+    if invalid:
+        suffix = "" if invalid == 1 else "s"
+        st.caption(f"{invalid} invalid regex pattern{suffix} ignored.")
+    if not compiled:
+        return frame.iloc[0:0]
+
+    mask = frame["acquisition"].astype(str).map(
+        lambda value: any(pattern.search(value) for pattern in compiled)
+    )
+    return frame[mask]
+
+
+def _regex_patterns_from_text(text: str) -> list[str]:
+    return [
+        line
+        for raw_line in text.splitlines()
+        if (line := raw_line.strip()) and not line.startswith("#")
+    ]
 
 
 def render_overview_table(frame: pd.DataFrame) -> None:
@@ -86,13 +312,17 @@ def render_overview_table(frame: pd.DataFrame) -> None:
 def render_exports(scan_result, filtered: pd.DataFrame) -> None:
     st.markdown('<div class="dm-export-spacer"></div>', unsafe_allow_html=True)
     cols = st.columns([1, 5])
+    _render_export_button(cols[0], scan_result, filtered)
+
+
+def _render_export_button(container, scan_result, filtered: pd.DataFrame) -> None:
     zip_bytes = build_missing_holo_lists_zip(
         scan_result.acquisitions,
         filtered,
         scan_result.all_holo_files,
     )
 
-    cols[0].download_button(
+    container.download_button(
         "Export list",
         data=zip_bytes,
         file_name="doppler_pipeline_missing_holo_lists.zip",

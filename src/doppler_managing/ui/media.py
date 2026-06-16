@@ -31,10 +31,43 @@ def render_media_preview(acquisition: AcquisitionResult) -> None:
         st.info("No PNG/JPG/AVI/MP4 media preview was detected in indexed locations.")
         return
 
-    tabs = st.tabs(list(groups.keys()))
-    for tab, (stage_label, files) in zip(tabs, groups.items()):
-        with tab:
-            _render_stage_media(acquisition, stage_label, files)
+    nav_col, content_col = st.columns([0.72, 5.6], vertical_alignment="top")
+    stage_label = _render_media_toolbar(nav_col, acquisition, list(groups.keys()))
+    with content_col:
+        _render_stage_media(acquisition, stage_label, groups[stage_label])
+
+
+def _render_media_toolbar(container, acquisition: AcquisitionResult, options: list[str]) -> str:
+    key = f"media-stage-{acquisition.acquisition_id}"
+    if st.session_state.get(key) not in options:
+        st.session_state[key] = options[0]
+
+    with container.container(border=True, key=f"media-stage-{acquisition.acquisition_id}-toolbar"):
+        for option in options:
+            selected = st.session_state[key] == option
+            st.button(
+                _media_toolbar_label(option),
+                key=f"{key}-{option}",
+                help=option,
+                type="primary" if selected else "secondary",
+                width="stretch",
+                on_click=_select_media_stage,
+                args=(key, option),
+            )
+    return str(st.session_state[key])
+
+
+def _media_toolbar_label(stage_label: str) -> str:
+    if stage_label == "Acquisition":
+        return "Raw"
+    for stage, label in STAGE_LABELS.items():
+        if label == stage_label:
+            return stage.upper()
+    return stage_label
+
+
+def _select_media_stage(key: str, stage_label: str) -> None:
+    st.session_state[key] = stage_label
 
 
 def _render_stage_media(acquisition: AcquisitionResult, stage_label: str, files: List[FileRef]) -> None:

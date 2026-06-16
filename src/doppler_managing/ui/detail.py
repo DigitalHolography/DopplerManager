@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import html
 from pathlib import Path
 from typing import List, Optional
 
@@ -7,7 +8,7 @@ import pandas as pd
 import streamlit as st
 
 from doppler_managing.models import AcquisitionResult, FileRef, STAGE_LABELS, STAGE_ORDER
-from doppler_managing.ui.formatting import format_size, format_timestamp, status_badge
+from doppler_managing.ui.formatting import format_size, format_timestamp, status_text
 from doppler_managing.ui.media import render_media_preview
 
 
@@ -18,58 +19,110 @@ def render_acquisition_detail(acquisitions: List[AcquisitionResult], filtered: p
         return
 
     by_id = {acquisition.acquisition_id: acquisition for acquisition in acquisitions}
-    selected_id = st.selectbox("Acquisition", filtered_ids)
+    header_cols = st.columns([2.2, 5])
+    selected_id = header_cols[0].selectbox("Acquisition", filtered_ids)
     acquisition = by_id[selected_id]
 
-    _render_status_line(acquisition)
+    _render_status_line(header_cols[1], acquisition)
 
-    tabs = st.tabs(["Parameters", "Versions", "Media Preview"])
-    with tabs[0]:
-        render_parameters(acquisition)
-    with tabs[1]:
-        render_versions(acquisition)
-    with tabs[2]:
-        render_media_preview(acquisition)
+    with st.container(border=True, key="detail_main_tabs"):
+        tabs = st.tabs(["Parameters", "Versions", "Media Preview"])
+        with tabs[0]:
+            render_parameters(acquisition)
+        with tabs[1]:
+            render_versions(acquisition)
+        with tabs[2]:
+            render_media_preview(acquisition)
 
 
 def render_parameters(acquisition: AcquisitionResult) -> None:
-    tabs = st.tabs([STAGE_LABELS[stage] for stage in STAGE_ORDER])
-    for tab, stage in zip(tabs, STAGE_ORDER):
-        with tab:
-            files = acquisition.stages[stage].params_files
-            _render_text_files(
-                files,
-                "No parameter files were indexed for this stage.",
-                language="json",
-                key_prefix=f"params-{acquisition.acquisition_id}-{stage}",
-            )
+    nav_col, content_col = st.columns([0.72, 5.6], vertical_alignment="top")
+    stage = _render_stage_toolbar(nav_col, f"params-stage-{acquisition.acquisition_id}")
+    with content_col:
+        files = acquisition.stages[stage].params_files
+        _render_text_files(
+            files,
+            "No parameter files were indexed for this stage.",
+            language="json",
+            key_prefix=f"params-{acquisition.acquisition_id}-{stage}",
+        )
 
 
 def render_versions(acquisition: AcquisitionResult) -> None:
-    tabs = st.tabs([STAGE_LABELS[stage] for stage in STAGE_ORDER])
-    for tab, stage in zip(tabs, STAGE_ORDER):
-        with tab:
-            result = acquisition.stages[stage]
-            if not result.version_files:
-                st.info("No version files were indexed for this stage.")
-                continue
+    nav_col, content_col = st.columns([0.72, 5.6], vertical_alignment="top")
+    stage = _render_stage_toolbar(nav_col, f"versions-stage-{acquisition.acquisition_id}")
+    with content_col:
+        result = acquisition.stages[stage]
+        if not result.version_files:
+            st.info("No version files were indexed for this stage.")
+            return
 
-            selected = st.selectbox(
-                "Version file",
-                result.version_files,
-                format_func=lambda file_ref: file_ref.name,
-                key=f"version-select-{acquisition.acquisition_id}-{stage}",
+        selected = st.selectbox(
+            "Version file",
+            result.version_files,
+            format_func=lambda file_ref: file_ref.name,
+            key=f"version-select-{acquisition.acquisition_id}-{stage}",
+        )
+        _render_file_meta(selected)
+        st.code(result.versions.get(selected.name, "(content not loaded)") or "(empty)", language="text")
+
+
+def _render_stage_toolbar(container, key: str) -> str:
+    st.session_state.setdefault(key, STAGE_ORDER[0])
+    with container.container(border=True, key=f"{key}-toolbar"):
+        for stage in STAGE_ORDER:
+            selected = st.session_state[key] == stage
+            st.button(
+                stage.upper(),
+                key=f"{key}-{stage}",
+                help=STAGE_LABELS[stage],
+                type="primary" if selected else "secondary",
+                width="stretch",
+                on_click=_select_stage,
+                args=(key, stage),
             )
-            _render_file_meta(selected)
-            st.code(result.versions.get(selected.name, "(content not loaded)") or "(empty)", language="text")
+    return str(st.session_state[key])
 
 
-def _render_status_line(acquisition: AcquisitionResult) -> None:
-    stage_cols = st.columns(5)
-    stage_cols[0].markdown(status_badge("Global", acquisition.status), unsafe_allow_html=True)
-    for index, stage in enumerate(STAGE_ORDER, start=1):
-        stage_result = acquisition.stages[stage]
-        stage_cols[index].markdown(status_badge(stage.upper(), stage_result.status), unsafe_allow_html=True)
+def _select_stage(key: str, stage: str) -> None:
+    st.session_state[key] = stage
+
+
+def _render_status_line(container, acquisition: AcquisitionResult) -> None:
+    stage_chips = [
+        _stage_chip(stage.upper(), acquisition.stages[stage].status)
+        for stage in STAGE_ORDER
+    ]
+    container.markdown(
+        f'<div class="dm-detail-stage-chips">{"".join(stage_chips)}</div>',
+        unsafe_allow_html=True,
+    )
+
+
+def _stage_chip(label: str, status: str) -> str:
+    state = _stage_chip_state(status)
+    return (
+        f'<span class="dm-stage-chip dm-stage-chip-{state}" title="{html.escape(status_text(status), quote=True)}">'
+        f'<span class="dm-stage-chip-icon">{_stage_chip_icon(state)}</span>'
+        f"<strong>{html.escape(label)}</strong>"
+        "</span>"
+    )
+
+
+def _stage_chip_state(status: str) -> str:
+    if status == "complete":
+        return "complete"
+    if status == "error":
+        return "error"
+    return "review"
+
+
+def _stage_chip_icon(state: str) -> str:
+    if state == "complete":
+        return "&#10003;"
+    if state == "error":
+        return "&times;"
+    return "!"
 
 
 def _render_text_files(files: List[FileRef], empty_message: str, language: str, key_prefix: str) -> None:
