@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import html
 from collections import deque
 from pathlib import Path
 from typing import Optional
@@ -93,13 +94,27 @@ def render_processing_tab(
         and ("ef" not in runnable_stages or selected_eyeflow_pipelines)
         and ("ae" not in runnable_stages or selected_angioeye_pipelines)
     )
-    if st.button(
-        "Run Processing",
-        type="primary",
-        disabled=not can_run,
-        width="stretch",
-        key="run_processing_button",
-    ):
+    no_incomplete_selected_scope = bool(
+        only_incomplete and selected_ids and selected_stages and not runnable_stages
+    )
+    run_button_help = (
+        "No files need to be processed: no selected acquisition is missing or needs "
+        "review for the chosen processing method(s)."
+        if no_incomplete_selected_scope
+        else None
+    )
+    if no_incomplete_selected_scope:
+        _render_disabled_run_button(run_button_help)
+        run_clicked = False
+    else:
+        run_clicked = st.button(
+            "Run Processing",
+            type="primary",
+            disabled=not can_run,
+            width="stretch",
+            key="run_processing_button",
+        )
+    if run_clicked:
         try:
             jobs = build_processing_jobs(
                 selected_acquisitions,
@@ -127,7 +142,7 @@ def render_processing_tab(
         )
 
     if not can_run:
-        if only_incomplete and selected_ids and selected_stages and not runnable_stages:
+        if no_incomplete_selected_scope:
             st.caption("Selected stages are already complete for the selected acquisitions.")
         else:
             st.caption(
@@ -154,6 +169,17 @@ def _render_processing_scope(container) -> tuple[list[str], bool]:
         return _render_stage_checklist(st)
 
 
+def _render_disabled_run_button(help_text: str | None) -> None:
+    title = html.escape(help_text or "", quote=True)
+    st.markdown(
+        (
+            f'<div class="dm-disabled-run-button" title="{title}" '
+            'role="button" aria-disabled="true">Run Processing</div>'
+        ),
+        unsafe_allow_html=True,
+    )
+
+
 def _render_processing_options(
     container,
     selected_acquisitions: list[AcquisitionResult],
@@ -169,7 +195,7 @@ def _render_processing_options(
             return None, None, None, []
         if only_incomplete and selected_acquisitions and not runnable_stages:
             st.caption("Selected acquisitions already satisfy the current scope.")
-        pipeline_selection_stages = runnable_stages if only_incomplete else selected_stages
+        pipeline_selection_stages = selected_stages
         hd_settings = _render_hd_settings(root_input, pipeline_selection_stages)
         selected_eyeflow_pipelines = _render_pipeline_selection("ef", pipeline_selection_stages)
         selected_angioeye_pipelines = _render_pipeline_selection("ae", pipeline_selection_stages)
@@ -186,13 +212,11 @@ def _render_processing_options(
 
 
 def _render_stage_checklist(container) -> tuple[list[str], bool]:
-    only_incomplete = bool(st.session_state.get("processing_only_incomplete", False))
     selected_stages: list[str] = []
     for stage in PROCESSING_STAGES:
         selected = container.checkbox(
             STAGE_OPTIONS[stage],
             key=f"processing_stage_{stage}",
-            disabled=only_incomplete,
         )
         if selected:
             selected_stages.append(stage)
@@ -202,9 +226,7 @@ def _render_stage_checklist(container) -> tuple[list[str], bool]:
         key="processing_only_incomplete",
     )
 
-    if only_incomplete:
-        return list(PROCESSING_STAGES), True
-    return selected_stages, False
+    return selected_stages, only_incomplete
 
 
 def _render_pipeline_selection(

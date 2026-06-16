@@ -277,6 +277,22 @@ def apply_dark_theme() -> None:
             opacity: 1;
         }
 
+        .dm-disabled-run-button {
+            width: 100%;
+            min-height: 2.5rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid color-mix(in srgb, var(--dm-action-hover) 42%, var(--dm-action-border));
+            border-radius: 6px;
+            background: color-mix(in srgb, var(--dm-action-hover) 38%, var(--dm-action-bg));
+            color: rgba(255, 255, 255, 0.62);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: help;
+            user-select: none;
+        }
+
         .dm-scan-or {
             min-height: 2.4rem;
             display: flex;
