@@ -5,7 +5,12 @@ from pathlib import Path
 
 import streamlit as st
 
-from doppler_managing.scanner import ScanOptions, holo_filter_ids_from_text, scan_root
+from doppler_managing.scanner import (
+    ScanOptions,
+    holo_filter_entries_from_text,
+    holo_filter_ids_from_text,
+    scan_root,
+)
 from doppler_managing.ui.dashboard import (
     render_filters,
     render_overview_table,
@@ -23,6 +28,8 @@ SCAN_ROOT_DROP_ERROR_KEY = "scan_root_drop_error"
 SCAN_ROOT_BROWSE_ERROR_KEY = "scan_root_browse_error"
 SCAN_INPUT_MODE_KEY = "scan_input_mode"
 HOLO_FILTER_UPLOAD_VERSION_KEY = "holo_filter_upload_version"
+HOLO_FILTER_ENTRIES_KEY = "holo_filter_entries"
+HOLO_FILTER_IDS_KEY = "holo_filter_ids"
 
 
 _SCAN_ROOT_DROP_HELPER = (
@@ -206,11 +213,16 @@ def main(processing_renderer: ProcessingRenderer | None = None) -> None:
     default_root = Path.cwd() / "software_pipeline_validation"
     st.title("Doppler Manager")
 
-    root_input, scan_options, run_scan, scan_hint_slot = _render_scan_bar(default_root)
+    root_input, scan_options, run_scan, refresh_scan, scan_hint_slot = _render_scan_bar(default_root)
 
     if run_scan:
         with st.spinner("Scanning pipeline format..."):
             st.session_state.scan_result = _scan_with_options(root_input, scan_options)
+        st.rerun()
+    elif refresh_scan:
+        with st.spinner("Refreshing pipeline format..."):
+            st.session_state.scan_result = _refresh_scan(root_input, scan_options)
+        st.rerun()
 
     if "scan_result" not in st.session_state:
         scan_hint_slot.info(
@@ -260,6 +272,7 @@ def _cached_scan(
     preview_limit: int,
     read_versions: bool,
     holo_filter_ids: tuple[str, ...] | None,
+    holo_filter_entries: tuple[str, ...] | None,
 ):
     options = ScanOptions(
         max_depth=max_depth,
@@ -267,6 +280,7 @@ def _cached_scan(
         preview_limit_per_stage=preview_limit,
         read_versions=read_versions,
         holo_filter_ids=set(holo_filter_ids) if holo_filter_ids is not None else None,
+        holo_filter_entries=holo_filter_entries,
     )
     return scan_root(root, options)
 
@@ -287,6 +301,7 @@ def _scan_with_options(root: str, options: ScanOptions):
         options.preview_limit_per_stage,
         options.read_versions,
         _holo_filter_cache_key(options),
+        _holo_filter_entries_cache_key(options),
     )
 
 
@@ -298,26 +313,50 @@ def _render_scan_bar(default_root: Path):
     with st.container():
         scan_hint_slot = st.empty()
         input_cols = st.columns([5, 1, 0.25, 1.15])
+        list_mode_active = _holo_filter_list_is_active()
         root_input = input_cols[0].text_input(
             "Root path",
             key=SCAN_ROOT_KEY,
             label_visibility="collapsed",
             on_change=_select_scan_root,
+            disabled=list_mode_active,
+            placeholder="Disabled while a .holo list is active",
         )
-        _render_scan_root_drop_helper()
+        if not list_mode_active:
+            _render_scan_root_drop_helper()
         _render_scan_root_widget_messages(input_cols[0])
-        input_cols[1].button("Browse", on_click=_browse_scan_root, args=(root_default,), width="stretch")
+        input_cols[1].button(
+            "Browse",
+            on_click=_browse_scan_root,
+            args=(root_default,),
+            width="stretch",
+        )
         input_cols[2].markdown('<div class="dm-scan-or">or</div>', unsafe_allow_html=True)
-        holo_filter_ids = _render_holo_filter_upload(input_cols[3])
+        holo_filter_ids, holo_filter_entries = _render_holo_filter_upload(input_cols[3])
 
-        action_cols = st.columns([1.8, 0.45, 6.4])
+        has_scan_result = "scan_result" in st.session_state
+        action_cols = (
+            st.columns([1.8, 0.9, 0.45, 5.5])
+            if has_scan_result
+            else st.columns([1.8, 0.45, 6.4])
+        )
         run_scan = action_cols[0].button(
             "Scan",
             type="primary",
             width="stretch",
             key="scan_button",
         )
-        max_depth, max_entries, preview_limit, read_versions = _render_scan_settings(action_cols[1])
+        refresh_scan = False
+        settings_col = action_cols[2] if has_scan_result else action_cols[1]
+        if has_scan_result:
+            refresh_scan = action_cols[1].button(
+                "Refresh",
+                icon=":material/refresh:",
+                help="Refresh",
+                width="stretch",
+                key="refresh_scan_button",
+            )
+        max_depth, max_entries, preview_limit, read_versions = _render_scan_settings(settings_col)
 
     options = ScanOptions(
         max_depth=int(max_depth),
@@ -325,8 +364,9 @@ def _render_scan_bar(default_root: Path):
         preview_limit_per_stage=int(preview_limit),
         read_versions=bool(read_versions),
         holo_filter_ids=holo_filter_ids,
+        holo_filter_entries=holo_filter_entries,
     )
-    return root_input, options, run_scan, scan_hint_slot
+    return root_input, options, run_scan, refresh_scan, scan_hint_slot
 
 
 def _render_scan_settings(container) -> tuple[int, int, int, bool]:
@@ -355,7 +395,7 @@ def _render_scan_settings(container) -> tuple[int, int, int, bool]:
     return int(max_depth), int(max_entries), int(preview_limit), bool(read_versions)
 
 
-def _render_holo_filter_upload(container) -> set[str] | None:
+def _render_holo_filter_upload(container) -> tuple[set[str] | None, tuple[str, ...] | None]:
     upload_key = _holo_filter_upload_key()
     with container:
         with st.popover("Upload list", use_container_width=True):
@@ -368,14 +408,20 @@ def _render_holo_filter_upload(container) -> set[str] | None:
                 label_visibility="collapsed",
                 on_change=_select_holo_filter_list,
             )
-            holo_filter_ids = _uploaded_holo_filter_ids(holo_filter_file)
-            if holo_filter_ids is None:
-                return None
+            if holo_filter_file is None and st.session_state.get(SCAN_INPUT_MODE_KEY) == "list":
+                _clear_holo_filter_list()
+
+            holo_filter_ids = st.session_state.get(HOLO_FILTER_IDS_KEY)
+            holo_filter_entries = st.session_state.get(HOLO_FILTER_ENTRIES_KEY)
+            if not holo_filter_ids or not holo_filter_entries:
+                return None, None
 
             count = len(holo_filter_ids)
             suffix = "" if count == 1 else "s"
             st.caption(f"{count} .holo name{suffix} loaded.")
-            return holo_filter_ids if st.session_state.get(SCAN_INPUT_MODE_KEY) == "list" else None
+            if st.session_state.get(SCAN_INPUT_MODE_KEY) == "list":
+                return set(holo_filter_ids), tuple(holo_filter_entries)
+            return None, None
 
 
 def _holo_filter_upload_key() -> str:
@@ -383,17 +429,47 @@ def _holo_filter_upload_key() -> str:
     return f"holo_filter_upload_{version}"
 
 
-def _uploaded_holo_filter_ids(uploaded_file) -> set[str] | None:
+def _holo_filter_list_is_active() -> bool:
+    return (
+        st.session_state.get(SCAN_INPUT_MODE_KEY) == "list"
+        and bool(st.session_state.get(HOLO_FILTER_ENTRIES_KEY))
+    )
+
+
+def _remember_holo_filter_upload(uploaded_file) -> None:
     if uploaded_file is None:
-        return None
+        return
     text = uploaded_file.getvalue().decode("utf-8-sig", errors="replace")
-    return holo_filter_ids_from_text(text)
+    st.session_state[HOLO_FILTER_ENTRIES_KEY] = holo_filter_entries_from_text(text)
+    st.session_state[HOLO_FILTER_IDS_KEY] = holo_filter_ids_from_text(text)
+    st.session_state[SCAN_INPUT_MODE_KEY] = "list"
+
+
+def _clear_holo_filter_list() -> None:
+    had_list = (
+        HOLO_FILTER_ENTRIES_KEY in st.session_state
+        or HOLO_FILTER_IDS_KEY in st.session_state
+        or st.session_state.get(SCAN_INPUT_MODE_KEY) == "list"
+    )
+    st.session_state.pop(HOLO_FILTER_ENTRIES_KEY, None)
+    st.session_state.pop(HOLO_FILTER_IDS_KEY, None)
+    st.session_state[SCAN_INPUT_MODE_KEY] = "browse"
+    if had_list:
+        st.session_state[HOLO_FILTER_UPLOAD_VERSION_KEY] = (
+            int(st.session_state.get(HOLO_FILTER_UPLOAD_VERSION_KEY, 0)) + 1
+        )
 
 
 def _holo_filter_cache_key(options: ScanOptions) -> tuple[str, ...] | None:
     if options.holo_filter_ids is None:
         return None
     return tuple(sorted(options.holo_filter_ids))
+
+
+def _holo_filter_entries_cache_key(options: ScanOptions) -> tuple[str, ...] | None:
+    if options.holo_filter_entries is None:
+        return None
+    return tuple(options.holo_filter_entries)
 
 
 def _render_scan_root_drop_helper() -> None:
@@ -424,14 +500,15 @@ def _apply_dropped_scan_root() -> None:
 
 
 def _select_scan_root() -> None:
-    st.session_state[SCAN_INPUT_MODE_KEY] = "browse"
-    st.session_state[HOLO_FILTER_UPLOAD_VERSION_KEY] = (
-        int(st.session_state.get(HOLO_FILTER_UPLOAD_VERSION_KEY, 0)) + 1
-    )
+    _clear_holo_filter_list()
 
 
 def _select_holo_filter_list() -> None:
-    st.session_state[SCAN_INPUT_MODE_KEY] = "list"
+    uploaded_file = st.session_state.get(_holo_filter_upload_key())
+    if uploaded_file is None:
+        _clear_holo_filter_list()
+        return
+    _remember_holo_filter_upload(uploaded_file)
 
 
 def _browse_scan_root(default_root: str) -> None:

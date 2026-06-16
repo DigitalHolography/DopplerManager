@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import html
 import io
+from pathlib import Path
 import re
 from typing import List
 import zipfile
@@ -20,7 +21,10 @@ FILTER_MISSING_HD_KEY = "index_filter_missing_hd"
 FILTER_MISSING_DV_KEY = "index_filter_missing_dv"
 FILTER_MISSING_AE_KEY = "index_filter_missing_ae"
 FILTER_DIALOG_REGEX_KEY = "index_filter_dialog_acquisition_regex"
-FILTER_DIALOG_FILE_KEY = "index_filter_dialog_regex_file"
+FILTER_REGEX_FILE_NAME_KEY = "index_filter_regex_file_name"
+FILTER_REGEX_FILE_DISPLAY_KEY = "index_filter_regex_file_display"
+FILTER_REGEX_FILE_TEXT_KEY = "index_filter_regex_file_text"
+FILTER_REGEX_FILE_ERROR_KEY = "index_filter_regex_file_error"
 FILTER_DIALOG_STATUSES_KEY = "index_filter_dialog_statuses"
 FILTER_DIALOG_MISSING_HD_KEY = "index_filter_dialog_missing_hd"
 FILTER_DIALOG_MISSING_DV_KEY = "index_filter_dialog_missing_dv"
@@ -70,14 +74,31 @@ def _render_filter_dialog(status_options: list[str]) -> None:
         key=FILTER_DIALOG_REGEX_KEY,
         on_change=_sync_filter_regex,
     )
-    st.file_uploader(
-        "Regex list",
-        type=["txt"],
-        accept_multiple_files=False,
-        help="One regex per line. Lines are matched with OR logic.",
-        key=FILTER_DIALOG_FILE_KEY,
-        on_change=_sync_filter_regex_file,
+    st.button(
+        "Browse regex list",
+        icon=":material/folder_open:",
+        help="Browse for a regex list file",
+        width="stretch",
+        on_click=_browse_regex_filter_file,
     )
+    file_error = st.session_state.pop(FILTER_REGEX_FILE_ERROR_KEY, "")
+    if file_error:
+        st.warning(file_error)
+    file_display = st.session_state.get(FILTER_REGEX_FILE_DISPLAY_KEY)
+    if file_display:
+        count = len(st.session_state.get(FILTER_REGEX_PATTERNS_KEY, []))
+        suffix = "" if count == 1 else "s"
+        file_cols = st.columns([0.9, 0.1], vertical_alignment="center")
+        file_cols[0].info(f"Active regex list: {file_display} ({count} pattern{suffix}).")
+        if file_cols[1].button(
+            "",
+            icon=":material/close:",
+            help="Clear regex list",
+            width="stretch",
+            key="clear_regex_list_button",
+            on_click=_clear_regex_file_state,
+        ):
+            st.rerun()
 
     st.divider()
     st.markdown("#### Status filters")
@@ -136,9 +157,44 @@ def _sync_filter_regex() -> None:
     st.session_state[FILTER_REGEX_KEY] = str(st.session_state.get(FILTER_DIALOG_REGEX_KEY, ""))
 
 
-def _sync_filter_regex_file() -> None:
-    uploaded_file = st.session_state.get(FILTER_DIALOG_FILE_KEY)
-    st.session_state[FILTER_REGEX_PATTERNS_KEY] = _uploaded_regex_patterns(uploaded_file)
+def _remember_regex_file_text(file_name: str, display_path: str, text: str) -> None:
+    st.session_state[FILTER_REGEX_FILE_NAME_KEY] = file_name
+    st.session_state[FILTER_REGEX_FILE_DISPLAY_KEY] = display_path or file_name
+    st.session_state[FILTER_REGEX_FILE_TEXT_KEY] = text
+    st.session_state[FILTER_REGEX_PATTERNS_KEY] = _regex_patterns_from_text(text)
+
+
+def _browse_regex_filter_file() -> None:
+    try:
+        import tkinter as tk
+        from tkinter import filedialog
+
+        dialog_root = tk.Tk()
+        dialog_root.withdraw()
+        dialog_root.attributes("-topmost", True)
+        dialog_root.update()
+        selected = filedialog.askopenfilename(
+            title="Select regex list",
+            filetypes=[("Text files", "*.txt"), ("All files", "*.*")],
+        )
+    except Exception as exc:
+        st.session_state[FILTER_REGEX_FILE_ERROR_KEY] = f"Unable to open file picker: {exc}"
+        return
+    finally:
+        if "dialog_root" in locals():
+            dialog_root.destroy()
+
+    if not selected:
+        return
+
+    path = Path(selected)
+    try:
+        text = path.read_text(encoding="utf-8-sig", errors="replace")
+    except OSError as exc:
+        st.session_state[FILTER_REGEX_FILE_ERROR_KEY] = f"Unable to read regex list: {exc}"
+        return
+
+    _remember_regex_file_text(path.name, str(path), text)
 
 
 def _sync_filter_statuses() -> None:
@@ -153,7 +209,7 @@ def _sync_filter_flags() -> None:
 
 def _clear_filter_state() -> None:
     st.session_state[FILTER_REGEX_KEY] = ""
-    st.session_state[FILTER_REGEX_PATTERNS_KEY] = []
+    _clear_regex_file_state()
     st.session_state[FILTER_STATUSES_KEY] = []
     st.session_state[FILTER_MISSING_HD_KEY] = False
     st.session_state[FILTER_MISSING_DV_KEY] = False
@@ -163,6 +219,13 @@ def _clear_filter_state() -> None:
     st.session_state[FILTER_DIALOG_MISSING_HD_KEY] = False
     st.session_state[FILTER_DIALOG_MISSING_DV_KEY] = False
     st.session_state[FILTER_DIALOG_MISSING_AE_KEY] = False
+
+
+def _clear_regex_file_state() -> None:
+    st.session_state[FILTER_REGEX_PATTERNS_KEY] = []
+    st.session_state.pop(FILTER_REGEX_FILE_NAME_KEY, None)
+    st.session_state.pop(FILTER_REGEX_FILE_DISPLAY_KEY, None)
+    st.session_state.pop(FILTER_REGEX_FILE_TEXT_KEY, None)
 
 
 def _filter_acquisition_regex(frame: pd.DataFrame, pattern: str) -> pd.DataFrame:
@@ -197,10 +260,7 @@ def _filter_acquisition_regex_list(frame: pd.DataFrame, patterns: list[str]) -> 
     return frame[mask]
 
 
-def _uploaded_regex_patterns(uploaded_file) -> list[str]:
-    if uploaded_file is None:
-        return []
-    text = uploaded_file.getvalue().decode("utf-8-sig", errors="replace")
+def _regex_patterns_from_text(text: str) -> list[str]:
     return [
         line
         for raw_line in text.splitlines()
