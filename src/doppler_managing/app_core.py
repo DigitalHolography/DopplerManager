@@ -206,21 +206,16 @@ def main(processing_renderer: ProcessingRenderer | None = None) -> None:
     default_root = Path.cwd() / "software_pipeline_validation"
     st.title("Doppler Manager")
 
-    root_input, scan_options, run_scan = _render_scan_bar(default_root)
+    root_input, scan_options, run_scan, scan_hint_slot = _render_scan_bar(default_root)
 
     if run_scan:
         with st.spinner("Scanning pipeline format..."):
-            st.session_state.scan_result = _cached_scan(
-                root_input,
-                scan_options.max_depth,
-                scan_options.max_entries,
-                scan_options.preview_limit_per_stage,
-                scan_options.read_versions,
-                _holo_filter_cache_key(scan_options),
-            )
+            st.session_state.scan_result = _scan_with_options(root_input, scan_options)
 
     if "scan_result" not in st.session_state:
-        st.info("Select a NAS or local root path, then run a scan. Large .holo and .h5 files are never loaded.")
+        scan_hint_slot.info(
+            "Select a NAS or local root path, then run a scan. Large .holo and .h5 files are never loaded."
+        )
         return
 
     scan_result = st.session_state.scan_result
@@ -277,14 +272,21 @@ def _cached_scan(
 
 def _refresh_scan(
     root: str,
-    max_depth: int,
-    max_entries: int,
-    preview_limit: int,
-    read_versions: bool,
-    holo_filter_ids: tuple[str, ...] | None = None,
+    options: ScanOptions,
 ):
     _cached_scan.clear()
-    return _cached_scan(root, max_depth, max_entries, preview_limit, read_versions, holo_filter_ids)
+    return _scan_with_options(root, options)
+
+
+def _scan_with_options(root: str, options: ScanOptions):
+    return _cached_scan(
+        root,
+        options.max_depth,
+        options.max_entries,
+        options.preview_limit_per_stage,
+        options.read_versions,
+        _holo_filter_cache_key(options),
+    )
 
 
 def _render_scan_bar(default_root: Path):
@@ -293,6 +295,7 @@ def _render_scan_bar(default_root: Path):
     st.session_state.setdefault(SCAN_INPUT_MODE_KEY, "browse")
     st.session_state.setdefault(HOLO_FILTER_UPLOAD_VERSION_KEY, 0)
     with st.container():
+        scan_hint_slot = st.empty()
         input_cols = st.columns([5, 1, 0.25, 1.15])
         root_input = input_cols[0].text_input(
             "Root path",
@@ -307,7 +310,12 @@ def _render_scan_bar(default_root: Path):
         holo_filter_ids = _render_holo_filter_upload(input_cols[3])
 
         action_cols = st.columns([1.8, 0.45, 6.4])
-        run_scan = action_cols[0].button("Scan", type="primary", width="stretch")
+        run_scan = action_cols[0].button(
+            "Scan",
+            type="primary",
+            width="stretch",
+            key="scan_button",
+        )
         max_depth, max_entries, preview_limit, read_versions = _render_scan_settings(action_cols[1])
 
     options = ScanOptions(
@@ -317,7 +325,7 @@ def _render_scan_bar(default_root: Path):
         read_versions=bool(read_versions),
         holo_filter_ids=holo_filter_ids,
     )
-    return root_input, options, run_scan
+    return root_input, options, run_scan, scan_hint_slot
 
 
 def _render_scan_settings(container) -> tuple[int, int, int, bool]:

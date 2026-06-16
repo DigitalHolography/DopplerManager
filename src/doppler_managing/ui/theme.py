@@ -15,6 +15,9 @@ def apply_dark_theme() -> None:
             --dm-text: #e5e7eb;
             --dm-muted: #9ca3af;
             --dm-accent: #38bdf8;
+            --dm-action-bg: #111827;
+            --dm-action-border: #2a3548;
+            --dm-action-hover: var(--primary-color, var(--st-primary-color, #ff4b4b));
         }
 
         .stApp {
@@ -88,17 +91,14 @@ def apply_dark_theme() -> None:
         .dm-stage-chip {
             display: inline-flex;
             align-items: center;
+            gap: 0.35rem;
             border-radius: 999px;
             border: 1px solid var(--dm-border);
             background: var(--dm-surface);
+            padding: 0.24rem 0.7rem 0.24rem 0.35rem;
             min-height: 2rem;
             max-width: 100%;
             white-space: nowrap;
-        }
-
-        .dm-stage-chip {
-            gap: 0.35rem;
-            padding: 0.24rem 0.7rem 0.24rem 0.35rem;
             font-size: 0.78rem;
             font-weight: 750;
         }
@@ -146,6 +146,12 @@ def apply_dark_theme() -> None:
         }
 
         .st-key-detail_main_tabs {
+            background: rgba(17, 24, 39, 0.72);
+        }
+
+        .st-key-processing_acquisition_selection,
+        .st-key-processing_stage_selection,
+        .st-key-processing_options {
             background: rgba(17, 24, 39, 0.72);
         }
 
@@ -232,6 +238,29 @@ def apply_dark_theme() -> None:
         .stButton > button,
         .stDownloadButton > button {
             border-radius: 6px;
+        }
+
+        .st-key-run_processing_button button:not(:disabled),
+        .st-key-scan_button button:not(:disabled) {
+            background: var(--dm-action-bg) !important;
+            background-color: var(--dm-action-bg) !important;
+            border-color: var(--dm-action-border) !important;
+            color: #ffffff !important;
+        }
+
+        .st-key-run_processing_button button:not(:disabled):hover,
+        .st-key-scan_button button:not(:disabled):hover {
+            background-color: var(--dm-action-hover) !important;
+            border-color: var(--dm-action-hover) !important;
+            color: #ffffff !important;
+        }
+
+        .st-key-run_processing_button button:disabled,
+        .st-key-scan_button button:disabled {
+            background: color-mix(in srgb, var(--dm-action-hover) 38%, var(--dm-action-bg));
+            border-color: color-mix(in srgb, var(--dm-action-hover) 42%, var(--dm-action-border));
+            color: rgba(255, 255, 255, 0.62);
+            opacity: 1;
         }
 
         .dm-scan-or {

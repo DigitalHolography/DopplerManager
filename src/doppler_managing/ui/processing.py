@@ -53,37 +53,34 @@ def render_processing_tab(
         acquisition.acquisition_id: acquisition
         for acquisition in scan_result.acquisitions
     }
-    selected_ids = st.multiselect(
-        "Acquisitions",
-        filtered_ids,
-        default=filtered_ids if len(filtered_ids) == 1 else [],
-    )
-    selected_stages = st.multiselect(
-        "Run or rerun",
-        list(PROCESSING_STAGES),
-        format_func=lambda stage: STAGE_OPTIONS[stage],
-    )
-    only_incomplete = st.checkbox("Only missing or needs review", value=False)
-    selected_eyeflow_pipelines = _render_pipeline_selection("ef", selected_stages)
-    selected_angioeye_pipelines = _render_pipeline_selection("ae", selected_stages)
+    processing_cols = st.columns([0.95, 1.35], vertical_alignment="top")
+    with processing_cols[0]:
+        selected_ids = _render_acquisition_selection(st, filtered_ids)
+        selected_stages, only_incomplete = _render_processing_scope(st)
 
     selected_acquisitions = [
         acquisitions_by_id[acquisition_id] for acquisition_id in selected_ids
     ]
+
     runnable_stages = needed_processing_stages(
         selected_acquisitions,
         selected_stages,
         only_incomplete=only_incomplete,
     )
+    (
+        selected_eyeflow_pipelines,
+        selected_angioeye_pipelines,
+        hd_settings,
+        missing_tools,
+    ) = _render_processing_options(
+        processing_cols[1],
+        selected_acquisitions,
+        selected_stages,
+        only_incomplete,
+        runnable_stages,
+        root_input,
+    )
 
-    hd_settings = _render_hd_settings(root_input, runnable_stages)
-    missing_tools = missing_default_processing_tools(runnable_stages)
-    if missing_tools:
-        missing_labels = ", ".join(STAGE_OPTIONS[stage] for stage in missing_tools)
-        st.warning(
-            f"Missing processing package(s): {missing_labels}. "
-            "Run `uv sync --extra processing`, then restart the app."
-        )
     log_placeholder = st.empty()
     _render_previous_log(log_placeholder)
 
@@ -96,7 +93,13 @@ def render_processing_tab(
         and ("ef" not in runnable_stages or selected_eyeflow_pipelines)
         and ("ae" not in runnable_stages or selected_angioeye_pipelines)
     )
-    if st.button("Run Processing", type="primary", disabled=not can_run, width="stretch"):
+    if st.button(
+        "Run Processing",
+        type="primary",
+        disabled=not can_run,
+        width="stretch",
+        key="run_processing_button",
+    ):
         try:
             jobs = build_processing_jobs(
                 selected_acquisitions,
@@ -130,6 +133,78 @@ def render_processing_tab(
             st.caption(
                 "Select at least one acquisition and one stage. HD also needs a settings JSON file."
             )
+
+
+def _render_acquisition_selection(container, filtered_ids: list[str]) -> list[str]:
+    with container.container(border=True, key="processing_acquisition_selection"):
+        st.markdown("#### Acquisitions")
+        selected_ids = st.multiselect(
+            "Acquisitions",
+            filtered_ids,
+            default=filtered_ids if len(filtered_ids) == 1 else [],
+            label_visibility="collapsed",
+        )
+        st.caption(f"{len(selected_ids)} of {len(filtered_ids)} selected")
+        return selected_ids
+
+
+def _render_processing_scope(container) -> tuple[list[str], bool]:
+    with container.container(border=True, key="processing_stage_selection"):
+        st.markdown("#### Processing scope")
+        return _render_stage_checklist(st)
+
+
+def _render_processing_options(
+    container,
+    selected_acquisitions: list[AcquisitionResult],
+    selected_stages: list[str],
+    only_incomplete: bool,
+    runnable_stages: list[str],
+    root_input: str,
+) -> tuple[Optional[tuple[str, ...]], Optional[tuple[str, ...]], Optional[Path], list[str]]:
+    with container.container(border=True, key="processing_options"):
+        st.markdown("#### Options")
+        if not selected_stages:
+            st.caption("Selected acquisitions already satisfy the current scope.")
+            return None, None, None, []
+        if only_incomplete and selected_acquisitions and not runnable_stages:
+            st.caption("Selected acquisitions already satisfy the current scope.")
+        pipeline_selection_stages = runnable_stages if only_incomplete else selected_stages
+        hd_settings = _render_hd_settings(root_input, pipeline_selection_stages)
+        selected_eyeflow_pipelines = _render_pipeline_selection("ef", pipeline_selection_stages)
+        selected_angioeye_pipelines = _render_pipeline_selection("ae", pipeline_selection_stages)
+        missing_tools = missing_default_processing_tools(runnable_stages)
+        if missing_tools:
+            missing_labels = ", ".join(STAGE_OPTIONS[stage] for stage in missing_tools)
+            st.warning(
+                f"Missing processing package(s): {missing_labels}. "
+                "Run `uv sync --extra processing`, then restart the app."
+            )
+        if not any(stage in pipeline_selection_stages for stage in ("hd", "ef", "ae")):
+            st.caption("No additional options for this scope.")
+        return selected_eyeflow_pipelines, selected_angioeye_pipelines, hd_settings, missing_tools
+
+
+def _render_stage_checklist(container) -> tuple[list[str], bool]:
+    only_incomplete = bool(st.session_state.get("processing_only_incomplete", False))
+    selected_stages: list[str] = []
+    for stage in PROCESSING_STAGES:
+        selected = container.checkbox(
+            STAGE_OPTIONS[stage],
+            key=f"processing_stage_{stage}",
+            disabled=only_incomplete,
+        )
+        if selected:
+            selected_stages.append(stage)
+    only_incomplete = container.checkbox(
+        "Only missing or needs review",
+        value=False,
+        key="processing_only_incomplete",
+    )
+
+    if only_incomplete:
+        return list(PROCESSING_STAGES), True
+    return selected_stages, False
 
 
 def _render_pipeline_selection(
@@ -229,14 +304,7 @@ def _run_jobs_and_refresh(
     failures = [result for result in results if not result.succeeded]
 
     append_log("[SCAN] Refreshing acquisition index...")
-    st.session_state.scan_result = refresh_scan(
-        root_input,
-        scan_options.max_depth,
-        scan_options.max_entries,
-        scan_options.preview_limit_per_stage,
-        scan_options.read_versions,
-        _holo_filter_cache_key(scan_options),
-    )
+    st.session_state.scan_result = refresh_scan(root_input, scan_options)
     append_log("[SCAN] Refresh complete.")
 
     if failures:
@@ -261,9 +329,3 @@ def _render_previous_log(log_placeholder=None) -> None:
         return
     target = log_placeholder if log_placeholder is not None else st
     target.code("\n".join(log_lines), language="text")
-
-
-def _holo_filter_cache_key(scan_options: ScanOptions) -> tuple[str, ...] | None:
-    if scan_options.holo_filter_ids is None:
-        return None
-    return tuple(sorted(scan_options.holo_filter_ids))
