@@ -138,8 +138,12 @@ The `processing` extra installs upstream dependencies from GitHub:
 ## Run the Application
 
 ```bash
-uv run streamlit run src/doppler_managing/app.py
+uv run dopplermanager
 ```
+
+The development command stops any recorded Doppler Manager server before starting
+the full application with Streamlit file watching enabled.
+Running `streamlit run` directly bypasses this lifecycle check.
 
 On first launch, select a NAS or local root folder and click `Scan`.
 
