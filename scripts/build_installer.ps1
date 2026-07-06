@@ -25,6 +25,7 @@ $env:UV_PROJECT_ENVIRONMENT = $ReleaseVenv
 Write-Host "Using isolated release environment: $ReleaseVenv"
 
 uv sync --no-dev --extra processing --group release
+uv run python -m doppler_manager.release_defaults
 
 $DistApp = Join-Path $Root "dist\DopplerManager"
 $BuildApp = Join-Path $Root "build\DopplerManager"

@@ -91,16 +91,16 @@ def test_build_missing_holo_lists_zip_contains_one_text_file_per_stage() -> None
 
     with zipfile.ZipFile(io.BytesIO(payload)) as archive:
         assert sorted(archive.namelist()) == [
-            "list_ae.txt",
-            "list_all.txt",
-            "list_dv.txt",
-            "list_ef.txt",
-            "list_hd.txt",
+            "all_scan_paths.txt",
+            "missing_AE.txt",
+            "missing_DV.txt",
+            "missing_EF.txt",
+            "missing_HD.txt",
         ]
-        assert archive.read("list_hd.txt").decode("utf-8") == ""
-        assert archive.read("list_dv.txt").decode("utf-8") == "C:\\data\\a.holo\n"
+        assert archive.read("missing_HD.txt").decode("utf-8") == ""
+        assert archive.read("missing_DV.txt").decode("utf-8") == "C:\\data\\a.holo\n"
         assert (
-            archive.read("list_all.txt").decode("utf-8")
+            archive.read("all_scan_paths.txt").decode("utf-8")
             == "C:\\data\\a.holo\nC:\\data\\b.holo\nC:\\data\\c.holo\n"
         )
 

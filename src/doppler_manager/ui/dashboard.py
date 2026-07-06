@@ -325,7 +325,7 @@ def _render_export_button(container, scan_result, filtered: pd.DataFrame) -> Non
     container.download_button(
         "Export list",
         data=zip_bytes,
-        file_name="doppler_pipeline_missing_holo_lists.zip",
+        file_name="doppler_manager_scan_lists.zip",
         mime="application/zip",
         width="stretch",
     )
@@ -344,11 +344,11 @@ def build_missing_holo_lists_zip(
             payload = "\n".join(lists[stage])
             if payload:
                 payload += "\n"
-            archive.writestr(f"list_{stage}.txt", payload)
+            archive.writestr(f"missing_{stage.upper()}.txt", payload)
         payload = "\n".join(all_holo_paths)
         if payload:
             payload += "\n"
-        archive.writestr("list_all.txt", payload)
+        archive.writestr("all_scan_paths.txt", payload)
     return buffer.getvalue()
 
 

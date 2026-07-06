@@ -99,17 +99,17 @@ Generated MP4 files for AVI previews are stored in `%LOCALAPPDATA%\DopplerManage
 
 The `Acquisition Index` tab exposes one scan-list export:
 
-- `doppler_pipeline_missing_holo_lists.zip`
+- `doppler_manager_scan_lists.zip`
 
 The ZIP contains five text files:
 
-- `list_hd.txt`
-- `list_dv.txt`
-- `list_ef.txt`
-- `list_ae.txt`
-- `list_all.txt`
+- `missing_HD.txt`
+- `missing_DV.txt`
+- `missing_EF.txt`
+- `missing_AE.txt`
+- `all_scan_paths.txt`
 
-The stage-specific files contain the `.holo` paths, limited to the active dashboard filters, for acquisitions where the corresponding stage is not already `complete`. `list_all.txt` contains every `.holo` path observed during the filesystem scan, without applying the dashboard filters or optional `.holo` filter list.
+The stage-specific files contain the `.holo` paths, limited to the active dashboard filters, for acquisitions where the corresponding stage is not already `complete`. `all_scan_paths.txt` contains every `.holo` path observed during the filesystem scan, without applying the dashboard filters or optional `.holo` filter list.
 
 ## Installation
 

@@ -276,7 +276,7 @@ def _render_hd_settings(root_input: str, selected_stages: list[str]) -> Optional
 
     default_index = _preferred_index(options)
     selected = st.selectbox(
-        "Settings file",
+        "Holodoppler Settings File",
         options,
         index=default_index,
         format_func=lambda path: path.name,
