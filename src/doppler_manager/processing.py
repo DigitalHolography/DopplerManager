@@ -39,6 +39,7 @@ PIPELINE_SETTINGS_TOOLS = {
     "ae": "angioeye",
 }
 PROGRESS_LOG_PREFIX = "\r"
+PROCESSING_CLI_SENTINEL = "--dm-processing-cli"
 
 COMMAND_ENV_VARS = {
     "hd": "DM_HOLODOPPLER_COMMAND",
@@ -79,8 +80,27 @@ REPO_PROCESSING_DEFAULTS = Path(__file__).resolve().parents[2] / "processing_def
 REQUIRED_HOLODOPPLER_SETTINGS_KEYS = ("temporal_transformation",)
 
 
+def processing_defaults_dir() -> Path:
+    candidates: list[Path] = []
+    bundle_root = getattr(sys, "_MEIPASS", None)
+    if bundle_root:
+        candidates.append(Path(bundle_root) / "processing_defaults")
+    if getattr(sys, "frozen", False):
+        candidates.append(Path(sys.executable).resolve().parent / "processing_defaults")
+    candidates.extend(
+        [
+            REPO_PROCESSING_DEFAULTS,
+            Path.cwd() / "processing_defaults",
+        ]
+    )
+    for candidate in candidates:
+        if candidate.is_dir():
+            return candidate
+    return candidates[0] if candidates else REPO_PROCESSING_DEFAULTS
+
+
 def bundled_holodoppler_settings_dir() -> Path:
-    return REPO_PROCESSING_DEFAULTS / "holodoppler"
+    return processing_defaults_dir() / "holodoppler"
 
 @dataclass(frozen=True)
 class ProcessingJob:
@@ -111,6 +131,8 @@ def command_prefix_for_stage(stage: str) -> tuple[str, ...]:
     override = os.getenv(env_var, "").strip()
     if override:
         return (override,)
+    if getattr(sys, "frozen", False):
+        return (sys.executable, PROCESSING_CLI_SENTINEL, stage)
     return DEFAULT_COMMAND_PREFIXES[stage]
 
 
@@ -121,14 +143,27 @@ def missing_default_processing_tools(stages: Sequence[str]) -> list[str]:
             continue
         if os.getenv(COMMAND_ENV_VARS[stage], "").strip():
             continue
-        module_name = DEFAULT_STAGE_MODULES[stage]
-        try:
-            module_spec = importlib.util.find_spec(module_name)
-        except (ImportError, ValueError):
-            module_spec = None
-        if module_spec is None:
+        if not _default_processing_tool_available(stage):
             missing.append(stage)
     return missing
+
+
+def _default_processing_tool_available(stage: str) -> bool:
+    if getattr(sys, "frozen", False) and stage in {"ef", "ae"}:
+        return True
+
+    module_name = DEFAULT_STAGE_MODULES[stage]
+    try:
+        module_spec = importlib.util.find_spec(module_name)
+    except (ImportError, ValueError):
+        module_spec = None
+    if module_spec is not None:
+        return True
+
+    tool_name = PIPELINE_SETTINGS_TOOLS.get(stage)
+    if tool_name is None:
+        return False
+    return _find_uv_git_cli(CLI_TOOLS[tool_name]) is not None
 
 
 def discover_holodoppler_settings(root: Path | str) -> list[Path]:
@@ -408,6 +443,8 @@ def build_processing_jobs(
             _require_file(holo_path, acquisition_id, "source .holo")
             if "hd" not in acquisition_stage_set:
                 _require_stage_h5(acquisition, "hd")
+            if "dv" not in acquisition_stage_set:
+                _require_stage_h5(acquisition, "dv")
             assert eyeflow_pipeline_file is not None
             temp_root = _eyeflow_temp_root(cache_dir, acquisition_id)
             destination = _stage_output_dir(acquisition_dir, acquisition_id, "ef")
@@ -840,7 +877,7 @@ def _default_pipeline_settings_path(stage: str) -> Path | None:
         return upstream
 
     fallback = (
-        REPO_PROCESSING_DEFAULTS
+        processing_defaults_dir()
         / PIPELINE_SETTINGS_FOLDERS[stage]
         / "default_settings.json"
     )

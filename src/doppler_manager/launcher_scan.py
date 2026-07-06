@@ -25,6 +25,7 @@ PORT_HOST = "127.0.0.1"
 PORT_START = 8501
 PORT_END = 8599
 FINGERPRINT_FORMAT = "doppler-manager-v1"
+PROCESSING_CLI_SENTINEL = "--dm-processing-cli"
 
 
 class _HashWriter(Protocol):
@@ -35,6 +36,8 @@ def main() -> None:
     log_path = _log_path()
     _configure_stdio(log_path)
     _log(log_path, "Launcher started.")
+    if PROCESSING_CLI_SENTINEL in sys.argv:
+        raise SystemExit(_run_processing_cli_from_argv())
     try:
         if "--stop" in sys.argv:
             _stop_running_server(log_path)
@@ -51,10 +54,40 @@ def main() -> None:
         raise
 
 
+def _run_processing_cli_from_argv() -> int:
+    sentinel_index = sys.argv.index(PROCESSING_CLI_SENTINEL)
+    args = sys.argv[sentinel_index + 1 :]
+    if not args:
+        print("Expected processing stage after --dm-processing-cli.", file=sys.stderr)
+        return 2
+
+    stage = args[0].lower()
+    tool_args = args[1:]
+    if stage == "hd":
+        from holodoppler.cli import main as holodoppler_main
+
+        sys.argv = ["holodoppler", *tool_args]
+        return int(holodoppler_main())
+    if stage == "dv":
+        import runpy
+
+        sys.argv = ["dopplerview", *tool_args]
+        runpy.run_module("dopplerview.cli", run_name="__main__")
+        return 0
+    if stage in {"ef", "ae"}:
+        from doppler_manager import _external_cli_runner
+
+        tool = "eyeflow" if stage == "ef" else "angioeye"
+        return _external_cli_runner.main([tool, *tool_args])
+
+    print(f"Unknown processing stage: {stage}", file=sys.stderr)
+    return 2
+
+
 def _run(
     log_path: Path,
     *,
-    app_module: str = "doppler_manager.app_scan",
+    app_module: str = "doppler_manager.app",
     file_watcher_type: str = "none",
 ) -> None:
     fingerprint = _application_fingerprint()
@@ -221,9 +254,9 @@ def _update_hash_from_file(hasher: _HashWriter, path: Path) -> None:
 
 def _stop_running_server(log_path: Path) -> None:
     if _stop_recorded_server(log_path):
-        _show_message("Doppler Manager Scan", "Doppler Manager Scan server was stopped.")
+        _show_message("Doppler Manager", "Doppler Manager server was stopped.")
     else:
-        _show_message("Doppler Manager Scan", "No running Doppler Manager Scan server was found.")
+        _show_message("Doppler Manager", "No running Doppler Manager server was found.")
 
 
 def _stop_recorded_server(log_path: Path) -> bool:
@@ -350,10 +383,10 @@ def _log(log_path: Path, message: str) -> None:
 
 def _show_startup_error(log_path: Path) -> None:
     message = (
-        "Doppler Manager Scan could not start.\n\n"
+        "Doppler Manager could not start.\n\n"
         f"Diagnostic log:\n{log_path}"
     )
-    _show_message("Doppler Manager Scan", message, error=True, log_path=log_path)
+    _show_message("Doppler Manager", message, error=True, log_path=log_path)
 
 
 def _show_message(

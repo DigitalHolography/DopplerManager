@@ -147,9 +147,9 @@ Running `streamlit run` directly bypasses this lifecycle check.
 
 On first launch, select a NAS or local root folder and click `Scan`.
 
-## Build the Scan-Only Windows Installer
+## Build the Windows Installer
 
-The scan-only release excludes the `Processing` tab and does not install the optional processing dependencies.
+The release includes the acquisition scan views, the `Processing` tab, and the optional processing dependencies.
 
 Prerequisites on the Windows build machine:
 
@@ -159,16 +159,16 @@ Prerequisites on the Windows build machine:
 Build the installer:
 
 ```powershell
-.\scripts\build_scan_release.ps1
+.\scripts\build_installer.ps1
 ```
 
 To override the release version:
 
 ```powershell
-.\scripts\build_scan_release.ps1 -Version 0.4.0
+.\scripts\build_installer.ps1 -Version 0.4.0
 ```
 
-The script builds `dist\DopplerManager\DopplerManager.exe` with PyInstaller, then creates:
+The script stages the PyInstaller application under `build\installer-payload`, packages it with Inno Setup, then creates:
 
 ```text
 dist\installer\DopplerManager-<version>-setup.exe
@@ -177,13 +177,14 @@ dist\installer\DopplerManager-<version>-setup.exe
 The installer uses Inno Setup and installs the application under:
 
 ```text
-C:\Program Files\DopplerManager\<version>\
+%LOCALAPPDATA%\Programs\DopplerManager\<version>\
 ```
 
-The packaged entry point is `src\doppler_manager\app_scan.py`, which only renders:
+The packaged entry point is `src\doppler_manager\app.py`, which renders:
 
 - `Acquisition Index`
 - `Acquisition Details`
+- `Processing`
 
 The build uses an isolated `.venv-release` environment so the local development environment can still be synced with `uv sync --extra processing` when the full app is needed.
 
@@ -202,8 +203,8 @@ If the installed executable does not open a browser on another PC, check the dia
 
 The installer also creates Start Menu shortcuts named:
 
-- `Doppler Manager Scan diagnostic log`
-- `Stop Doppler Manager Scan`
+- `Doppler Manager diagnostic log`
+- `Stop Doppler Manager`
 
 Launching the app again while it is already running reopens the existing local Streamlit server instead of starting another copy.
 

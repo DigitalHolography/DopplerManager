@@ -4,6 +4,31 @@ import importlib
 import sys
 
 
+def test_processing_cli_sentinel_dispatches_external_runner(monkeypatch) -> None:
+    from doppler_manager import _external_cli_runner, launcher_scan
+
+    calls = []
+    monkeypatch.setattr(
+        _external_cli_runner,
+        "main",
+        lambda args: calls.append(args) or 7,
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "DopplerManager.exe",
+            launcher_scan.PROCESSING_CLI_SENTINEL,
+            "ef",
+            "--data",
+            "sample.holo",
+        ],
+    )
+
+    assert launcher_scan._run_processing_cli_from_argv() == 7
+    assert calls == [["eyeflow", "--data", "sample.holo"]]
+
+
 def test_scan_entrypoint_does_not_import_processing_modules() -> None:
     for module_name in (
         "doppler_manager.app_core",

@@ -1,8 +1,9 @@
-#define MyAppName "Doppler Manager Scan"
+#define MyAppName "Doppler Manager"
 #define MyAppInstallDirName "DopplerManager"
 #define MyAppPublisher "Doppler Manager"
 #define MyAppExeName "DopplerManager.exe"
 #define MyAppVersion GetEnv("DM_VERSION")
+#define MyAppIcon "..\packaging\DopplerManager.ico"
 
 #if MyAppVersion == ""
   #define MyAppVersion "0.4.0"
@@ -20,6 +21,7 @@ DisableProgramGroupPage=yes
 UsePreviousAppDir=no
 OutputDir=..\dist\installer
 OutputBaseFilename=DopplerManager-{#MyAppVersion}-setup
+SetupIconFile={#MyAppIcon}
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
@@ -36,13 +38,20 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "..\dist\DopplerManager\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\build\installer-payload\DopplerManager\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+
+[InstallDelete]
+Type: files; Name: "{autodesktop}\Doppler Manager Scan.lnk"
+Type: files; Name: "{autoprograms}\Doppler Manager Scan *.lnk"
+Type: files; Name: "{autoprograms}\Doppler Manager Scan {#MyAppVersion}.lnk"
+Type: files; Name: "{autoprograms}\Stop Doppler Manager Scan.lnk"
+Type: files; Name: "{autoprograms}\Doppler Manager Scan diagnostic log.lnk"
 
 [Icons]
-Name: "{autoprograms}\{#MyAppName} {#MyAppVersion}"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"
-Name: "{autoprograms}\Stop {#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Parameters: "--stop"; WorkingDir: "{app}"
+Name: "{autoprograms}\{#MyAppName} {#MyAppVersion}"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; IconFilename: "{app}\{#MyAppExeName}"
+Name: "{autoprograms}\Stop {#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Parameters: "--stop"; WorkingDir: "{app}"; IconFilename: "{app}\{#MyAppExeName}"
 Name: "{autoprograms}\{#MyAppName} diagnostic log"; Filename: "{sys}\notepad.exe"; Parameters: """{localappdata}\DopplerManager\logs\DopplerManager.log"""
-Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; Tasks: desktopicon
+Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; IconFilename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent

@@ -1,6 +1,8 @@
 import sys
 from pathlib import Path
 
+import pytest
+
 import doppler_manager._external_cli_runner as external_cli_runner
 import doppler_manager.processing as processing
 from doppler_manager.models import AcquisitionResult, FileRef, StageResult
@@ -12,6 +14,7 @@ from doppler_manager.processing import (
     missing_default_processing_tools,
     needed_processing_stages,
     preferred_holodoppler_settings,
+    processing_defaults_dir,
 )
 
 
@@ -154,7 +157,24 @@ def test_eyeflow_job_uses_absolute_generated_paths(tmp_path: Path, monkeypatch) 
     assert pipelines_path.is_file()
 
 
-def test_eyeflow_job_does_not_require_dopplerview_h5(tmp_path: Path, monkeypatch) -> None:
+def test_eyeflow_job_requires_existing_dopplerview_h5(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setenv("DM_EYEFLOW_COMMAND", "ef-command")
+    acquisition_id = "251031_ALA_L_1"
+    acquisition = _acquisition(tmp_path, acquisition_id)
+    acquisition.stages["dv"] = StageResult(code="dv", label="DopplerView", status="not_started")
+
+    with pytest.raises(FileNotFoundError, match="DV .h5 file is required"):
+        build_processing_jobs(
+            [acquisition],
+            [acquisition_id],
+            ["ef"],
+            hd_settings_path=None,
+            cache_dir=tmp_path / ".doppler_cache",
+        )
+
+
+def test_eyeflow_can_use_dopplerview_from_same_run(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setenv("DM_DOPPLERVIEW_COMMAND", "dv-command")
     monkeypatch.setenv("DM_EYEFLOW_COMMAND", "ef-command")
     acquisition_id = "251031_ALA_L_1"
     acquisition = _acquisition(tmp_path, acquisition_id)
@@ -163,12 +183,12 @@ def test_eyeflow_job_does_not_require_dopplerview_h5(tmp_path: Path, monkeypatch
     jobs = build_processing_jobs(
         [acquisition],
         [acquisition_id],
-        ["ef"],
+        ["ef", "dv"],
         hd_settings_path=None,
         cache_dir=tmp_path / ".doppler_cache",
     )
 
-    assert [job.stage for job in jobs] == ["ef"]
+    assert [job.stage for job in jobs] == ["dv", "ef"]
 
 
 def test_angioeye_job_uses_existing_eyeflow_h5_and_absolute_paths(tmp_path: Path, monkeypatch) -> None:
@@ -310,12 +330,40 @@ def test_run_processing_jobs_deletes_existing_stage_folder_before_launch(tmp_pat
 
 def test_missing_default_processing_tools_respects_command_override(monkeypatch) -> None:
     monkeypatch.setattr(processing.importlib.util, "find_spec", lambda _name: None)
+    monkeypatch.setattr(processing, "_find_uv_git_cli", lambda _tool_config: None)
 
     assert missing_default_processing_tools(["hd"]) == ["hd"]
 
     monkeypatch.setenv("DM_HOLODOPPLER_COMMAND", "holodoppler.exe")
 
     assert missing_default_processing_tools(["hd"]) == []
+
+
+def test_missing_default_processing_tools_accepts_uv_git_cli(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.setattr(processing.importlib.util, "find_spec", lambda _name: None)
+    monkeypatch.setattr(processing, "_find_uv_git_cli", lambda _tool_config: tmp_path / "cli.py")
+
+    assert missing_default_processing_tools(["ef", "ae"]) == []
+
+
+def test_missing_default_processing_tools_accepts_frozen_processing_bundle(monkeypatch) -> None:
+    monkeypatch.setattr(processing.importlib.util, "find_spec", lambda _name: None)
+    monkeypatch.setattr(processing, "_find_uv_git_cli", lambda _tool_config: None)
+    monkeypatch.setattr(processing.sys, "frozen", True, raising=False)
+
+    assert missing_default_processing_tools(["ef", "ae"]) == []
+    assert missing_default_processing_tools(["hd"]) == ["hd"]
+
+
+def test_frozen_processing_command_prefix_uses_launcher_dispatch(monkeypatch) -> None:
+    monkeypatch.setattr(processing.sys, "frozen", True, raising=False)
+    monkeypatch.setattr(processing.sys, "executable", r"C:\App\DopplerManager.exe")
+
+    assert processing.command_prefix_for_stage("dv") == (
+        r"C:\App\DopplerManager.exe",
+        processing.PROCESSING_CLI_SENTINEL,
+        "dv",
+    )
 
 
 def test_run_single_job_keeps_progress_as_replaceable_log_lines(tmp_path: Path) -> None:
@@ -367,6 +415,30 @@ def test_bundled_holodoppler_defaults_are_discovered_and_preferred(tmp_path: Pat
     assert default_settings in discovered
     assert debug_settings in discovered
     assert preferred_holodoppler_settings(discovered) == debug_settings
+
+
+def test_processing_defaults_dir_prefers_pyinstaller_bundle(tmp_path: Path, monkeypatch) -> None:
+    bundled = tmp_path / "_internal" / "processing_defaults"
+    bundled.mkdir(parents=True)
+    exe_defaults = tmp_path / "installed" / "processing_defaults"
+    exe_defaults.mkdir(parents=True)
+    monkeypatch.setattr(processing.sys, "_MEIPASS", str(tmp_path / "_internal"), raising=False)
+    monkeypatch.setattr(processing.sys, "frozen", True, raising=False)
+    monkeypatch.setattr(processing.sys, "executable", str(tmp_path / "installed" / "DopplerManager.exe"))
+    monkeypatch.setattr(processing, "REPO_PROCESSING_DEFAULTS", tmp_path / "repo" / "processing_defaults")
+
+    assert processing_defaults_dir() == bundled
+
+
+def test_processing_defaults_dir_uses_installed_exe_neighbor(tmp_path: Path, monkeypatch) -> None:
+    exe_defaults = tmp_path / "installed" / "processing_defaults"
+    exe_defaults.mkdir(parents=True)
+    monkeypatch.delattr(processing.sys, "_MEIPASS", raising=False)
+    monkeypatch.setattr(processing.sys, "frozen", True, raising=False)
+    monkeypatch.setattr(processing.sys, "executable", str(tmp_path / "installed" / "DopplerManager.exe"))
+    monkeypatch.setattr(processing, "REPO_PROCESSING_DEFAULTS", tmp_path / "repo" / "processing_defaults")
+
+    assert processing_defaults_dir() == exe_defaults
 
 
 def test_pipeline_defaults_prefer_installed_tool_settings(tmp_path: Path, monkeypatch) -> None:

@@ -14,8 +14,8 @@ from doppler_manager.processing import (
     PROGRESS_LOG_PREFIX,
     available_pipelines_for_stage,
     build_processing_jobs,
+    bundled_holodoppler_settings_dir,
     default_pipelines_for_stage,
-    discover_holodoppler_settings,
     holodoppler_settings_from_path,
     missing_default_processing_tools,
     needed_processing_stages,
@@ -33,6 +33,7 @@ STAGE_OPTIONS = {
 }
 
 LOG_LIMIT = 700
+CUSTOM_HOLODOPPLER_SETTINGS = "Upload custom settings JSON..."
 
 
 def render_processing_tab(
@@ -253,35 +254,49 @@ def _render_pipeline_selection(
     return tuple(selected)
 
 
-def _render_hd_settings(root_input: str, selected_stages: list[str]) -> Optional[Path]:
+def _render_hd_settings(_root_input: str, selected_stages: list[str]) -> Optional[Path]:
     if "hd" not in selected_stages:
         return None
 
-    discovered = discover_holodoppler_settings(root_input)
-    preferred = preferred_holodoppler_settings(discovered)
-    default_value = str(preferred.parent if preferred else "")
-    settings_input = st.text_input(
-        "HoloDoppler settings",
-        value=st.session_state.get("hd_settings_input", default_value),
-        placeholder=r"D:\path\to\HoloDopplerPython\parameters or a JSON file",
-    )
-    st.session_state.hd_settings_input = settings_input
-
-    options = holodoppler_settings_from_path(settings_input)
+    options = holodoppler_settings_from_path(bundled_holodoppler_settings_dir())
     if not options:
-        st.warning(
-            "Point HoloDoppler settings to a folder containing JSON settings, or to one JSON file."
-        )
-        return None
+        st.warning("No bundled HoloDoppler settings were found.")
+        return _render_custom_hd_settings_upload()
 
     default_index = _preferred_index(options)
+    select_options: list[Path | str] = [*options, CUSTOM_HOLODOPPLER_SETTINGS]
     selected = st.selectbox(
-        "Holodoppler Settings File",
-        options,
+        "HoloDoppler settings",
+        select_options,
         index=default_index,
-        format_func=lambda path: path.name,
+        format_func=_format_hd_settings_option,
     )
-    return selected
+    if selected == CUSTOM_HOLODOPPLER_SETTINGS:
+        return _render_custom_hd_settings_upload()
+    return selected if isinstance(selected, Path) else None
+
+
+def _format_hd_settings_option(option: Path | str) -> str:
+    if isinstance(option, Path):
+        return option.name
+    return option
+
+
+def _render_custom_hd_settings_upload() -> Optional[Path]:
+    uploaded = st.file_uploader(
+        "Upload HoloDoppler settings JSON",
+        type=["json"],
+        key="hd_settings_upload",
+    )
+    if uploaded is None:
+        st.warning("Upload a HoloDoppler settings JSON file.")
+        return None
+
+    safe_name = Path(uploaded.name).name or "uploaded_holodoppler_settings.json"
+    target = Path(".doppler_cache") / "processing" / "holodoppler_settings" / safe_name
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(uploaded.getvalue())
+    return target
 
 
 def _preferred_index(options: list[Path]) -> int:
