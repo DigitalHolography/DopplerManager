@@ -13,7 +13,7 @@ AppId={{9E92E34C-995E-42D1-9DF8-84B6842DF9CF}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
-DefaultDirName={autopf}\{#MyAppInstallDirName}\{#MyAppVersion}
+DefaultDirName={localappdata}\Programs\{#MyAppInstallDirName}\{#MyAppVersion}
 DefaultGroupName={#MyAppName}
 DisableDirPage=yes
 DisableProgramGroupPage=yes
@@ -25,7 +25,7 @@ SolidCompression=yes
 WizardStyle=modern
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
-PrivilegesRequired=admin
+PrivilegesRequired=lowest
 UninstallDisplayIcon={app}\{#MyAppExeName}
 
 [Languages]

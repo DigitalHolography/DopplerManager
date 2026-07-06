@@ -49,8 +49,6 @@ uv run pyinstaller `
     --hidden-import streamlit.web.cli `
     --hidden-import watchdog.observers.winapi `
     --hidden-import doppler_manager.app_scan `
-    # --exclude-module doppler_manager.processing `
-    # --exclude-module doppler_manager.ui.processing `
     src\doppler_manager\launcher_scan.py
 
 if (-not (Test-Path (Join-Path $DistApp "DopplerManager.exe"))) {
