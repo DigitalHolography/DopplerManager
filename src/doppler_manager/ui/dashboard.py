@@ -10,8 +10,8 @@ import zipfile
 import pandas as pd
 import streamlit as st
 
-from doppler_managing.models import AcquisitionResult, FileRef, STAGE_ORDER
-from doppler_managing.ui.formatting import status_text
+from doppler_manager.models import AcquisitionResult, FileRef, STAGE_ORDER
+from doppler_manager.ui.formatting import status_text
 
 
 FILTER_REGEX_KEY = "index_filter_acquisition_regex"

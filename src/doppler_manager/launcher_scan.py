@@ -19,7 +19,7 @@ from typing import Protocol
 
 
 APP_NAME = "DopplerManager"
-LOG_FILE_NAME = "DopplerManagerScan.log"
+LOG_FILE_NAME = "DopplerManager.log"
 STATE_FILE_NAME = "server_state.json"
 PORT_HOST = "127.0.0.1"
 PORT_START = 8501
@@ -54,7 +54,7 @@ def main() -> None:
 def _run(
     log_path: Path,
     *,
-    app_module: str = "doppler_managing.app_scan",
+    app_module: str = "doppler_manager.app_scan",
     file_watcher_type: str = "none",
 ) -> None:
     fingerprint = _application_fingerprint()

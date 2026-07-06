@@ -24,10 +24,10 @@ $ReleaseVenv = Join-Path $Root ".venv-release"
 $env:UV_PROJECT_ENVIRONMENT = $ReleaseVenv
 Write-Host "Using isolated release environment: $ReleaseVenv"
 
-uv sync --no-dev --group release
+uv sync --no-dev --extra processing --group release
 
-$DistApp = Join-Path $Root "dist\DopplerManagerScan"
-$BuildApp = Join-Path $Root "build\DopplerManagerScan"
+$DistApp = Join-Path $Root "dist\DopplerManager"
+$BuildApp = Join-Path $Root "build\DopplerManager"
 $InstallerOut = Join-Path $Root "dist\installer"
 
 foreach ($Path in @($DistApp, $BuildApp, $InstallerOut)) {
@@ -42,18 +42,18 @@ uv run pyinstaller `
     --onedir `
     --noconsole `
     --specpath build `
-    --name DopplerManagerScan `
+    --name DopplerManager `
     --collect-all streamlit `
     --collect-data imageio_ffmpeg `
     --hidden-import streamlit.web.cli `
     --hidden-import watchdog.observers.winapi `
-    --hidden-import doppler_managing.app_scan `
-    --exclude-module doppler_managing.processing `
-    --exclude-module doppler_managing.ui.processing `
-    src\doppler_managing\launcher_scan.py
+    --hidden-import doppler_manager.app_scan `
+    # --exclude-module doppler_manager.processing `
+    # --exclude-module doppler_manager.ui.processing `
+    src\doppler_manager\launcher_scan.py
 
-if (-not (Test-Path (Join-Path $DistApp "DopplerManagerScan.exe"))) {
-    throw "PyInstaller did not produce dist\DopplerManagerScan\DopplerManagerScan.exe."
+if (-not (Test-Path (Join-Path $DistApp "DopplerManager.exe"))) {
+    throw "PyInstaller did not produce dist\DopplerManager\DopplerManager.exe."
 }
 
 if (-not $InnoCompiler) {
@@ -77,9 +77,9 @@ if (-not $InnoCompiler -or -not (Test-Path $InnoCompiler)) {
 
 $env:DM_VERSION = $Version
 New-Item -ItemType Directory -Force -Path $InstallerOut | Out-Null
-& $InnoCompiler (Join-Path $Root "packaging\DopplerManagerScan.iss")
+& $InnoCompiler (Join-Path $Root "packaging\DopplerManager.iss")
 
-$Installer = Join-Path $InstallerOut "DopplerManagerScan-$Version-setup.exe"
+$Installer = Join-Path $InstallerOut "DopplerManager-$Version-setup.exe"
 if (-not (Test-Path $Installer)) {
     throw "Inno Setup did not produce $Installer."
 }

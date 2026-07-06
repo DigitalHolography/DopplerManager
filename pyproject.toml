@@ -12,15 +12,15 @@ dependencies = [
 ]
 
 [project.scripts]
-dopplermanager = "doppler_managing.app:launch"
+dopplermanager = "doppler_manager.app:launch"
 
 [project.optional-dependencies]
 processing = [
-    "holodoppler @ git+https://github.com/DigitalHolography/HoloDopplerPython.git@doppler_managing",
-    "dopplerview @ git+https://github.com/DigitalHolography/DopplerView.git@doppler_managing",
+    "holodoppler @ git+https://github.com/DigitalHolography/HoloDopplerPython.git@doppler_manager",
+    "dopplerview @ git+https://github.com/DigitalHolography/DopplerView.git@doppler_manager",
     "onnxruntime>=1.25,<1.26",
-    "EyeFlow @ git+https://github.com/DigitalHolography/EyeFlowPython.git@doppler_managing",
-    "AngioEye @ git+https://github.com/DigitalHolography/AngioEye.git@doppler_managing",
+    "EyeFlow @ git+https://github.com/DigitalHolography/EyeFlowPython.git@doppler_manager",
+    "AngioEye @ git+https://github.com/DigitalHolography/AngioEye.git@doppler_manager",
 ]
 
 [build-system]
@@ -32,7 +32,7 @@ dev = ["pytest>=8.0"]
 release = ["pyinstaller>=6.0,<7"]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/doppler_managing"]
+packages = ["src/doppler_manager"]
 
 [tool.hatch.metadata]
 allow-direct-references = true

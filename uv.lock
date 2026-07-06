@@ -38,7 +38,7 @@ wheels = [
 [[package]]
 name = "angioeye"
 version = "1.15.0"
-source = { git = "https://github.com/DigitalHolography/AngioEye.git?rev=doppler_managing#9442eb81ea3cf860de9b5b6f94d8248e36c82ba7" }
+source = { git = "https://github.com/DigitalHolography/AngioEye.git?rev=doppler_manager#9442eb81ea3cf860de9b5b6f94d8248e36c82ba7" }
 dependencies = [
     { name = "h5py" },
     { name = "jinja2" },
@@ -385,10 +385,10 @@ release = [
 
 [package.metadata]
 requires-dist = [
-    { name = "angioeye", marker = "extra == 'processing'", git = "https://github.com/DigitalHolography/AngioEye.git?rev=doppler_managing" },
-    { name = "dopplerview", marker = "extra == 'processing'", git = "https://github.com/DigitalHolography/DopplerView.git?rev=doppler_managing" },
-    { name = "eyeflow", marker = "extra == 'processing'", git = "https://github.com/DigitalHolography/EyeFlowPython.git?rev=doppler_managing" },
-    { name = "holodoppler", marker = "extra == 'processing'", git = "https://github.com/DigitalHolography/HoloDopplerPython.git?rev=doppler_managing" },
+    { name = "angioeye", marker = "extra == 'processing'", git = "https://github.com/DigitalHolography/AngioEye.git?rev=doppler_manager" },
+    { name = "dopplerview", marker = "extra == 'processing'", git = "https://github.com/DigitalHolography/DopplerView.git?rev=doppler_manager" },
+    { name = "eyeflow", marker = "extra == 'processing'", git = "https://github.com/DigitalHolography/EyeFlowPython.git?rev=doppler_manager" },
+    { name = "holodoppler", marker = "extra == 'processing'", git = "https://github.com/DigitalHolography/HoloDopplerPython.git?rev=doppler_manager" },
     { name = "imageio-ffmpeg", specifier = ">=0.5" },
     { name = "onnxruntime", marker = "extra == 'processing'", specifier = ">=1.25,<1.26" },
     { name = "pandas", specifier = ">=2.0,<3" },
@@ -404,7 +404,7 @@ release = [{ name = "pyinstaller", specifier = ">=6.0,<7" }]
 [[package]]
 name = "dopplerview"
 version = "1.5.0"
-source = { git = "https://github.com/DigitalHolography/DopplerView.git?rev=doppler_managing#717e7b53ea7338cafb3d91e70fcf45ecc780c8e7" }
+source = { git = "https://github.com/DigitalHolography/DopplerView.git?rev=doppler_manager#717e7b53ea7338cafb3d91e70fcf45ecc780c8e7" }
 dependencies = [
     { name = "h5py" },
     { name = "huggingface-hub" },
@@ -429,7 +429,7 @@ dependencies = [
 [[package]]
 name = "eyeflow"
 version = "0.7.0"
-source = { git = "https://github.com/DigitalHolography/EyeFlowPython.git?rev=doppler_managing#2d42e4a03483d73bdb13a2b4cf71f7dac4042ab4" }
+source = { git = "https://github.com/DigitalHolography/EyeFlowPython.git?rev=doppler_manager#2d42e4a03483d73bdb13a2b4cf71f7dac4042ab4" }
 dependencies = [
     { name = "h5py" },
     { name = "joblib" },
@@ -603,7 +603,7 @@ wheels = [
 [[package]]
 name = "holodoppler"
 version = "0.2.0"
-source = { git = "https://github.com/DigitalHolography/HoloDopplerPython.git?rev=doppler_managing#05d0b7c822648283e7dd5809a7a71cee5730aebd" }
+source = { git = "https://github.com/DigitalHolography/HoloDopplerPython.git?rev=doppler_manager#05d0b7c822648283e7dd5809a7a71cee5730aebd" }
 dependencies = [
     { name = "cinereader" },
     { name = "cupy-cuda13x" },

@@ -15,14 +15,14 @@ CLI_TOOLS = {
         "distribution": "EyeFlow",
         "project": "EyeFlow",
         "root_module": "eye_flow",
-        "alias": "_doppler_managing_eyeflow_cli",
+        "alias": "_doppler_manager_eyeflow_cli",
         "marker": "Run EyeFlow pipelines",
     },
     "angioeye": {
         "distribution": "AngioEye",
         "project": "AngioEye",
         "root_module": "angio_eye",
-        "alias": "_doppler_managing_angioeye_cli",
+        "alias": "_doppler_manager_angioeye_cli",
         "marker": "Run AngioEye pipelines",
     },
 }
@@ -44,7 +44,7 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     if tool == "eyeflow":
-        import doppler_managing._eyeflow_runtime_limits as runtime_limits
+        import doppler_manager._eyeflow_runtime_limits as runtime_limits
 
         sys.modules.setdefault("runtime_limits", runtime_limits)
 

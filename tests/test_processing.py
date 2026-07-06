@@ -1,9 +1,10 @@
 import sys
 from pathlib import Path
 
-import doppler_managing.processing as processing
-from doppler_managing.models import AcquisitionResult, FileRef, StageResult
-from doppler_managing.processing import (
+import doppler_manager._external_cli_runner as external_cli_runner
+import doppler_manager.processing as processing
+from doppler_manager.models import AcquisitionResult, FileRef, StageResult
+from doppler_manager.processing import (
     build_processing_jobs,
     discover_holodoppler_settings,
     install_angioeye_output,
@@ -366,3 +367,74 @@ def test_bundled_holodoppler_defaults_are_discovered_and_preferred(tmp_path: Pat
     assert default_settings in discovered
     assert debug_settings in discovered
     assert preferred_holodoppler_settings(discovered) == debug_settings
+
+
+def test_pipeline_defaults_prefer_installed_tool_settings(tmp_path: Path, monkeypatch) -> None:
+    checkout = tmp_path / "uv-cache" / "git-v0" / "checkouts" / "repo" / "abcdef0"
+    upstream_settings = checkout / "default_settings.json"
+    _write(
+        checkout / "pyproject.toml",
+        b'[project]\nname = "EyeFlow"\n',
+    )
+    _write(checkout / "src" / "cli.py", b'"""Run EyeFlow pipelines."""\n')
+    _write(
+        upstream_settings,
+        (
+            b'{"pipeline_visibility": {'
+            b'"upstream_selected": true, '
+            b'"upstream_available": false'
+            b"}}"
+        ),
+    )
+
+    class FakeDistribution:
+        def read_text(self, name: str) -> str | None:
+            if name != "direct_url.json":
+                return None
+            return (
+                '{"url": "https://github.com/DigitalHolography/EyeFlowPython.git", '
+                '"vcs_info": {"vcs": "git", "commit_id": "abcdef0123456789"}}'
+    )
+
+    monkeypatch.setenv("UV_CACHE_DIR", str(tmp_path / "uv-cache"))
+    monkeypatch.setattr(
+        external_cli_runner.metadata,
+        "distribution",
+        lambda _name: FakeDistribution(),
+    )
+
+    repo_defaults = tmp_path / "processing_defaults" / "eyeflow"
+    _write(
+        repo_defaults / "default_settings.json",
+        b'{"pipeline_visibility": {"repo_selected": true}}',
+    )
+    monkeypatch.setattr(processing, "REPO_PROCESSING_DEFAULTS", tmp_path / "processing_defaults")
+
+    assert processing.available_pipelines_for_stage("ef") == (
+        "upstream_selected",
+        "upstream_available",
+        "waveform_shape_metrics",
+    )
+    assert processing.default_pipelines_for_stage("ef") == ("upstream_selected",)
+
+
+def test_pipeline_defaults_fall_back_to_repo_settings(tmp_path: Path, monkeypatch) -> None:
+    repo_defaults = tmp_path / "processing_defaults" / "angioeye"
+    _write(
+        repo_defaults / "default_settings.json",
+        (
+            b'{"pipeline_visibility": {'
+            b'"repo_selected": true, '
+            b'"repo_available": false'
+            b"}}"
+        ),
+    )
+    monkeypatch.setattr(processing, "REPO_PROCESSING_DEFAULTS", tmp_path / "processing_defaults")
+    monkeypatch.setattr(processing, "_upstream_pipeline_settings_path", lambda _stage: None)
+
+    assert processing.available_pipelines_for_stage("ae") == (
+        "repo_selected",
+        "repo_available",
+        "waveform_shape_metrics",
+    )
+    assert processing.default_pipelines_for_stage("ae") == ("repo_selected",)

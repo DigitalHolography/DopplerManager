@@ -168,10 +168,10 @@ To override the release version:
 .\scripts\build_scan_release.ps1 -Version 0.4.0
 ```
 
-The script builds `dist\DopplerManagerScan\DopplerManagerScan.exe` with PyInstaller, then creates:
+The script builds `dist\DopplerManager\DopplerManager.exe` with PyInstaller, then creates:
 
 ```text
-dist\installer\DopplerManagerScan-<version>-setup.exe
+dist\installer\DopplerManager-<version>-setup.exe
 ```
 
 The installer uses Inno Setup and installs the application under:
@@ -180,7 +180,7 @@ The installer uses Inno Setup and installs the application under:
 C:\Program Files\DopplerManager\<version>\
 ```
 
-The packaged entry point is `src\doppler_managing\app_scan.py`, which only renders:
+The packaged entry point is `src\doppler_manager\app_scan.py`, which only renders:
 
 - `Acquisition Index`
 - `Acquisition Details`
@@ -197,7 +197,7 @@ git push origin v0.4.0
 If the installed executable does not open a browser on another PC, check the diagnostic log:
 
 ```text
-%LOCALAPPDATA%\DopplerManager\logs\DopplerManagerScan.log
+%LOCALAPPDATA%\DopplerManager\logs\DopplerManager.log
 ```
 
 The installer also creates Start Menu shortcuts named:
@@ -231,8 +231,8 @@ Default commands:
 ```text
 python -c "from holodoppler.cli import main; raise SystemExit(main())"
 python -m dopplerview.cli
-python -m doppler_managing._external_cli_runner eyeflow
-python -m doppler_managing._external_cli_runner angioeye
+python -m doppler_manager._external_cli_runner eyeflow
+python -m doppler_manager._external_cli_runner angioeye
 ```
 
 Commands can be overridden with local executable paths:
@@ -274,7 +274,7 @@ uv run pytest
 ## Code Structure
 
 ```text
-src/doppler_managing/
+src/doppler_manager/
   app.py                       Streamlit entry point
   models.py                    Scan data models
   scanner.py                   Acquisition and status detection

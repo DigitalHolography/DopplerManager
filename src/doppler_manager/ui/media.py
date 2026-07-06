@@ -10,8 +10,8 @@ from typing import Dict, List, Optional, Tuple
 
 import streamlit as st
 
-from doppler_managing.models import AcquisitionResult, FileRef, STAGE_LABELS, STAGE_ORDER
-from doppler_managing.ui.formatting import format_size, format_timestamp
+from doppler_manager.models import AcquisitionResult, FileRef, STAGE_LABELS, STAGE_ORDER
+from doppler_manager.ui.formatting import format_size, format_timestamp
 
 
 IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg"}

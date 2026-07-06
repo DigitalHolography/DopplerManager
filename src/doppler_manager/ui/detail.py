@@ -7,9 +7,9 @@ from typing import List, Optional
 import pandas as pd
 import streamlit as st
 
-from doppler_managing.models import AcquisitionResult, FileRef, STAGE_LABELS, STAGE_ORDER
-from doppler_managing.ui.formatting import format_size, format_timestamp, status_text
-from doppler_managing.ui.media import render_media_preview
+from doppler_manager.models import AcquisitionResult, FileRef, STAGE_LABELS, STAGE_ORDER
+from doppler_manager.ui.formatting import format_size, format_timestamp, status_text
+from doppler_manager.ui.media import render_media_preview
 
 
 def render_acquisition_detail(acquisitions: List[AcquisitionResult], filtered: pd.DataFrame) -> None:

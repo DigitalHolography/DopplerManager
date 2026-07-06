@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from doppler_managing.ui.media import _video_cache_path
+from doppler_manager.ui.media import _video_cache_path
 
 
 def test_video_cache_path_uses_user_writable_local_appdata(monkeypatch, tmp_path: Path) -> None:

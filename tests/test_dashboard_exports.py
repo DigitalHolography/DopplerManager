@@ -5,8 +5,8 @@ import zipfile
 
 import pandas as pd
 
-from doppler_managing.models import AcquisitionResult, FileRef, STAGE_LABELS, STAGE_ORDER, StageResult
-from doppler_managing.ui.dashboard import (
+from doppler_manager.models import AcquisitionResult, FileRef, STAGE_LABELS, STAGE_ORDER, StageResult
+from doppler_manager.ui.dashboard import (
     build_missing_holo_lists_zip,
     missing_holo_paths_by_stage,
     scanned_holo_paths,

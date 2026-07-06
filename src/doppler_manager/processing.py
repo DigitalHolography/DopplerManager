@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
+from ._external_cli_runner import CLI_TOOLS, _find_uv_git_cli
 from .models import AcquisitionResult
 
 
@@ -30,6 +31,10 @@ DEFAULT_PIPELINES_BY_STAGE = {
     "ae": DEFAULT_ANGIOEYE_PIPELINES,
 }
 PIPELINE_SETTINGS_FOLDERS = {
+    "ef": "eyeflow",
+    "ae": "angioeye",
+}
+PIPELINE_SETTINGS_TOOLS = {
     "ef": "eyeflow",
     "ae": "angioeye",
 }
@@ -52,13 +57,13 @@ DEFAULT_COMMAND_PREFIXES = {
     "ef": (
         sys.executable,
         "-m",
-        "doppler_managing._external_cli_runner",
+        "doppler_manager._external_cli_runner",
         "eyeflow",
     ),
     "ae": (
         sys.executable,
         "-m",
-        "doppler_managing._external_cli_runner",
+        "doppler_manager._external_cli_runner",
         "angioeye",
     ),
 }
@@ -810,11 +815,10 @@ def _safe_resolve(path: Path) -> Path:
 
 
 def _pipeline_visibility(stage: str) -> dict[str, bool]:
-    settings_path = (
-        REPO_PROCESSING_DEFAULTS
-        / PIPELINE_SETTINGS_FOLDERS[stage]
-        / "default_settings.json"
-    )
+    settings_path = _default_pipeline_settings_path(stage)
+    if settings_path is None:
+        return {}
+
     try:
         payload = json.loads(settings_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
@@ -828,6 +832,28 @@ def _pipeline_visibility(stage: str) -> dict[str, bool]:
         for name, enabled in visibility.items()
         if str(name).strip()
     }
+
+
+def _default_pipeline_settings_path(stage: str) -> Path | None:
+    upstream = _upstream_pipeline_settings_path(stage)
+    if upstream is not None:
+        return upstream
+
+    fallback = (
+        REPO_PROCESSING_DEFAULTS
+        / PIPELINE_SETTINGS_FOLDERS[stage]
+        / "default_settings.json"
+    )
+    return fallback if fallback.is_file() else None
+
+
+def _upstream_pipeline_settings_path(stage: str) -> Path | None:
+    tool_name = PIPELINE_SETTINGS_TOOLS[stage]
+    cli_path = _find_uv_git_cli(CLI_TOOLS[tool_name])
+    if cli_path is None:
+        return None
+    settings_path = cli_path.parents[1] / "default_settings.json"
+    return settings_path if settings_path.is_file() else None
 
 
 def _normalize_pipeline_selection(

@@ -4,7 +4,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, Optional
 
-from doppler_managing.models import FileRef, STATUS_LABELS
+from doppler_manager.models import FileRef, STATUS_LABELS
 
 
 STATUS_COLORS = {

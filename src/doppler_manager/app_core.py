@@ -5,18 +5,18 @@ from pathlib import Path
 
 import streamlit as st
 
-from doppler_managing.scanner import (
+from doppler_manager.scanner import (
     ScanOptions,
     holo_filter_entries_from_text,
     holo_filter_ids_from_text,
     scan_root,
 )
-from doppler_managing.ui.dashboard import (
+from doppler_manager.ui.dashboard import (
     render_filters,
     render_overview_table,
 )
-from doppler_managing.ui.detail import render_acquisition_detail
-from doppler_managing.ui.theme import apply_dark_theme
+from doppler_manager.ui.detail import render_acquisition_detail
+from doppler_manager.ui.theme import apply_dark_theme
 
 
 DEFAULT_MAX_DEPTH = 8

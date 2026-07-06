@@ -8,8 +8,8 @@ from typing import Optional
 import pandas as pd
 import streamlit as st
 
-from doppler_managing.models import AcquisitionResult, ScanResult
-from doppler_managing.processing import (
+from doppler_manager.models import AcquisitionResult, ScanResult
+from doppler_manager.processing import (
     PROCESSING_STAGES,
     PROGRESS_LOG_PREFIX,
     available_pipelines_for_stage,
@@ -22,7 +22,7 @@ from doppler_managing.processing import (
     preferred_holodoppler_settings,
     run_processing_jobs,
 )
-from doppler_managing.scanner import ScanOptions
+from doppler_manager.scanner import ScanOptions
 
 
 STAGE_OPTIONS = {
