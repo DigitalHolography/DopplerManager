@@ -12,7 +12,7 @@ dependencies = [
 ]
 
 [project.scripts]
-dopplermanager = "doppler_manager.app:launch"
+dopplermanager = "doppler_manager.launcher:launch"
 
 [project.optional-dependencies]
 processing = [

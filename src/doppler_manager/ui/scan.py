@@ -1,22 +1,14 @@
 from __future__ import annotations
 
-from collections.abc import Callable
 from pathlib import Path
 
 import streamlit as st
 
-from doppler_manager.scanner import (
+from doppler_manager.scan import (
     ScanOptions,
     holo_filter_entries_from_text,
     holo_filter_ids_from_text,
-    scan_root,
 )
-from doppler_manager.ui.dashboard import (
-    render_filters,
-    render_overview_table,
-)
-from doppler_manager.ui.detail import render_acquisition_detail
-from doppler_manager.ui.theme import apply_dark_theme
 
 
 DEFAULT_MAX_DEPTH = 8
@@ -198,114 +190,7 @@ export default function(component) {
 )
 
 
-ProcessingRenderer = Callable[..., None]
-
-
-def main(processing_renderer: ProcessingRenderer | None = None) -> None:
-    st.set_page_config(
-        page_title="Doppler Manager",
-        page_icon="DM",
-        layout="wide",
-        initial_sidebar_state="collapsed",
-    )
-    apply_dark_theme()
-
-    default_root = Path.cwd() / "software_pipeline_validation"
-    st.title("Doppler Manager")
-
-    root_input, scan_options, run_scan, refresh_scan, scan_hint_slot = _render_scan_bar(default_root)
-
-    if run_scan:
-        with st.spinner("Scanning pipeline format..."):
-            st.session_state.scan_result = _scan_with_options(root_input, scan_options)
-        st.rerun()
-    elif refresh_scan:
-        with st.spinner("Refreshing pipeline format..."):
-            st.session_state.scan_result = _refresh_scan(root_input, scan_options)
-        st.rerun()
-
-    if "scan_result" not in st.session_state:
-        scan_hint_slot.info(
-            "Select a NAS or local root path, then run a scan. Large .holo and .h5 files are never loaded."
-        )
-        return
-
-    scan_result = st.session_state.scan_result
-    acquisitions = scan_result.acquisitions
-
-    _render_scan_messages(scan_result)
-
-    if not acquisitions:
-        st.warning("No compatible acquisition was detected under this root.")
-        return
-
-    with st.container(border=True, key="main_mode_tabs"):
-        if processing_renderer is None:
-            index_tab, detail_tab = st.tabs(["Acquisition Index", "Acquisition Details"])
-            processing_tab = None
-        else:
-            index_tab, detail_tab, processing_tab = st.tabs(
-                ["Acquisition Index", "Acquisition Details", "Processing"]
-            )
-
-        with index_tab:
-            frame = render_filters(acquisitions, scan_result)
-            render_overview_table(frame)
-            st.caption(
-                f"{scan_result.visited_entries:,}".replace(",", " ")
-                + f" entries inspected across {scan_result.visited_dirs} folders."
-            )
-
-        with detail_tab:
-            render_acquisition_detail(acquisitions, frame)
-
-        if processing_tab is not None and processing_renderer is not None:
-            with processing_tab:
-                processing_renderer(scan_result, frame, root_input, scan_options, _refresh_scan)
-
-
-@st.cache_data(show_spinner=False)
-def _cached_scan(
-    root: str,
-    max_depth: int,
-    max_entries: int,
-    preview_limit: int,
-    read_versions: bool,
-    holo_filter_ids: tuple[str, ...] | None,
-    holo_filter_entries: tuple[str, ...] | None,
-):
-    options = ScanOptions(
-        max_depth=max_depth,
-        max_entries=max_entries,
-        preview_limit_per_stage=preview_limit,
-        read_versions=read_versions,
-        holo_filter_ids=set(holo_filter_ids) if holo_filter_ids is not None else None,
-        holo_filter_entries=holo_filter_entries,
-    )
-    return scan_root(root, options)
-
-
-def _refresh_scan(
-    root: str,
-    options: ScanOptions,
-):
-    _cached_scan.clear()
-    return _scan_with_options(root, options)
-
-
-def _scan_with_options(root: str, options: ScanOptions):
-    return _cached_scan(
-        root,
-        options.max_depth,
-        options.max_entries,
-        options.preview_limit_per_stage,
-        options.read_versions,
-        _holo_filter_cache_key(options),
-        _holo_filter_entries_cache_key(options),
-    )
-
-
-def _render_scan_bar(default_root: Path):
+def render_scan_bar(default_root: Path):
     root_default = str(default_root if default_root.exists() else Path.cwd())
     st.session_state.setdefault(SCAN_ROOT_KEY, root_default)
     st.session_state.setdefault(SCAN_INPUT_MODE_KEY, "browse")
@@ -346,10 +231,10 @@ def _render_scan_bar(default_root: Path):
             width="stretch",
             key="scan_button",
         )
-        refresh_scan = False
+        refresh_clicked = False
         settings_col = action_cols[2] if has_scan_result else action_cols[1]
         if has_scan_result:
-            refresh_scan = action_cols[1].button(
+            refresh_clicked = action_cols[1].button(
                 "Refresh",
                 icon=":material/refresh:",
                 help="Refresh",
@@ -366,7 +251,17 @@ def _render_scan_bar(default_root: Path):
         holo_filter_ids=holo_filter_ids,
         holo_filter_entries=holo_filter_entries,
     )
-    return root_input, options, run_scan, refresh_scan, scan_hint_slot
+    return root_input, options, run_scan, refresh_clicked, scan_hint_slot
+
+
+def render_scan_messages(scan_result) -> None:
+    if scan_result.truncated:
+        st.warning(
+            "The scan stopped at the configured entry limit. "
+            "Increase the limit or scan a narrower folder."
+        )
+    for error in scan_result.errors:
+        st.error(error)
 
 
 def _render_scan_settings(container) -> tuple[int, int, int, bool]:
@@ -458,18 +353,6 @@ def _clear_holo_filter_list() -> None:
         st.session_state[HOLO_FILTER_UPLOAD_VERSION_KEY] = (
             int(st.session_state.get(HOLO_FILTER_UPLOAD_VERSION_KEY, 0)) + 1
         )
-
-
-def _holo_filter_cache_key(options: ScanOptions) -> tuple[str, ...] | None:
-    if options.holo_filter_ids is None:
-        return None
-    return tuple(sorted(options.holo_filter_ids))
-
-
-def _holo_filter_entries_cache_key(options: ScanOptions) -> tuple[str, ...] | None:
-    if options.holo_filter_entries is None:
-        return None
-    return tuple(options.holo_filter_entries)
 
 
 def _render_scan_root_drop_helper() -> None:
@@ -570,10 +453,3 @@ def _state_value(state, key: str):
     if isinstance(state, dict):
         return state.get(key)
     return getattr(state, key, None)
-
-
-def _render_scan_messages(scan_result) -> None:
-    if scan_result.truncated:
-        st.warning("The scan stopped at the configured entry limit. Increase the limit or scan a narrower folder.")
-    for error in scan_result.errors:
-        st.error(error)

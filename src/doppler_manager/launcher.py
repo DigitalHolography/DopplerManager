@@ -54,6 +54,17 @@ def main() -> None:
         raise
 
 
+def launch() -> None:
+    log_path = _log_path()
+    _log(log_path, "Development launcher started.")
+    _stop_recorded_server(log_path)
+    _run(
+        log_path,
+        app_module="doppler_manager.app",
+        file_watcher_type="auto",
+    )
+
+
 def _run_processing_cli_from_argv() -> int:
     sentinel_index = sys.argv.index(PROCESSING_CLI_SENTINEL)
     args = sys.argv[sentinel_index + 1 :]

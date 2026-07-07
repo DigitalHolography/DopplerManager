@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Sequence, Set, Tuple, Union
 
-from .models import (
+from doppler_manager.models import (
     AcquisitionResult,
     FileRef,
     STAGE_LABELS,
@@ -14,6 +14,12 @@ from .models import (
     StageResult,
     ScanResult,
 )
+from doppler_manager.scan.filters import (
+    holo_filter_allows,
+    holo_filter_entry_path,
+    normalize_holo_filter_entry,
+)
+from doppler_manager.scan.options import DEFAULT_SKIP_DIRS, ScanOptions
 
 
 STAGE_SUFFIXES = {
@@ -23,46 +29,9 @@ STAGE_SUFFIXES = {
     "ae": "_AE",
 }
 
-DEFAULT_SKIP_DIRS = {
-    ".git",
-    ".hg",
-    ".svn",
-    ".venv",
-    "__pycache__",
-    ".pytest_cache",
-    "cache",
-    "output",
-}
-
 TEXT_SUFFIXES = {".txt", ".log"}
 PARAM_SUFFIXES = {".json"}
 PREVIEW_SUFFIXES = {".png", ".jpg", ".jpeg", ".avi", ".mp4", ".mov"}
-
-
-@dataclass
-class ScanOptions:
-    max_depth: int = 8
-    max_entries: int = 250_000
-    preview_limit_per_stage: int = 40
-    read_versions: bool = True
-    max_text_bytes: int = 4_096
-    skip_dirs: Set[str] = field(default_factory=lambda: set(DEFAULT_SKIP_DIRS))
-    holo_filter_ids: Optional[Set[str]] = None
-    holo_filter_entries: Optional[Tuple[str, ...]] = None
-
-    def __post_init__(self) -> None:
-        if self.holo_filter_ids is not None:
-            self.holo_filter_ids = {
-                normalized
-                for value in self.holo_filter_ids
-                if (normalized := _normalize_holo_filter_entry(value))
-            }
-        if self.holo_filter_entries is not None:
-            self.holo_filter_entries = tuple(
-                entry
-                for value in self.holo_filter_entries
-                if (entry := _clean_holo_filter_entry(value))
-            )
 
 
 @dataclass
@@ -145,7 +114,7 @@ def _discover(root: Path, options: ScanOptions) -> Discovery:
                         stage = _stage_from_dir_name(name)
                         if stage:
                             acquisition_id = name[: -len(STAGE_SUFFIXES[stage])]
-                            if not _holo_filter_allows(acquisition_id, options):
+                            if not holo_filter_allows(acquisition_id, options.holo_filter_ids):
                                 continue
                             discovery.stage_dirs[(acquisition_id, stage)] = entry_path
                             if entry_path.parent.name == acquisition_id:
@@ -160,7 +129,7 @@ def _discover(root: Path, options: ScanOptions) -> Discovery:
 
                     elif is_file and name.lower().endswith(".holo"):
                         discovery.all_holo_paths.append(entry_path)
-                        if not _holo_filter_allows(entry_path.stem, options):
+                        if not holo_filter_allows(entry_path.stem, options.holo_filter_ids):
                             continue
                         discovery.holo_by_id[entry_path.stem] = entry_path
                         sibling_dir = entry_path.with_suffix("")
@@ -179,11 +148,11 @@ def _scan_holo_filter_entries(root: Path, options: ScanOptions) -> ScanResult:
     discovery.visited_entries = len(entries)
 
     for entry in entries:
-        acquisition_id = _normalize_holo_filter_entry(entry)
+        acquisition_id = normalize_holo_filter_entry(entry)
         if acquisition_id:
             discovery.listed_ids.add(acquisition_id)
 
-        holo_path = _holo_filter_entry_path(entry, root)
+        holo_path = holo_filter_entry_path(entry, root)
         if holo_path is None:
             continue
 
@@ -239,64 +208,6 @@ def _candidate_ids(discovery: Discovery, options: ScanOptions) -> Set[str]:
     if options.holo_filter_ids is not None:
         ids &= options.holo_filter_ids
     return ids
-
-
-def holo_filter_ids_from_text(text: str) -> Set[str]:
-    ids: Set[str] = set()
-    for entry in holo_filter_entries_from_text(text):
-        normalized = _normalize_holo_filter_entry(entry)
-        if normalized:
-            ids.add(normalized)
-    return ids
-
-
-def holo_filter_entries_from_text(text: str) -> Tuple[str, ...]:
-    return tuple(
-        entry
-        for line in text.splitlines()
-        if (entry := _clean_holo_filter_entry(line))
-    )
-
-
-def _holo_filter_allows(acquisition_id: str, options: ScanOptions) -> bool:
-    return options.holo_filter_ids is None or acquisition_id in options.holo_filter_ids
-
-
-def _clean_holo_filter_entry(value: object) -> Optional[str]:
-    candidate = str(value).strip().lstrip("\ufeff").strip("\"'")
-    if not candidate or candidate.startswith("#"):
-        return None
-    return candidate
-
-
-def _normalize_holo_filter_entry(value: object) -> Optional[str]:
-    candidate = _clean_holo_filter_entry(value)
-    if candidate is None:
-        return None
-
-    name = candidate.replace("\\", "/").rsplit("/", 1)[-1].strip()
-    if name.lower().endswith(".holo"):
-        name = name[: -len(".holo")]
-    return name or None
-
-
-def _holo_filter_entry_path(entry: str, root: Path) -> Optional[Path]:
-    value = _clean_holo_filter_entry(entry)
-    if value is None:
-        return None
-
-    path_like = (
-        value.lower().endswith(".holo")
-        or "\\" in value
-        or "/" in value
-    )
-    if not path_like:
-        return None
-
-    candidate = Path(value).expanduser()
-    if not candidate.is_absolute():
-        candidate = root / candidate
-    return candidate
 
 
 def _build_acquisition(

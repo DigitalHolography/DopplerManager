@@ -277,12 +277,26 @@ uv run pytest
 ```text
 src/doppler_manager/
   app.py                       Streamlit entry point
+  launcher.py                  Streamlit server lifecycle and release launcher
   models.py                    Scan data models
-  scanner.py                   Acquisition and status detection
-  processing.py                Job construction and execution
+  processing/                  Job construction, external app calls, and execution
+    apps/                      External app command builders
+      holodoppler.py           HoloDoppler command builder
+      dopplerview.py           DopplerView command builder
+      eyeflow.py               EyeFlow command builder
+      angioeye.py              AngioEye command builder
+    config/                    Defaults, settings, and pipeline selection
+    core/                      Job models, paths, commands, and orchestration
+    execution/                 Subprocess runner and output installation
   _external_cli_runner.py       EyeFlow/AngioEye wrappers
   _eyeflow_runtime_limits.py    EyeFlow runtime compatibility and limits
+  scan/
+    cache.py                   Streamlit scan cache bridge
+    core.py                    Acquisition and status detection
+    filters.py                 .holo filter list parsing
+    options.py                 Scan options and defaults
   ui/
+    scan.py                     Scan bar, filter upload, and scan messages
     dashboard.py                Index, filters, and exports
     detail.py                   Parameters, versions, and acquisition details
     media.py                    Image/video previews

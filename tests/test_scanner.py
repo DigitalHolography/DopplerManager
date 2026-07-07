@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from doppler_manager.scanner import ScanOptions, holo_filter_ids_from_text, scan_root
+from doppler_manager.scan import ScanOptions, holo_filter_ids_from_text, scan_root
 
 
 def _write(path: Path, content: bytes = b"x") -> None:

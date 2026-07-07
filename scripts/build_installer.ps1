@@ -62,7 +62,7 @@ try {
         --hidden-import streamlit.web.cli `
         --hidden-import watchdog.observers.winapi `
         --hidden-import doppler_manager.app `
-        src\doppler_manager\launcher_scan.py
+        src\doppler_manager\launcher.py
 
     if (-not (Test-Path (Join-Path $DistApp "DopplerManager.exe"))) {
         throw "PyInstaller did not produce the staged DopplerManager.exe."

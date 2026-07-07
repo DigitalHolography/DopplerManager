@@ -22,7 +22,7 @@ from doppler_manager.processing import (
     preferred_holodoppler_settings,
     run_processing_jobs,
 )
-from doppler_manager.scanner import ScanOptions
+from doppler_manager.scan import ScanOptions
 
 
 STAGE_OPTIONS = {
