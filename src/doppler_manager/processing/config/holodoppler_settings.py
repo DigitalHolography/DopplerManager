@@ -4,38 +4,31 @@ import json
 import os
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Optional
 
 from doppler_manager import release_defaults
-from . import defaults
 from doppler_manager.processing.core.paths import safe_resolve
+
+from . import defaults
 
 
 REQUIRED_HOLODOPPLER_SETTINGS_KEYS = ("temporal_transformation",)
+PREFERRED_HOLODOPPLER_SETTINGS = (
+    "default_parameters_simple.yaml",
+    "default_parameters_debug.json",
+    "debug_parameters.json",
+    "default_parameters.json",
+    "default_parameters_lightest.json",
+    "default_parameters_cine.json",
+)
 
 
 def discover_holodoppler_settings(root: Path | str) -> list[Path]:
-    root_path = Path(root).expanduser()
-    candidates: list[Path] = []
-
-    env_file = os.getenv("DM_HOLODOPPLER_SETTINGS")
-    if env_file:
-        candidates.append(Path(env_file).expanduser())
-
-    env_dir = os.getenv("DM_HOLODOPPLER_SETTINGS_DIR")
-    if env_dir:
-        candidates.append(Path(env_dir).expanduser())
-
-    candidates.extend(
-        [
-            upstream_holodoppler_settings_dir(),
-            defaults.bundled_holodoppler_settings_dir(),
-            Path.cwd() / "processing_defaults" / "holodoppler",
-            Path.cwd() / "parameters",
-            Path.cwd() / "HoloDopplerPython" / "parameters",
-            root_path / "parameters",
-            root_path / "HoloDopplerPython" / "parameters",
-        ]
+    candidates: tuple[Path | str | None, ...] = (
+        os.getenv("DM_HOLODOPPLER_SETTINGS"),
+        os.getenv("DM_HOLODOPPLER_SETTINGS_DIR"),
+        upstream_holodoppler_settings_dir(),
+        defaults.bundled_holodoppler_settings_dir(),
+        Path(root).expanduser() / "parameters",
     )
 
     settings: list[Path] = []
@@ -80,23 +73,20 @@ def holodoppler_settings_from_path(path: Path | str | None) -> list[Path]:
     return []
 
 
-def preferred_holodoppler_settings(settings: Sequence[Path]) -> Optional[Path]:
+def preferred_holodoppler_settings(settings: Sequence[Path]) -> Path | None:
     if not settings:
         return None
-    compatible = [path for path in settings if has_settings_keys(path, REQUIRED_HOLODOPPLER_SETTINGS_KEYS)]
+    compatible = [
+        path
+        for path in settings
+        if has_settings_keys(path, REQUIRED_HOLODOPPLER_SETTINGS_KEYS)
+    ]
     if compatible:
         settings = compatible
-    preferred_names = (
-        "default_parameters_simple.yaml",
-        "default_parameters.json",
-        "default_parameters_debug.json",
-        "default_parameters_lightest.json",
-        "default_parameters_cine.json",
-    )
     by_name: dict[str, Path] = {}
     for path in settings:
         by_name.setdefault(path.name.lower(), path)
-    for name in preferred_names:
+    for name in PREFERRED_HOLODOPPLER_SETTINGS:
         if name in by_name:
             return by_name[name]
     return settings[0]

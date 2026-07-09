@@ -1,0 +1,45 @@
+pipeline_name: "pca_accumulation"
+
+# Core parameters
+batch_size: 32
+first_frame: 0
+batch_stride: 32
+end_frame: -1  # -1 means process all frames
+accumulation: 32
+
+# Propagation parameters
+spatial_propagation: "Fresnel"  # Options: "Fresnel" or "AngularSpectrum"
+z: "use_holovibes"  # Propagation distance in meters
+wavelength: 852.0e-9  # Wavelength in meters
+pixel_pitch: "use_holovibes"  # Pixel pitch in meters [y, x]
+
+# Fresnel specific
+Fresnel_use_ouput_kernel: false  # Use output kernel for Fresnel transform
+
+
+# Time transform
+time_transform: "FFT" # "FFT"
+# PCA projection
+pca_range: [0, 16]
+low_freq: 0.2  # Low frequency cutoff in reduced frequency
+high_freq: 0.5  # High frequency cutoff in reduced frequency
+
+# Image registration
+image_registration: true
+registration_flatfield_gw: 35.0  # Gaussian width for flatfield normalization
+
+# Image resizing
+square: true
+
+# Shack-Hartmann wavefront sensing
+
+shack_hartmann: false  # Enable Shack-Hartmann processing
+shack_hartmann_nx_subap: 5  # Number of subapertures in X
+shack_hartmann_ny_subap: 5  # Number of subapertures in Y
+shack_hartmann_svd_threshold: 10
+shack_hartmann_pupil_threshold: 1.5 # Rejection of the side sub images if they are too
+shack_hartmann_deviation_threshold: 10.0 # Max displacement accepted in number of the std
+shack_hartmann_shifts_pixel_range_threshold: 1000.0 # Max displacement accepted in pixels
+shack_hartmann_graph_laplacian: true  # Use graph Laplacian method
+shack_hartmann_zernike_fit: true # Other option is shack_hartmann_southwell_integration but not really implemented yet because it is not stable
+shack_hartmann_zernike_fit_modes: [4,5,6]  # Number of the Zernike modes to use in the fit in Null ordering

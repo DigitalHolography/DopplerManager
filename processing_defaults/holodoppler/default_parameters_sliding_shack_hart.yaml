@@ -1,0 +1,61 @@
+pipeline_name: "sliding_shack_hartmann"
+
+# Core parameters
+time_window: 256
+time_stride: 256
+sh_time_accumulation: 8 # number of repetition of sh at each batch
+first_frame: 0
+end_frame: -1  # -1 means process all frames
+
+# Propagation parameters
+spatial_propagation: "use_holovibes"  # Options: "Fresnel" or "AngularSpectrum"
+z: "use_holovibes"  # Propagation distance in meters
+wavelength: "use_holovibes"  # Wavelength in meters
+pixel_pitch: "use_holovibes"  # Pixel pitch in meters [y, x]
+
+# Fresnel specific
+Fresnel_use_ouput_kernel: false  # Use output kernel for Fresnel transform
+
+# Filtering 2D frequencies
+filter2d: true
+filter2d_low: 0.03
+
+# SVD filtering
+svd_filtering: true
+svd_threshold: 0
+svd_filter_mode: "number_of_values"  # Options: "number_of_values", "amplitude_threshold"
+svd_remove_dc: true
+
+# Temporal transformation
+temporal_transformation: "FourierTransform"  # Options: "FourierTransform" or None
+sampling_freq: "use_holovibes"  # Sampling frequency in Hz
+low_freq: 6000  # Low frequency cutoff in Hz
+high_freq: 18300  # High frequency cutoff in Hz "use_holovibes" sampling_freq/2
+
+# Frequency bands for different cutoffs of the psd in Hz. It will give the average of the psd in the symmetric frequency range
+frequency_bands:
+  - [3000, 9000]
+  - [9000, 18000]
+
+# Image registration
+image_registration: true
+registration_flatfield_gw: 35.0  # Gaussian width for flatfield normalization
+registration_laplacian: false
+
+# Corner compensation
+corner_compensation: false
+
+# Image resizing
+square: true
+
+# Shack-Hartmann wavefront sensing
+shack_hartmann: true  # Enable Shack-Hartmann processing
+shack_hartmann_nx_subap: 5  # Number of subapertures in X
+shack_hartmann_ny_subap: 5  # Number of subapertures in Y
+shack_hartmann_svd_threshold: 10
+shack_hartmann_pupil_threshold: 2.0 # Rejection of the side sub images if they are too
+shack_hartmann_deviation_threshold: 10.0 # Max displacement accepted in number of the std
+shack_hartmann_shifts_pixel_range_threshold: 1000.0 # Max displacement accepted in pixels
+shack_hartmann_graph_laplacian: true  # Use graph Laplacian method
+shack_hartmann_zernike_fit: true # Other option is shack_hartmann_southwell_integration but not really implemented yet because it is not stable
+shack_hartmann_zernike_fit_modes: [4,5,6]  # Number of the Zernike modes to use in the fit in Null ordering

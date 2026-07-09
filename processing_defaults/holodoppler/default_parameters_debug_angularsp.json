@@ -43,12 +43,12 @@
   "svd_filter_mode": "number_of_values",
   "svd_remove_dc": true,
   "save_psd_avg": true,
-
+  
   "square": true,
   "transpose": false,
   "flip_x": false,
   "flip_y": false,
-
+  
   "debug" : false,
   "tictoc" : false,
 

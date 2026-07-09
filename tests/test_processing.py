@@ -418,7 +418,7 @@ def test_bundled_holodoppler_defaults_are_discovered_and_preferred(tmp_path: Pat
     assert default_settings in discovered
     assert debug_settings in discovered
     assert simple_settings in discovered
-    assert preferred_holodoppler_settings(discovered) == simple_settings
+    assert preferred_holodoppler_settings(discovered) == debug_settings
 
 
 def test_holodoppler_defaults_prefer_installed_tool_parameters(tmp_path: Path, monkeypatch) -> None:

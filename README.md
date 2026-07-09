@@ -129,7 +129,7 @@ uv sync --extra processing
 
 The `processing` extra installs upstream dependencies from GitHub:
 
-- `HoloDopplerPython`
+- `HoloDoppler`
 - `DopplerView`
 - `EyeFlowPython`
 - `AngioEye`
@@ -248,7 +248,11 @@ HoloDoppler settings can be preconfigured with:
 - `DM_HOLODOPPLER_SETTINGS`: path to a JSON or YAML file
 - `DM_HOLODOPPLER_SETTINGS_DIR`: path to a folder containing JSON or YAML files
 
-Settings discovery also checks `processing_defaults/holodoppler/`, `parameters/`, `HoloDopplerPython/parameters/`, and matching folders under the scanned root. When multiple files are available, the application prefers a JSON or YAML file containing `temporal_transformation`, which is required by the current HoloDoppler CLI.
+Settings discovery checks the installed HoloDoppler package, bundled defaults,
+the scanned root's `parameters/` folder, and the explicit environment overrides
+above. When available, `default_parameters_debug.json` is selected by default.
+Only settings containing `temporal_transformation`, which is required by the
+current HoloDoppler CLI, are preferred.
 
 ## EF and AE Pipelines
 
