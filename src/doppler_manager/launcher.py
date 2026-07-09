@@ -17,6 +17,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Protocol
 
+from .release_defaults import sync_processing_defaults
+
 
 APP_NAME = "DopplerManager"
 LOG_FILE_NAME = "DopplerManager.log"
@@ -58,6 +60,8 @@ def launch() -> None:
     log_path = _log_path()
     _log(log_path, "Development launcher started.")
     _stop_recorded_server(log_path)
+    synced_defaults = sync_processing_defaults()
+    _log(log_path, f"Synced {len(synced_defaults)} processing default files.")
     _run(
         log_path,
         app_module="doppler_manager.app",

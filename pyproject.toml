@@ -16,11 +16,11 @@ dopplermanager = "doppler_manager.launcher:launch"
 
 [project.optional-dependencies]
 processing = [
-    "holodoppler @ git+https://github.com/DigitalHolography/HoloDopplerPython.git@doppler_manager",
-    "dopplerview @ git+https://github.com/DigitalHolography/DopplerView.git@doppler_manager",
+    "holodoppler @ git+https://github.com/DigitalHolography/HoloDoppler.git@merge_debugger_revamp_ui",
+    "dopplerview @ git+https://github.com/DigitalHolography/DopplerView.git@main",
     "onnxruntime>=1.25,<1.26",
-    "EyeFlow @ git+https://github.com/DigitalHolography/EyeFlowPython.git@doppler_manager",
-    "AngioEye @ git+https://github.com/DigitalHolography/AngioEye.git@doppler_manager",
+    "EyeFlow @ git+https://github.com/DigitalHolography/EyeFlow.git@main",
+    "AngioEye @ git+https://github.com/DigitalHolography/AngioEye.git@main",
 ]
 
 [build-system]

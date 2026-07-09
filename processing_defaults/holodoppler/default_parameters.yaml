@@ -1,0 +1,44 @@
+pipeline_name: "daskxp2" # pipeline name
+
+# pipeline parameters 
+runtime:
+  backend: cupy
+
+sampling_freq: 37037 # camera sampling frequency of the aquisition
+wavelength: 8.52e-7 # laser wavelength
+pixel_pitch: [2.e-5, 2.e-5] # camera pixel pitch (distance between two consecutive 
+                          # pixels in y and x direction)
+frame_reader:
+  first_frame: 0
+  last_frame: -1
+frame_batcher:
+  batch_size: 256
+  batch_stride: 256
+  use_memmap: False
+propag:
+  mode: "Fresnel" # | "AngularSpectrum" | "None" | "Fraunhofer"
+  propagation_dist: 0.45
+  zero_padding: False
+  use_output_kernel: True
+time_transform: "FourierTransform"
+moments_calc:
+  low_freq: 6000
+  high_freq: 18300
+  orders: [0,1,2]
+moments_accumulation:
+    window: 8
+    stride: 8
+registration:
+  enabled : True
+  applied : True
+  ref_first_frame: 0
+  ref_batch_size: 512
+debug:
+  enabled: true
+  figures: all
+
+saving:
+  square: true
+  transpose: false
+  flip_x: false
+  flip_y: false

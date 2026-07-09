@@ -13,6 +13,7 @@ from .apps.dopplerview import build_dopplerview_call, build_dopplerview_job
 from .apps.eyeflow import build_eyeflow_call, build_eyeflow_job, eyeflow_temp_root
 from .apps.holodoppler import build_holodoppler_call, build_holodoppler_job
 from .config import defaults as _defaults
+from .config import holodoppler_settings as _holodoppler_settings
 from .config import pipelines as _pipelines
 from .core import commands as _commands
 from .core import jobs as _jobs
@@ -62,6 +63,7 @@ from .config.holodoppler_settings import (
 
 REPO_PROCESSING_DEFAULTS = _defaults.REPO_PROCESSING_DEFAULTS
 _upstream_pipeline_settings_path = _pipelines.upstream_pipeline_settings_path
+_upstream_holodoppler_settings_dir = _holodoppler_settings.upstream_holodoppler_settings_dir
 _eyeflow_temp_root = eyeflow_temp_root
 _angioeye_temp_root = angioeye_temp_root
 
@@ -71,6 +73,7 @@ def _sync_patchable_globals() -> None:
     _pipelines._find_uv_git_cli = _find_uv_git_cli
     _defaults.REPO_PROCESSING_DEFAULTS = REPO_PROCESSING_DEFAULTS
     _pipelines.upstream_pipeline_settings_path = _upstream_pipeline_settings_path
+    _holodoppler_settings.upstream_holodoppler_settings_dir = _upstream_holodoppler_settings_dir
 
 
 def processing_defaults_dir() -> Path:

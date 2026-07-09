@@ -8,9 +8,12 @@ from pathlib import Path
 from ._external_cli_runner import _project_name, _uv_cache_roots
 
 
+HOLODOPPLER_SETTINGS_SUFFIXES = frozenset({".json", ".yaml", ".yml"})
+
+
 def sync_processing_defaults(target_root: Path | None = None) -> list[Path]:
     target_root = Path.cwd() / "processing_defaults" if target_root is None else Path(target_root)
-    copied = _copy_jsons(
+    copied = _copy_holodoppler_settings(
         _app_root("holodoppler", "holodoppler") / "parameters",
         target_root / "holodoppler",
     )
@@ -38,13 +41,18 @@ def _app_root(distribution: str, project: str) -> Path:
     raise FileNotFoundError(f"Could not find {distribution} checkout for commit {commit}.")
 
 
-def _copy_jsons(source_dir: Path, target_dir: Path) -> list[Path]:
-    files = sorted(source_dir.glob("*.json"))
-    if len(files) < 4:
-        raise FileNotFoundError(f"Expected HoloDoppler JSON defaults in {source_dir}.")
+def _copy_holodoppler_settings(source_dir: Path, target_dir: Path) -> list[Path]:
+    files = sorted(
+        path
+        for path in source_dir.glob("*")
+        if path.is_file() and path.suffix.lower() in HOLODOPPLER_SETTINGS_SUFFIXES
+    )
+    if not files:
+        raise FileNotFoundError(f"Expected HoloDoppler settings in {source_dir}.")
     target_dir.mkdir(parents=True, exist_ok=True)
-    for stale in target_dir.glob("*.json"):
-        stale.unlink()
+    for path in target_dir.iterdir():
+        if path.is_file() and path.suffix.lower() in HOLODOPPLER_SETTINGS_SUFFIXES:
+            path.unlink()
     return [_copy_file(source, target_dir / source.name) for source in files]
 
 

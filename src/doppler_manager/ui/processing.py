@@ -33,7 +33,7 @@ STAGE_OPTIONS = {
 }
 
 LOG_LIMIT = 700
-CUSTOM_HOLODOPPLER_SETTINGS = "Upload custom settings JSON..."
+CUSTOM_HOLODOPPLER_SETTINGS = "Upload custom settings..."
 
 
 def render_processing_tab(
@@ -284,15 +284,15 @@ def _format_hd_settings_option(option: Path | str) -> str:
 
 def _render_custom_hd_settings_upload() -> Optional[Path]:
     uploaded = st.file_uploader(
-        "Upload HoloDoppler settings JSON",
-        type=["json"],
+        "Upload HoloDoppler settings",
+        type=["json", "yaml", "yml"],
         key="hd_settings_upload",
     )
     if uploaded is None:
-        st.warning("Upload a HoloDoppler settings JSON file.")
+        st.warning("Upload a HoloDoppler settings file.")
         return None
 
-    safe_name = Path(uploaded.name).name or "uploaded_holodoppler_settings.json"
+    safe_name = Path(uploaded.name).name or "uploaded_holodoppler_settings.yaml"
     target = Path(".doppler_cache") / "processing" / "holodoppler_settings" / safe_name
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_bytes(uploaded.getvalue())

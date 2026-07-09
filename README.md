@@ -245,10 +245,10 @@ Commands can be overridden with local executable paths:
 
 HoloDoppler settings can be preconfigured with:
 
-- `DM_HOLODOPPLER_SETTINGS`: path to a JSON file
-- `DM_HOLODOPPLER_SETTINGS_DIR`: path to a folder containing JSON files
+- `DM_HOLODOPPLER_SETTINGS`: path to a JSON or YAML file
+- `DM_HOLODOPPLER_SETTINGS_DIR`: path to a folder containing JSON or YAML files
 
-Settings discovery also checks `processing_defaults/holodoppler/`, `parameters/`, `HoloDopplerPython/parameters/`, and matching folders under the scanned root. When multiple files are available, the application prefers a JSON file containing `temporal_transformation`, which is required by the current HoloDoppler CLI.
+Settings discovery also checks `processing_defaults/holodoppler/`, `parameters/`, `HoloDopplerPython/parameters/`, and matching folders under the scanned root. When multiple files are available, the application prefers a JSON or YAML file containing `temporal_transformation`, which is required by the current HoloDoppler CLI.
 
 ## EF and AE Pipelines
 

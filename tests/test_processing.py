@@ -405,8 +405,11 @@ def test_bundled_holodoppler_defaults_are_discovered_and_preferred(tmp_path: Pat
     defaults_dir = tmp_path / "processing_defaults" / "holodoppler"
     default_settings = defaults_dir / "default_parameters.json"
     debug_settings = defaults_dir / "default_parameters_debug.json"
+    simple_settings = defaults_dir / "default_parameters_simple.yaml"
     _write(default_settings, b"{}")
     _write(debug_settings, b'{"temporal_transformation": "FourierTransform"}')
+    _write(simple_settings, b"temporal_transformation: FourierTransform")
+    monkeypatch.setattr(processing, "_upstream_holodoppler_settings_dir", lambda: None)
     monkeypatch.setattr(processing, "REPO_PROCESSING_DEFAULTS", tmp_path / "processing_defaults")
     monkeypatch.chdir(tmp_path)
 
@@ -414,7 +417,31 @@ def test_bundled_holodoppler_defaults_are_discovered_and_preferred(tmp_path: Pat
 
     assert default_settings in discovered
     assert debug_settings in discovered
-    assert preferred_holodoppler_settings(discovered) == debug_settings
+    assert simple_settings in discovered
+    assert preferred_holodoppler_settings(discovered) == simple_settings
+
+
+def test_holodoppler_defaults_prefer_installed_tool_parameters(tmp_path: Path, monkeypatch) -> None:
+    upstream_dir = tmp_path / "uv-cache" / "git-v0" / "checkouts" / "holodoppler" / "abcdef0" / "parameters"
+    upstream_settings = upstream_dir / "default_parameters.json"
+    repo_settings = tmp_path / "processing_defaults" / "holodoppler" / "default_parameters.json"
+    _write(
+        upstream_settings,
+        b'{"source": "upstream", "temporal_transformation": "FourierTransform"}',
+    )
+    _write(
+        repo_settings,
+        b'{"source": "repo", "temporal_transformation": "FourierTransform"}',
+    )
+    monkeypatch.setattr(processing, "_upstream_holodoppler_settings_dir", lambda: upstream_dir)
+    monkeypatch.setattr(processing, "REPO_PROCESSING_DEFAULTS", tmp_path / "processing_defaults")
+    monkeypatch.chdir(tmp_path)
+
+    discovered = discover_holodoppler_settings(tmp_path)
+
+    assert upstream_settings in discovered
+    assert repo_settings in discovered
+    assert preferred_holodoppler_settings(discovered) == upstream_settings
 
 
 def test_processing_defaults_dir_prefers_pyinstaller_bundle(tmp_path: Path, monkeypatch) -> None:
