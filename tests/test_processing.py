@@ -1,5 +1,6 @@
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -8,6 +9,7 @@ import doppler_manager.processing as processing
 from doppler_manager.models import AcquisitionResult, FileRef, StageResult
 from doppler_manager.processing import (
     build_processing_jobs,
+    discover_angioeye_postprocesses,
     discover_holodoppler_settings,
     install_angioeye_output,
     install_eyeflow_output,
@@ -15,7 +17,9 @@ from doppler_manager.processing import (
     needed_processing_stages,
     preferred_holodoppler_settings,
     processing_defaults_dir,
+    proposed_angioeye_postprocesses,
 )
+import doppler_manager.processing.apps.angioeye_postprocess as angioeye_postprocess
 
 
 def _write(path: Path, content: bytes = b"x") -> None:
@@ -213,7 +217,7 @@ def test_angioeye_job_uses_existing_eyeflow_h5_and_absolute_paths(tmp_path: Path
     assert pipelines_path.is_absolute()
     assert output_path.is_absolute()
     assert pipelines_path.is_file()
-    assert "--trim-source" in job.command
+    assert "--keep-source" not in job.command
 
 
 def test_build_processing_jobs_uses_selected_ef_and_ae_pipelines(tmp_path: Path, monkeypatch) -> None:
@@ -243,6 +247,279 @@ def test_build_processing_jobs_uses_selected_ef_and_ae_pipelines(tmp_path: Path,
     assert ae_pipelines_path.read_text(encoding="utf-8") == (
         "modal_analysis\nwaveform_shape_metrics\n"
     )
+
+
+def test_angioeye_postprocess_discovery_keeps_decorator_input_methods(monkeypatch) -> None:
+    monkeypatch.setattr(
+        angioeye_postprocess,
+        "_load_angioeye_postprocess_catalog",
+        lambda: (
+            [
+                SimpleNamespace(
+                    name="Single and batch",
+                    description="description",
+                    input_methods=["single_file", "file_batch"],
+                    available=True,
+                ),
+                SimpleNamespace(
+                    name="Hidden batch",
+                    input_methods=["file_batch"],
+                    available=True,
+                    visibility="hidden",
+                ),
+            ],
+            [],
+        ),
+    )
+
+    discovered = discover_angioeye_postprocesses()
+    single_and_batch = next(
+        item for item in discovered if item.name == "Single and batch"
+    )
+
+    assert single_and_batch.input_methods == ("single_file", "file_batch")
+    assert [item.name for item in proposed_angioeye_postprocesses(discovered, 1)] == [
+        "Single and batch"
+    ]
+    assert [item.name for item in proposed_angioeye_postprocesses(discovered, 2)] == [
+        "Single and batch"
+    ]
+
+
+def test_angioeye_postprocess_catalog_discovery_is_cached(monkeypatch) -> None:
+    calls = 0
+
+    def load_catalog():
+        nonlocal calls
+        calls += 1
+        return ([SimpleNamespace(name="Cached", input_methods=["single_file"])], [])
+
+    monkeypatch.setattr(
+        angioeye_postprocess,
+        "_load_angioeye_postprocess_catalog",
+        load_catalog,
+    )
+
+    first = discover_angioeye_postprocesses()
+    second = discover_angioeye_postprocesses()
+
+    assert first == second
+    assert calls == 1
+
+
+def test_angioeye_postprocess_batch_only_is_hidden_for_one_file() -> None:
+    batch_only = angioeye_postprocess.AngioEyePostprocessDescriptor(
+        name="Batch only",
+        input_methods=("file_batch", "cohort_batch", "zip_batch"),
+    )
+
+    assert proposed_angioeye_postprocesses((batch_only,), 1) == ()
+    assert proposed_angioeye_postprocesses((batch_only,), 2) == (batch_only,)
+
+
+def test_angioeye_postprocess_discovery_does_not_guess_old_descriptor_modes(
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr(
+        angioeye_postprocess,
+        "_load_angioeye_postprocess_catalog",
+        lambda: ([SimpleNamespace(name="Legacy")], []),
+    )
+
+    descriptor = discover_angioeye_postprocesses()[0]
+
+    assert descriptor.input_methods == ()
+
+
+def test_angioeye_postprocess_requirements_include_selected_pipeline_dag_upstream(
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr(
+        angioeye_postprocess,
+        "_load_angioeye_pipeline_catalog",
+        lambda: (
+            [
+                SimpleNamespace(
+                    name="waveform_shape_metrics",
+                    dag_produces=(),
+                    dag_requires=(),
+                ),
+                SimpleNamespace(
+                    name="pdf_generator",
+                    dag_produces=(),
+                    dag_requires=("waveform_shape_metrics",),
+                ),
+            ],
+            [],
+        ),
+    )
+    descriptor = angioeye_postprocess.AngioEyePostprocessDescriptor(
+        name="PDF summary",
+        available=False,
+        missing_pipelines=("waveform_shape_metrics",),
+        required_pipelines=("waveform_shape_metrics",),
+        input_methods=("single_file",),
+    )
+
+    assert proposed_angioeye_postprocesses((descriptor,), 1, ()) == ()
+    assert proposed_angioeye_postprocesses(
+        (descriptor,),
+        1,
+        ("pdf_generator",),
+    ) == (descriptor,)
+
+
+def test_angioeye_postprocess_missing_catalog_pipeline_can_be_satisfied_by_run(
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr(
+        angioeye_postprocess,
+        "_load_angioeye_pipeline_catalog",
+        lambda: ([], []),
+    )
+    descriptor = angioeye_postprocess.AngioEyePostprocessDescriptor(
+        name="Waveform report",
+        available=False,
+        missing_pipelines=("waveform_shape_metrics",),
+        required_pipelines=("waveform_shape_metrics",),
+        input_methods=("single_file",),
+    )
+
+    assert proposed_angioeye_postprocesses((descriptor,), 1, ()) == ()
+    assert proposed_angioeye_postprocesses(
+        (descriptor,),
+        1,
+        ("waveform_shape_metrics",),
+    ) == (descriptor,)
+
+
+def test_angioeye_postprocess_requirements_accept_selected_pipeline_option_group(
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr(
+        angioeye_postprocess,
+        "_load_angioeye_pipeline_catalog",
+        lambda: ([], []),
+    )
+    descriptor = angioeye_postprocess.AngioEyePostprocessDescriptor(
+        name="Waveform report",
+        available=True,
+        required_pipeline_options=(
+            ("waveform_shape_metrics", "waveform_shape_metrics_denoised"),
+            ("persisted_summary",),
+        ),
+        input_methods=("file_batch",),
+    )
+
+    assert proposed_angioeye_postprocesses(
+        (descriptor,),
+        2,
+        ("waveform_shape_metrics_denoised", "persisted_summary"),
+    ) == (descriptor,)
+    assert proposed_angioeye_postprocesses(
+        (descriptor,),
+        2,
+        ("waveform_shape_metrics_denoised",),
+    ) == ()
+
+
+def test_build_processing_jobs_embeds_single_file_postprocess_in_angioeye_job(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    monkeypatch.setenv("DM_ANGIOEYE_COMMAND", "ae-command")
+    acquisition_id = "251031_ALA_L_1"
+    acquisition = _acquisition(tmp_path, acquisition_id)
+
+    jobs = build_processing_jobs(
+        [acquisition],
+        [acquisition_id],
+        ["ae"],
+        hd_settings_path=None,
+        cache_dir=tmp_path / ".doppler_cache",
+        angioeye_postprocesses=["HTML summary"],
+    )
+
+    assert [job.stage for job in jobs] == ["ae"]
+    job = jobs[0]
+    assert job.command[-2:] == (
+        "--postprocesses",
+        str(
+            tmp_path
+            / ".doppler_cache"
+            / "processing"
+            / "angioeye_postprocesses.txt"
+        ),
+    )
+    assert "--keep-source" not in job.command
+    assert Path(job.command[-1]).read_text(encoding="utf-8") == "HTML summary\n"
+
+
+def test_build_processing_jobs_adds_angioeye_batch_postprocess_job(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    monkeypatch.setenv("DM_ANGIOEYE_COMMAND", "ae-command")
+    first = _acquisition(tmp_path, "251031_ALA_L_1")
+    second = _acquisition(tmp_path, "251031_ALA_L_2")
+    for acquisition in (first, second):
+        acquisition_id = acquisition.acquisition_id
+        ae_h5 = (
+            tmp_path
+            / acquisition_id
+            / f"{acquisition_id}_AE"
+            / "h5"
+            / f"{acquisition_id}_AE.h5"
+        )
+        _write(ae_h5)
+        acquisition.stages["ae"] = StageResult(
+            code="ae",
+            label="AngioEye",
+            h5_files=[FileRef.from_path(ae_h5, "h5")],
+            status="complete",
+        )
+
+    jobs = build_processing_jobs(
+        [first, second],
+        [first.acquisition_id, second.acquisition_id],
+        [],
+        hd_settings_path=None,
+        cache_dir=tmp_path / ".doppler_cache",
+        angioeye_postprocesses=["Report", "Report"],
+    )
+
+    assert len(jobs) == 1
+    job = jobs[0]
+    assert job.stage == "ae_postprocess"
+    assert job.command == (
+        "ae-command",
+        "--data",
+        str(
+            tmp_path / first.acquisition_id / f"{first.acquisition_id}_AE" / "h5"
+            / f"{first.acquisition_id}_AE.h5"
+        ),
+        "--data",
+        str(
+            tmp_path / second.acquisition_id / f"{second.acquisition_id}_AE" / "h5"
+            / f"{second.acquisition_id}_AE.h5"
+        ),
+        "--pipelines",
+        str(
+            tmp_path
+            / ".doppler_cache"
+            / "processing"
+            / "angioeye_postprocess_pipelines.txt"
+        ),
+        "--postprocesses",
+        str(
+            tmp_path
+            / ".doppler_cache"
+            / "processing"
+            / "angioeye_postprocesses.txt"
+        ),
+    )
+    assert Path(job.command[6]).read_text(encoding="utf-8") == ""
+    assert Path(job.command[8]).read_text(encoding="utf-8") == "Report\n"
 
 
 def test_build_processing_jobs_can_skip_completed_stages(tmp_path: Path, monkeypatch) -> None:
@@ -418,7 +695,7 @@ def test_bundled_holodoppler_defaults_are_discovered_and_preferred(tmp_path: Pat
     assert default_settings in discovered
     assert debug_settings in discovered
     assert simple_settings in discovered
-    assert preferred_holodoppler_settings(discovered) == debug_settings
+    assert preferred_holodoppler_settings(discovered) == simple_settings
 
 
 def test_holodoppler_defaults_prefer_installed_tool_parameters(tmp_path: Path, monkeypatch) -> None:

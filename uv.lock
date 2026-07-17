@@ -37,8 +37,8 @@ wheels = [
 
 [[package]]
 name = "angioeye"
-version = "1.20.1"
-source = { git = "https://github.com/DigitalHolography/AngioEye.git?rev=main#f5ae5672f040193199e4d8fbf130ea4d23e290f7" }
+version = "1.21.0"
+source = { git = "https://github.com/DigitalHolography/AngioEye.git?rev=dev#c1ad0ae1e33f60b0dbd1f95e2c719da8f7457985" }
 dependencies = [
     { name = "h5py" },
     { name = "jinja2" },
@@ -385,7 +385,7 @@ release = [
 
 [package.metadata]
 requires-dist = [
-    { name = "angioeye", marker = "extra == 'processing'", git = "https://github.com/DigitalHolography/AngioEye.git?rev=main" },
+    { name = "angioeye", marker = "extra == 'processing'", git = "https://github.com/DigitalHolography/AngioEye.git?rev=dev" },
     { name = "dopplerview", marker = "extra == 'processing'", git = "https://github.com/DigitalHolography/DopplerView.git?rev=varying_HD_output_keys" },
     { name = "eyeflow", marker = "extra == 'processing'", git = "https://github.com/DigitalHolography/EyeFlow.git?rev=dev" },
     { name = "holodoppler", marker = "extra == 'processing'", git = "https://github.com/DigitalHolography/HoloDoppler.git?rev=dev" },
@@ -428,8 +428,8 @@ dependencies = [
 
 [[package]]
 name = "eyeflow"
-version = "0.11.2"
-source = { git = "https://github.com/DigitalHolography/EyeFlow.git?rev=dev#029d411e09b56e988092bb4316015447764d542b" }
+version = "0.11.3"
+source = { git = "https://github.com/DigitalHolography/EyeFlow.git?rev=dev#b2d5ac0f2cac0cc82901b63856dcfb966620c659" }
 dependencies = [
     { name = "h5py" },
     { name = "joblib" },

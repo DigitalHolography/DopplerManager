@@ -16,7 +16,9 @@ from doppler_manager.processing import (
     build_processing_jobs,
     bundled_holodoppler_settings_dir,
     default_pipelines_for_stage,
+    discover_angioeye_postprocesses,
     holodoppler_settings_from_path,
+    proposed_angioeye_postprocesses,
     missing_default_processing_tools,
     needed_processing_stages,
     preferred_holodoppler_settings,
@@ -34,6 +36,13 @@ STAGE_OPTIONS = {
 
 LOG_LIMIT = 700
 CUSTOM_HOLODOPPLER_SETTINGS = "Upload custom settings..."
+
+
+@st.cache_resource(show_spinner=False)
+def _cached_angioeye_postprocesses():
+    """Keep decorator discovery cached across Streamlit reruns."""
+
+    return discover_angioeye_postprocesses()
 
 
 def render_processing_tab(
@@ -72,6 +81,7 @@ def render_processing_tab(
     (
         selected_eyeflow_pipelines,
         selected_angioeye_pipelines,
+        selected_angioeye_postprocesses,
         hd_settings,
         missing_tools,
     ) = _render_processing_options(
@@ -88,15 +98,18 @@ def render_processing_tab(
 
     can_run = bool(
         selected_ids
-        and selected_stages
-        and runnable_stages
         and not missing_tools
+        and (runnable_stages or selected_angioeye_postprocesses)
         and ("hd" not in runnable_stages or hd_settings is not None)
         and ("ef" not in runnable_stages or selected_eyeflow_pipelines)
         and ("ae" not in runnable_stages or selected_angioeye_pipelines)
     )
     no_incomplete_selected_scope = bool(
-        only_incomplete and selected_ids and selected_stages and not runnable_stages
+        only_incomplete
+        and selected_ids
+        and selected_stages
+        and not runnable_stages
+        and not selected_angioeye_postprocesses
     )
     run_button_help = (
         "No files need to be processed: no selected acquisition is missing or needs "
@@ -126,6 +139,7 @@ def render_processing_tab(
                 only_incomplete=only_incomplete,
                 eyeflow_pipelines=selected_eyeflow_pipelines,
                 angioeye_pipelines=selected_angioeye_pipelines,
+                angioeye_postprocesses=selected_angioeye_postprocesses,
             )
         except Exception as exc:  # noqa: BLE001
             st.error(str(exc))
@@ -147,7 +161,8 @@ def render_processing_tab(
             st.caption("Selected stages are already complete for the selected acquisitions.")
         else:
             st.caption(
-                "Select at least one acquisition and one stage. HD also needs a settings JSON file."
+                "Select at least one acquisition and one stage or postprocess. "
+                "HD also needs a settings JSON file."
             )
 
 
@@ -188,19 +203,52 @@ def _render_processing_options(
     only_incomplete: bool,
     runnable_stages: list[str],
     root_input: str,
-) -> tuple[Optional[tuple[str, ...]], Optional[tuple[str, ...]], Optional[Path], list[str]]:
+) -> tuple[
+    Optional[tuple[str, ...]],
+    Optional[tuple[str, ...]],
+    tuple[str, ...],
+    Optional[Path],
+    list[str],
+]:
     with container.container(border=True, key="processing_options"):
         st.markdown("#### Options")
-        if not selected_stages:
-            st.caption("Selected acquisitions already satisfy the current scope.")
-            return None, None, None, []
+        if not selected_acquisitions:
+            _clear_processing_option_state()
+            st.caption(
+                "Select at least one acquisition to configure processing options."
+            )
+            return None, None, (), None, []
+
         if only_incomplete and selected_acquisitions and not runnable_stages:
             st.caption("Selected acquisitions already satisfy the current scope.")
         pipeline_selection_stages = selected_stages
-        hd_settings = _render_hd_settings(root_input, pipeline_selection_stages)
-        selected_eyeflow_pipelines = _render_pipeline_selection("ef", pipeline_selection_stages)
-        selected_angioeye_pipelines = _render_pipeline_selection("ae", pipeline_selection_stages)
-        missing_tools = missing_default_processing_tools(runnable_stages)
+        hd_settings = (
+            _render_hd_settings(root_input, pipeline_selection_stages)
+            if selected_stages
+            else None
+        )
+        selected_eyeflow_pipelines = (
+            _render_pipeline_selection("ef", pipeline_selection_stages)
+            if selected_stages
+            else None
+        )
+        selected_angioeye_pipelines = (
+            _render_pipeline_selection("ae", pipeline_selection_stages)
+            if selected_stages
+            else None
+        )
+        selected_angioeye_postprocesses = (
+            _render_postprocess_selection(
+                selected_acquisitions,
+                selected_angioeye_pipelines,
+            )
+            if "ae" in selected_stages
+            else ()
+        )
+        tool_stages = list(runnable_stages)
+        if selected_angioeye_postprocesses and "ae" not in tool_stages:
+            tool_stages.append("ae")
+        missing_tools = missing_default_processing_tools(tool_stages)
         if missing_tools:
             missing_labels = ", ".join(STAGE_OPTIONS[stage] for stage in missing_tools)
             st.warning(
@@ -208,8 +256,71 @@ def _render_processing_options(
                 "Run `uv sync --extra processing`, then restart the app."
             )
         if not any(stage in pipeline_selection_stages for stage in ("hd", "ef", "ae")):
-            st.caption("No additional options for this scope.")
-        return selected_eyeflow_pipelines, selected_angioeye_pipelines, hd_settings, missing_tools
+            if not selected_angioeye_postprocesses:
+                st.caption("No additional options for this scope.")
+        return (
+            selected_eyeflow_pipelines,
+            selected_angioeye_pipelines,
+            selected_angioeye_postprocesses,
+            hd_settings,
+            missing_tools,
+        )
+
+
+def _clear_processing_option_state() -> None:
+    """Drop selections that should not survive an empty acquisition scope."""
+
+    for key in (
+        "ef_pipelines",
+        "ae_pipelines",
+        "angioeye_postprocesses",
+        "angioeye_postprocesses_loading",
+        "hd_settings_upload",
+    ):
+        st.session_state.pop(key, None)
+
+
+def _render_postprocess_selection(
+    selected_acquisitions: list[AcquisitionResult],
+    selected_angioeye_pipelines: Optional[tuple[str, ...]],
+) -> tuple[str, ...]:
+    st.markdown("##### AngioEye postprocesses")
+    if not selected_acquisitions:
+        st.caption("Select at least one acquisition to discover compatible postprocesses.")
+        return ()
+
+    loading_dropdown = st.empty()
+    loading_dropdown.multiselect(
+        "AngioEye postprocesses",
+        ["Discovering compatible postprocesses..."],
+        default=[],
+        disabled=True,
+        key="angioeye_postprocesses_loading",
+    )
+    with st.spinner("Discovering compatible AngioEye postprocesses..."):
+        proposed = proposed_angioeye_postprocesses(
+            _cached_angioeye_postprocesses(),
+            len(selected_acquisitions),
+            selected_pipelines=selected_angioeye_pipelines,
+        )
+    if not proposed:
+        loading_dropdown.empty()
+        st.caption(
+            "No AngioEye postprocess supports this selection size and pipeline "
+            "selection. "
+            "ZIP postprocess mode is not available from the acquisition scan."
+        )
+        return ()
+
+    options = [postprocess.name for postprocess in proposed]
+    selected = loading_dropdown.multiselect(
+        "AngioEye postprocesses",
+        options,
+        default=[],
+        key="angioeye_postprocesses",
+        help="One acquisition uses single_file; multiple acquisitions use file_batch.",
+    )
+    return tuple(selected)
 
 
 def _render_stage_checklist(container) -> tuple[list[str], bool]:

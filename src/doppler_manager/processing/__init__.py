@@ -9,12 +9,25 @@ from typing import Optional
 from doppler_manager._external_cli_runner import _find_uv_git_cli
 
 from .apps.angioeye import angioeye_temp_root, build_angioeye_call, build_angioeye_job
+from .apps.angioeye_postprocess import (
+    AngioEyePostprocessDescriptor,
+    POSTPROCESS_INPUT_METHODS,
+    build_angioeye_postprocess_call,
+    build_angioeye_postprocess_job,
+    discover_angioeye_postprocesses,
+    input_method_for_count,
+    proposed_angioeye_postprocesses,
+)
 from .apps.dopplerview import build_dopplerview_call, build_dopplerview_job
 from .apps.eyeflow import build_eyeflow_call, build_eyeflow_job, eyeflow_temp_root
 from .apps.holodoppler import build_holodoppler_call, build_holodoppler_job
 from .config import defaults as _defaults
 from .config import holodoppler_settings as _holodoppler_settings
 from .config import pipelines as _pipelines
+from .config.postprocesses import (
+    ensure_angioeye_postprocess_pipeline_file,
+    ensure_angioeye_postprocess_file,
+)
 from .core import commands as _commands
 from .core import jobs as _jobs
 from .core.commands import command_prefix_for_stage
@@ -131,6 +144,7 @@ def build_processing_jobs(
     only_incomplete: bool = False,
     eyeflow_pipelines: Optional[Sequence[str]] = None,
     angioeye_pipelines: Optional[Sequence[str]] = None,
+    angioeye_postprocesses: Optional[Sequence[str]] = None,
 ) -> list[ProcessingJob]:
     _sync_patchable_globals()
     return _jobs.build_processing_jobs(
@@ -142,6 +156,7 @@ def build_processing_jobs(
         only_incomplete=only_incomplete,
         eyeflow_pipelines=eyeflow_pipelines,
         angioeye_pipelines=angioeye_pipelines,
+        angioeye_postprocesses=angioeye_postprocesses,
     )
 
 
@@ -210,10 +225,14 @@ __all__ = [
     "PROGRESS_LOG_PREFIX",
     "PROCESSING_CLI_SENTINEL",
     "ProcessingJob",
+    "AngioEyePostprocessDescriptor",
+    "POSTPROCESS_INPUT_METHODS",
     "JobResult",
     "available_pipelines_for_stage",
     "build_angioeye_call",
     "build_angioeye_job",
+    "build_angioeye_postprocess_call",
+    "build_angioeye_postprocess_job",
     "build_dopplerview_call",
     "build_dopplerview_job",
     "build_eyeflow_call",
@@ -226,16 +245,21 @@ __all__ = [
     "default_pipelines_for_stage",
     "discover_holodoppler_settings",
     "ensure_angioeye_pipeline_file",
+    "ensure_angioeye_postprocess_pipeline_file",
+    "ensure_angioeye_postprocess_file",
     "ensure_eyeflow_pipeline_file",
     "format_command",
     "holodoppler_settings_from_path",
     "install_angioeye_output",
     "install_eyeflow_output",
+    "discover_angioeye_postprocesses",
+    "input_method_for_count",
     "missing_default_processing_tools",
     "needed_processing_stages",
     "preferred_holodoppler_settings",
     "prepare_processing_output",
     "processing_defaults_dir",
     "processing_stages_for_acquisition",
+    "proposed_angioeye_postprocesses",
     "run_processing_jobs",
 ]

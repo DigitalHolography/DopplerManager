@@ -7,12 +7,19 @@ from typing import Optional
 from doppler_manager.models import AcquisitionResult
 
 from doppler_manager.processing.apps.angioeye import angioeye_temp_root, build_angioeye_job
+from doppler_manager.processing.apps.angioeye_postprocess import (
+    build_angioeye_postprocess_job,
+)
 from doppler_manager.processing.apps.dopplerview import build_dopplerview_job
 from doppler_manager.processing.apps.eyeflow import build_eyeflow_job, eyeflow_temp_root
 from doppler_manager.processing.apps.holodoppler import build_holodoppler_job
 from doppler_manager.processing.config.pipelines import (
     ensure_angioeye_pipeline_file,
     ensure_eyeflow_pipeline_file,
+)
+from doppler_manager.processing.config.postprocesses import (
+    ensure_angioeye_postprocess_pipeline_file,
+    ensure_angioeye_postprocess_file,
 )
 
 from .constants import PROCESSING_STAGES
@@ -82,6 +89,7 @@ def build_processing_jobs(
     only_incomplete: bool = False,
     eyeflow_pipelines: Optional[Sequence[str]] = None,
     angioeye_pipelines: Optional[Sequence[str]] = None,
+    angioeye_postprocesses: Optional[Sequence[str]] = None,
 ) -> list[ProcessingJob]:
     cache_dir = safe_resolve(cache_dir)
     selected_stage_set = set(stages)
@@ -111,6 +119,17 @@ def build_processing_jobs(
         for acquisition_stages in stages_by_acquisition.values()
         for stage in acquisition_stages
     }
+
+    selected_postprocesses = tuple(
+        str(name).strip()
+        for name in (angioeye_postprocesses or ())
+        if str(name).strip()
+    )
+    postprocess_file = (
+        ensure_angioeye_postprocess_file(cache_dir, selected_postprocesses)
+        if selected_postprocesses
+        else None
+    )
 
     if "hd" in needed_stage_set:
         if hd_settings_path is None:
@@ -200,6 +219,49 @@ def build_processing_jobs(
                     angioeye_pipeline_file,
                     temp_root,
                     destination,
+                    # A single selected acquisition can be processed and
+                    # postprocessed in one AngioEye workflow invocation.
+                    postprocess_file=(
+                        postprocess_file
+                        if len(selected_ids) == 1
+                        else None
+                    ),
+                )
+            )
+
+    if selected_postprocesses:
+        # Single-file postprocesses are already part of the AE pipeline job
+        # above. For a batch selection, keep the input method truthful by
+        # passing all existing/generated AE H5 files to one filesystem call.
+        postprocess_inputs: list[Path] = []
+        needs_postprocess_only_job = True
+        for acquisition_id in selected_ids:
+            acquisition = by_id[acquisition_id]
+            acquisition_stage_set = set(stages_by_acquisition[acquisition_id])
+            if "ae" in acquisition_stage_set:
+                holo_path = source_holo_path(acquisition)
+                acquisition_root = acquisition_dir(acquisition, holo_path)
+                postprocess_inputs.append(
+                    stage_output_dir(acquisition_root, acquisition_id, "ae")
+                    / "h5"
+                    / f"{acquisition_id}_AE.h5"
+                )
+            else:
+                require_stage_h5(acquisition, "ae")
+                postprocess_inputs.append(preferred_stage_h5(acquisition, "ae"))
+            if "ae" in acquisition_stage_set and len(selected_ids) == 1:
+                needs_postprocess_only_job = False
+
+        if needs_postprocess_only_job:
+            assert postprocess_file is not None
+            jobs.append(
+                build_angioeye_postprocess_job(
+                    postprocess_inputs,
+                    postprocess_file,
+                    selected_postprocesses,
+                    pipeline_file=ensure_angioeye_postprocess_pipeline_file(
+                        cache_dir,
+                    ),
                 )
             )
 
