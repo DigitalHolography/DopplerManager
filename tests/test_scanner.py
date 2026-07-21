@@ -1,4 +1,7 @@
+import json
 from pathlib import Path
+
+import h5py
 
 from doppler_manager.scan import ScanOptions, holo_filter_ids_from_text, scan_root
 
@@ -6,6 +9,18 @@ from doppler_manager.scan import ScanOptions, holo_filter_ids_from_text, scan_ro
 def _write(path: Path, content: bytes = b"x") -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(content)
+
+
+def _write_h5(path: Path, app_versions: dict[str, str]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with h5py.File(path, "w") as handle:
+        handle.create_dataset("/app_versions", data=json.dumps(app_versions))
+
+
+def _write_hd_h5(path: Path, version: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with h5py.File(path, "w") as handle:
+        handle.create_dataset("/HD_version", data=version)
 
 
 def test_scan_detects_complete_pipeline(tmp_path: Path) -> None:
@@ -18,7 +33,9 @@ def test_scan_detects_complete_pipeline(tmp_path: Path) -> None:
     _write(tmp_path / acquisition_id / f"{acquisition_id}_DV" / "h5" / f"{acquisition_id}_DV.h5")
     _write(tmp_path / acquisition_id / f"{acquisition_id}_DV" / "config" / "DV_params.json", b"{}")
     _write(tmp_path / acquisition_id / f"{acquisition_id}_EF" / "h5" / f"{acquisition_id}_EF.h5")
+    _write(tmp_path / acquisition_id / f"{acquisition_id}_EF" / "pdf" / f"{acquisition_id}_report.pdf", b"%PDF")
     _write(tmp_path / acquisition_id / f"{acquisition_id}_AE" / "h5" / f"{acquisition_id}_AE.h5")
+    _write(tmp_path / acquisition_id / f"{acquisition_id}_AE" / "html" / f"{acquisition_id}_AE.html", b"<html></html>")
 
     result = scan_root(tmp_path, ScanOptions(max_depth=4))
 
@@ -32,6 +49,8 @@ def test_scan_detects_complete_pipeline(tmp_path: Path) -> None:
     assert acquisition.stages["ae"].status == "complete"
     assert acquisition.stages["hd"].versions["version_holodoppler.txt"] == "1.2.3"
     assert acquisition.stages["hd"].preview_files[0].name.endswith(".png")
+    assert any(file_ref.name.endswith(".pdf") for file_ref in acquisition.stages["ef"].preview_files)
+    assert acquisition.stages["ae"].preview_files[0].name.endswith(".html")
 
 
 def test_scan_does_not_warn_when_downstream_exists_without_upstream(tmp_path: Path) -> None:
@@ -77,6 +96,54 @@ def test_scan_marks_zero_byte_h5_as_error(tmp_path: Path) -> None:
     acquisition = result.acquisitions[0]
     assert acquisition.stages["hd"].status == "error"
     assert acquisition.status == "error"
+
+
+def test_scan_reads_complete_app_version_dictionary_from_h5(tmp_path: Path) -> None:
+    acquisition_id = "260310_AUZ0752_1"
+    _write(tmp_path / f"{acquisition_id}.holo")
+    versions = {
+        "HD_version": "py0.2.0",
+        "DV_version": "1.7.2",
+        "EF_version": "0.11.3",
+    }
+    h5_path = tmp_path / acquisition_id / f"{acquisition_id}_EF" / "h5" / f"{acquisition_id}_EF.h5"
+    _write_h5(h5_path, versions)
+
+    acquisition = scan_root(tmp_path, ScanOptions(max_depth=4)).acquisitions[0]
+
+    assert acquisition.stages["ef"].app_versions[h5_path.name] == versions
+
+
+def test_scan_warns_when_downstream_h5_uses_stale_upstream_version(tmp_path: Path) -> None:
+    acquisition_id = "260310_AUZ0752_1"
+    _write(tmp_path / f"{acquisition_id}.holo")
+    hd_path = tmp_path / acquisition_id / f"{acquisition_id}_HD" / "h5" / f"{acquisition_id}_HD_output.h5"
+    dv_path = tmp_path / acquisition_id / f"{acquisition_id}_DV" / "h5" / f"{acquisition_id}_DV.h5"
+    _write_hd_h5(hd_path, "py0.2.1")
+    _write_h5(
+        dv_path,
+        {"HD_version": "py0.2.0", "DV_version": "1.7.2"},
+    )
+
+    acquisition = scan_root(tmp_path, ScanOptions(max_depth=4)).acquisitions[0]
+
+    assert acquisition.stages["hd"].status == "complete"
+    assert acquisition.stages["dv"].status == "warning"
+    assert acquisition.status == "warning"
+    assert not acquisition.errors
+    assert any("HD_version" in message for message in acquisition.warning_messages())
+
+
+def test_holodoppler_version_is_read_from_hd_version_only(tmp_path: Path) -> None:
+    acquisition_id = "260310_AUZ0752_1"
+    _write(tmp_path / f"{acquisition_id}.holo")
+    hd_path = tmp_path / acquisition_id / f"{acquisition_id}_HD" / "h5" / f"{acquisition_id}_HD_output.h5"
+    _write_hd_h5(hd_path, "py0.2.0")
+
+    acquisition = scan_root(tmp_path, ScanOptions(max_depth=4)).acquisitions[0]
+
+    assert acquisition.stages["hd"].app_versions[hd_path.name] == {"HD_version": "py0.2.0"}
+    assert acquisition.stages["hd"].status == "complete"
 
 
 def test_holo_filter_text_accepts_holo_filenames_paths_and_comments() -> None:

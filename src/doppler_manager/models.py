@@ -67,6 +67,7 @@ class StageResult:
     version_files: List[FileRef] = field(default_factory=list)
     preview_files: List[FileRef] = field(default_factory=list)
     versions: Dict[str, str] = field(default_factory=dict)
+    app_versions: Dict[str, Dict[str, object]] = field(default_factory=dict)
     notes: List[str] = field(default_factory=list)
 
     def to_dict(self) -> Dict[str, object]:

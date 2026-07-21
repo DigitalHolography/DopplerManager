@@ -16,10 +16,13 @@ from doppler_manager.ui.formatting import format_size, format_timestamp
 
 IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg"}
 VIDEO_SUFFIXES = {".avi", ".mp4", ".mov", ".m4v"}
+HTML_SUFFIXES = {".html", ".htm"}
+PDF_SUFFIXES = {".pdf"}
+VIDEO_PREVIEW_WIDTH = 640
 
 
 def media_by_stage(acquisition: AcquisitionResult) -> Dict[str, List[FileRef]]:
-    groups: Dict[str, List[FileRef]] = {"Acquisition": list(acquisition.root_preview_files)}
+    groups: Dict[str, List[FileRef]] = {}
     for stage in STAGE_ORDER:
         groups[STAGE_LABELS[stage]] = list(acquisition.stages[stage].preview_files)
     return groups
@@ -28,7 +31,7 @@ def media_by_stage(acquisition: AcquisitionResult) -> Dict[str, List[FileRef]]:
 def render_media_preview(acquisition: AcquisitionResult) -> None:
     groups = media_by_stage(acquisition)
     if not any(groups.values()):
-        st.info("No PNG/JPG/AVI/MP4 media preview was detected in indexed locations.")
+        st.info("No PNG/JPG/AVI/MP4/HTML/PDF preview was detected in indexed locations.")
         return
 
     nav_col, content_col = st.columns([0.72, 5.6], vertical_alignment="top")
@@ -58,8 +61,6 @@ def _render_media_toolbar(container, acquisition: AcquisitionResult, options: li
 
 
 def _media_toolbar_label(stage_label: str) -> str:
-    if stage_label == "Acquisition":
-        return "Raw"
     for stage, label in STAGE_LABELS.items():
         if label == stage_label:
             return stage.upper()
@@ -85,7 +86,7 @@ def _render_stage_media(acquisition: AcquisitionResult, stage_label: str, files:
     )
     selected_type = filter_cols[1].selectbox(
         "Type",
-        ["All", "Images", "Videos"],
+        ["All", "Images", "Videos", "HTML", "PDF"],
         key=f"media-type-{acquisition.acquisition_id}-{stage_label}",
     )
     search = filter_cols[2].text_input(
@@ -114,27 +115,90 @@ def _render_media_file(file_ref: FileRef) -> None:
     path = Path(file_ref.path)
     suffix = path.suffix.lower()
 
-    if suffix in IMAGE_SUFFIXES:
-        st.image(str(path), width="stretch")
+    if suffix in IMAGE_SUFFIXES | VIDEO_SUFFIXES:
+        with st.container(key="media-preview"):
+            if suffix in IMAGE_SUFFIXES:
+                st.image(str(path), width="content")
+            elif suffix in {".mp4", ".mov", ".m4v"}:
+                st.video(str(path), width=VIDEO_PREVIEW_WIDTH)
+            else:
+                with st.spinner("Preparing browser-compatible MP4 preview from AVI..."):
+                    mp4_path, error = prepare_browser_video(path)
+                if mp4_path:
+                    st.video(str(mp4_path), width=VIDEO_PREVIEW_WIDTH)
+                    st.caption("AVI files are converted to cached MP4 previews for reliable browser playback.")
+                else:
+                    st.warning("AVI playback requires conversion. Automatic conversion failed on this machine.")
+                    if error:
+                        st.code(error, language="text")
         return
 
-    if suffix in {".mp4", ".mov", ".m4v"}:
-        st.video(str(path))
-        return
-
-    if suffix == ".avi":
-        with st.spinner("Preparing browser-compatible MP4 preview from AVI..."):
-            mp4_path, error = prepare_browser_video(path)
-        if mp4_path:
-            st.video(str(mp4_path))
-            st.caption("AVI files are converted to cached MP4 previews for reliable browser playback.")
+    if suffix in HTML_SUFFIXES:
+        try:
+            html = path.read_text(encoding="utf-8", errors="replace")
+        except OSError as exc:
+            st.warning(f"Unable to read HTML preview: {exc}")
         else:
-            st.warning("AVI playback requires conversion. Automatic conversion failed on this machine.")
-            if error:
-                st.code(error, language="text")
+            st.iframe(_html_preview_with_toolbar(html), height=800)
+        return
+
+    if suffix in PDF_SUFFIXES:
+        st.iframe(path, height=800)
         return
 
     st.info("This media type is indexed but not previewable in the browser.")
+
+
+def _html_preview_with_toolbar(content: str) -> str:
+    toolbar = """
+<style>
+#dm-html-toolbar {
+    position: fixed;
+    top: 8px;
+    right: 8px;
+    z-index: 1000;
+    display: flex;
+    justify-content: flex-end;
+    padding: 5px 8px;
+    background: rgba(100, 100, 100, 0.55);
+    border: 1px solid rgba(220, 220, 220, 0.45);
+    border-radius: 5px;
+    backdrop-filter: blur(3px);
+}
+#dm-html-fullscreen {
+    border: 1px solid rgba(240, 240, 240, 0.65);
+    border-radius: 4px;
+    background: rgba(70, 70, 70, 0.65);
+    color: #f8fafc;
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    padding: 4px 7px;
+}
+#dm-html-fullscreen:hover { background: rgba(90, 90, 90, 0.8); }
+</style>
+<div id="dm-html-toolbar">
+    <button id="dm-html-fullscreen" type="button" aria-label="Toggle fullscreen">⛶</button>
+</div>
+<script>
+const dmFullscreenButton = document.getElementById("dm-html-fullscreen");
+dmFullscreenButton.addEventListener("click", async () => {
+    try {
+        if (document.fullscreenElement) {
+            await document.exitFullscreen();
+        } else if (document.documentElement.requestFullscreen) {
+            await document.documentElement.requestFullscreen();
+        }
+    } catch (error) {
+        document.body.classList.toggle("dm-html-expanded");
+    }
+});
+</script>
+"""
+    body_end = content.lower().find("</body>")
+    if body_end >= 0:
+        return content[:body_end] + toolbar + content[body_end:]
+    return toolbar + content
 
 
 def _render_media_meta(file_ref: FileRef) -> None:
@@ -145,13 +209,6 @@ def _render_media_meta(file_ref: FileRef) -> None:
 
 
 def _stage_base_dir(acquisition: AcquisitionResult, stage_label: str) -> Optional[Path]:
-    if stage_label == "Acquisition":
-        if acquisition.acquisition_dir:
-            return Path(acquisition.acquisition_dir.path).parent
-        if acquisition.source_holo:
-            return Path(acquisition.source_holo.path).parent
-        return None
-
     for stage in STAGE_ORDER:
         result = acquisition.stages[stage]
         if STAGE_LABELS[stage] == stage_label and result.stage_dir:
@@ -179,6 +236,10 @@ def _filter_media(
         filtered = [file_ref for file_ref in filtered if Path(file_ref.path).suffix.lower() in IMAGE_SUFFIXES]
     elif selected_type == "Videos":
         filtered = [file_ref for file_ref in filtered if Path(file_ref.path).suffix.lower() in VIDEO_SUFFIXES]
+    elif selected_type == "HTML":
+        filtered = [file_ref for file_ref in filtered if Path(file_ref.path).suffix.lower() in HTML_SUFFIXES]
+    elif selected_type == "PDF":
+        filtered = [file_ref for file_ref in filtered if Path(file_ref.path).suffix.lower() in PDF_SUFFIXES]
 
     if search:
         normalized_search = search.lower()

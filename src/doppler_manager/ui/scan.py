@@ -286,7 +286,7 @@ def _render_scan_settings(container) -> tuple[int, int, int, bool]:
                 max_value=200,
                 value=DEFAULT_PREVIEW_LIMIT,
             )
-            read_versions = st.checkbox("Read version files", value=True)
+            read_versions = st.checkbox("Read H5 app versions", value=True)
     return int(max_depth), int(max_entries), int(preview_limit), bool(read_versions)
 
 

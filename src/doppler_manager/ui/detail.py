@@ -26,26 +26,23 @@ def render_acquisition_detail(acquisitions: List[AcquisitionResult], filtered: p
     _render_status_line(header_cols[1], acquisition)
 
     with st.container(border=True, key="detail_main_tabs"):
-        tabs = st.tabs(["Parameters", "Versions", "Media Preview"])
+        tabs = st.tabs(["Versions", "Parameters", "Media Preview"])
         with tabs[0]:
-            render_parameters(acquisition)
-        with tabs[1]:
             render_versions(acquisition)
+        with tabs[1]:
+            render_parameters(acquisition)
         with tabs[2]:
             render_media_preview(acquisition)
 
 
 def render_parameters(acquisition: AcquisitionResult) -> None:
-    nav_col, content_col = st.columns([0.72, 5.6], vertical_alignment="top")
-    stage = _render_stage_toolbar(nav_col, f"params-stage-{acquisition.acquisition_id}")
-    with content_col:
-        files = acquisition.stages[stage].params_files
-        _render_text_files(
-            files,
-            "No parameter files were indexed for this stage.",
-            language="json",
-            key_prefix=f"params-{acquisition.acquisition_id}-{stage}",
-        )
+    files = acquisition.stages["hd"].params_files
+    _render_text_files(
+        files,
+        "No HD parameter files were indexed.",
+        language="json",
+        key_prefix=f"params-{acquisition.acquisition_id}-hd",
+    )
 
 
 def render_versions(acquisition: AcquisitionResult) -> None:
@@ -53,10 +50,19 @@ def render_versions(acquisition: AcquisitionResult) -> None:
     stage = _render_stage_toolbar(nav_col, f"versions-stage-{acquisition.acquisition_id}")
     with content_col:
         result = acquisition.stages[stage]
-        if not result.version_files:
-            st.info("No version files were indexed for this stage.")
-            return
+        if result.app_versions:
+            for versions in result.app_versions.values():
+                st.json(versions)
+        else:
+            _render_legacy_versions(acquisition, stage)
 
+
+def _render_legacy_versions(acquisition: AcquisitionResult, stage: str) -> None:
+    result = acquisition.stages[stage]
+    if not result.version_files:
+        return
+
+    with st.expander("Legacy text version files"):
         selected = st.selectbox(
             "Version file",
             result.version_files,

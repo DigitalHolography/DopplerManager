@@ -5,6 +5,7 @@ description = "Streamlit MVP for detecting and verifying Holodoppler processing 
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "h5py>=3.10",
     "imageio-ffmpeg>=0.5",
     "pandas>=2.0,<3",
     "pyarrow>=23,<24",
@@ -17,7 +18,7 @@ dopplermanager = "doppler_manager.launcher:launch"
 [project.optional-dependencies]
 processing = [
     "holodoppler @ git+https://github.com/DigitalHolography/HoloDoppler.git@dev",
-    "dopplerview @ git+https://github.com/DigitalHolography/DopplerView.git@varying_HD_output_keys",
+    "dopplerview @ git+https://github.com/DigitalHolography/DopplerView.git@main",
     "onnxruntime>=1.25,<1.26",
     "EyeFlow @ git+https://github.com/DigitalHolography/EyeFlow.git@main",
     "AngioEye @ git+https://github.com/DigitalHolography/AngioEye.git@main",

@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import json
 import os
 from collections import deque
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Sequence, Set, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Set, Tuple, Union
+
+import h5py
 
 from doppler_manager.models import (
     AcquisitionResult,
@@ -32,6 +35,9 @@ STAGE_SUFFIXES = {
 TEXT_SUFFIXES = {".txt", ".log"}
 PARAM_SUFFIXES = {".json"}
 PREVIEW_SUFFIXES = {".png", ".jpg", ".jpeg", ".avi", ".mp4", ".mov"}
+HTML_SUFFIXES = {".html", ".htm"}
+PDF_SUFFIXES = {".pdf"}
+APP_VERSIONS_DATASET = "/app_versions/"
 
 
 @dataclass
@@ -236,6 +242,7 @@ def _build_acquisition(
 
     acquisition.root_preview_files = _find_root_previews(acquisition_id, source_holo_path, acquisition_dir_path)
     _apply_pipeline_consistency(acquisition)
+    _apply_app_version_consistency(acquisition)
     acquisition.status = _global_status(acquisition)
     return acquisition
 
@@ -300,8 +307,12 @@ def _inspect_stage(
     result.version_files = [FileRef.from_path(path, "version") for path in version_paths]
     if options.read_versions:
         result.versions = _read_version_files(version_paths, options.max_text_bytes)
+        for file_ref in result.h5_files:
+            app_versions = _read_h5_app_versions(Path(file_ref.path), stage)
+            if app_versions is not None:
+                result.app_versions[file_ref.name] = app_versions
 
-    preview_paths = _stage_preview_paths(stage_dir, options.preview_limit_per_stage)
+    preview_paths = _stage_preview_paths(stage, stage_dir, options.preview_limit_per_stage)
     result.preview_files = [FileRef.from_path(path, "preview") for path in preview_paths]
 
     result.status = _stage_status(acquisition_id, stage, result)
@@ -354,13 +365,16 @@ def _stage_version_paths(stage_dir: Optional[Path]) -> List[Path]:
     return _direct_files(stage_dir, TEXT_SUFFIXES)
 
 
-def _stage_preview_paths(stage_dir: Optional[Path], limit: int) -> List[Path]:
+def _stage_preview_paths(stage: str, stage_dir: Optional[Path], limit: int) -> List[Path]:
     if not stage_dir:
         return []
 
     paths: List[Path] = []
     paths.extend(_direct_files(stage_dir / "png", PREVIEW_SUFFIXES, limit=limit))
     paths.extend(_direct_files(stage_dir / "avi", PREVIEW_SUFFIXES, limit=limit))
+    if stage == "ae":
+        paths.extend(_direct_files(stage_dir / "html", HTML_SUFFIXES, limit=limit))
+    paths.extend(_direct_files(stage_dir / "pdf", PDF_SUFFIXES, limit=limit))
     paths.extend(_direct_files(stage_dir, PREVIEW_SUFFIXES, limit=limit))
     remaining = limit - len(_dedupe_paths(paths))
     if remaining > 0:
@@ -442,6 +456,55 @@ def _apply_pipeline_consistency(acquisition: AcquisitionResult) -> None:
                 result.notes.append(message)
                 acquisition.errors.append(message)
                 result.status = "error"
+
+
+def _apply_app_version_consistency(acquisition: AcquisitionResult) -> None:
+    """Warn when a downstream H5 used a stale upstream application version."""
+
+    launched_versions: Dict[str, Tuple[FileRef, str]] = {}
+    for stage in STAGE_ORDER:
+        result = acquisition.stages[stage]
+        version_key = f"{stage.upper()}_version"
+        candidates = [
+            file_ref
+            for file_ref in result.h5_files
+            if version_key in result.app_versions.get(file_ref.name, {})
+        ]
+        if candidates:
+            newest = max(
+                candidates,
+                key=lambda file_ref: (file_ref.modified_ts or float("-inf"), file_ref.name),
+            )
+            launched_versions[version_key] = (
+                newest,
+                str(result.app_versions[newest.name][version_key]),
+            )
+
+    for downstream_index, downstream_stage in enumerate(STAGE_ORDER):
+        result = acquisition.stages[downstream_stage]
+        for file_name, versions in result.app_versions.items():
+            mismatches: List[str] = []
+            for upstream_stage in STAGE_ORDER[:downstream_index]:
+                version_key = f"{upstream_stage.upper()}_version"
+                used_version = versions.get(version_key)
+                launched = launched_versions.get(version_key)
+                if used_version is None or launched is None:
+                    continue
+                launched_file, launched_version = launched
+                if str(used_version) == launched_version:
+                    continue
+                mismatches.append(
+                    f"{version_key}={used_version!r}; newest {STAGE_LABELS[upstream_stage]} output "
+                    f"{launched_file.name} records {version_key}={launched_version!r}"
+                )
+
+            if mismatches:
+                result.notes.append(
+                    f"{result.label} ({file_name}) uses inconsistent upstream app versions: "
+                    + "; ".join(mismatches)
+                )
+                if result.status != "error":
+                    result.status = "warning"
 
 
 def _global_status(acquisition: AcquisitionResult) -> str:
@@ -557,3 +620,36 @@ def _read_version_files(paths: Sequence[Path], max_bytes: int) -> Dict[str, str]
         except OSError as exc:
             versions[path.name] = f"Unable to read: {exc}"
     return versions
+
+
+def _read_h5_app_versions(path: Path, stage: str) -> Optional[Dict[str, Any]]:
+    try:
+        with h5py.File(path, "r") as handle:
+            dataset = handle.get(APP_VERSIONS_DATASET)
+            if dataset is None and stage == "hd":
+                dataset = handle.get("/HD_version")
+                if dataset is not None:
+                    value: Any = dataset[()]
+                    if hasattr(value, "tolist"):
+                        value = value.tolist()
+                    if isinstance(value, bytes):
+                        value = value.decode("utf-8")
+                    return {"HD_version": value}
+            if dataset is None:
+                return None
+            value: Any = dataset[()]
+    except (OSError, ValueError, RuntimeError):
+        return None
+
+    try:
+        if hasattr(value, "tolist"):
+            value = value.tolist()
+        if isinstance(value, bytes):
+            value = value.decode("utf-8")
+        if isinstance(value, str):
+            value = json.loads(value)
+        if not isinstance(value, dict):
+            return None
+        return {str(key): item for key, item in value.items()}
+    except (UnicodeDecodeError, TypeError, ValueError):
+        return None

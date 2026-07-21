@@ -38,6 +38,14 @@ def apply_dark_theme() -> None:
             color: var(--dm-muted);
         }
 
+        .st-key-media-preview [data-testid="stImage"],
+        .st-key-media-preview [data-testid="stVideo"] {
+            width: fit-content;
+            max-width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
         div[data-testid="stMetric"] {
             border: 1px solid var(--dm-border);
             border-radius: 6px;

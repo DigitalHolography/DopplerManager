@@ -14,7 +14,7 @@ The supported processing chain is:
 
 | Stage | Tool        | Expected inputs                            | Recognized outputs                                               |
 | ----- | ----------- | ------------------------------------------ | ---------------------------------------------------------------- |
-| HD    | HoloDoppler | Raw `<id>.holo` acquisition and settings JSON | `<id>_HD/h5/<id>_HD_output.h5`, JSON files, version TXT, previews |
+| HD    | HoloDoppler | Raw `<id>.holo` acquisition and settings JSON | `<id>_HD/h5/<id>_HD_output.h5`, JSON files, H5 app versions, previews |
 | DV    | DopplerView | Acquisition with an available HD output    | `<id>_DV/h5/<id>_DV.h5`, config JSON, outputs under `output/`    |
 | EF    | EyeFlow     | Acquisition with available HD and DV outputs | `<id>_EF/h5/<id>_EF.h5`, JSON files, previews                    |
 | AE    | AngioEye    | EF `.h5` file                              | `<id>_AE/h5/<id>_AE.h5`                                         |
@@ -79,7 +79,7 @@ The Streamlit application provides three main tabs:
 - `Acquisition Details`: select a filtered acquisition, view status badges, and inspect `Parameters`, `Versions`, and `Media Preview` tabs.
 - `Processing`: select acquisitions and stages to run or rerun, choose HoloDoppler settings, choose EyeFlow/AngioEye pipelines, follow real-time logs, and refresh the scan automatically after processing.
 
-The scan bar accepts a typed or pasted path, a folder selected with `Browse`, and dropped paths when the browser provides a usable local path. Scan options control maximum depth, maximum inspected entries, indexed media per stage, and version-file reading. The `Input filter` expander accepts an optional `.txt` filter list. When a filter list is uploaded, each non-empty line is treated as a `.holo` filename, full path, or acquisition ID, and only matching acquisitions are scanned. By default, no filter is applied.
+The scan bar accepts a typed or pasted path, a folder selected with `Browse`, and dropped paths when the browser provides a usable local path. Scan options control maximum depth, maximum inspected entries, indexed media per stage, and H5 app-version reading. The `Versions` detail tab reads the JSON dictionary stored at `/app_versions/` in each H5 and displays the complete dictionary, including upstream versions recorded by downstream applications. A stale upstream version is shown as a warning on the downstream stage, never as an error. Legacy text version files remain available in the detail view when present. The `Input filter` expander accepts an optional `.txt` filter list. When a filter list is uploaded, each non-empty line is treated as a `.holo` filename, full path, or acquisition ID, and only matching acquisitions are scanned. By default, no filter is applied.
 
 ## Media Preview
 
