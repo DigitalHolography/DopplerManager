@@ -1,12 +1,10 @@
-pipeline_name: "simple"
-
-
+pipeline_name: "simple_split_apertures"
 
 # Core parameters
-batch_size: 256
+batch_size: 128
 first_frame: 0
-batch_stride: 256
-end_frame: -1  # -1 means process all frames
+batch_stride: 128
+end_frame: -1 # -1 means process all frames
 
 # Propagation parameters
 spatial_propagation: "Fresnel"  # Options: "Fresnel" or "AngularSpectrum"
@@ -15,38 +13,35 @@ wavelength: 852.0e-9  # Wavelength in meters
 pixel_pitch: "use_holovibes"  # Pixel pitch in meters [y, x]
 
 # Fresnel specific
-Fresnel_use_ouput_kernel: false  # Use output kernel for Fresnel transform
-
-# Filtering 2D frequencies
-filter2d: false
-filter2d_low: 0.03
+Fresnel_use_ouput_kernel: true  # Use output kernel for Fresnel transform
 
 # SVD filtering
-svd_threshold: 39
+svd_threshold: 2
 svd_filter_mode: "number_of_values"  # Options: "number_of_values", "amplitude_threshold"
 svd_remove_dc: true
 
 # Temporal transformation
 temporal_transformation: "FourierTransform"  # Options: "FourierTransform" or None
 sampling_freq: "use_holovibes"  # Sampling frequency in Hz
-low_freq: 6000  # Low frequency cutoff in Hz
-high_freq: 18300  # High frequency cutoff in Hz "use_holovibes" sampling_freq/2
+low_freq: 1500  # Low frequency cutoff in Hz
+high_freq: "use_holovibes"  # High frequency cutoff in Hz "use_holovibes" sampling_freq/2
 
 # Frequency bands for different cutoffs of the psd in Hz. It will give the average of the psd in the symmetric frequency range
 frequency_bands:
-  - [3000, 9000]
-  - [9000, 18000]
+  - [100, 1500]
+#   - [9000, 18000]
+
+# Filtering 2D frequencies
+filter2d: true
+filter2d_low: 0.03
 
 # Image registration
-image_registration: true
+image_registration: false
 registration_ref_first_frame: 0
 registration_ref_batch_size: 512
-registration_radius: 0.8
+registration_radius: 0.9
 registration_sub_pixel: true
 registration_flatfield_gw: 35.0  # Gaussian width for flatfield normalization
-
-# Corner compensation
-corner_compensation: false
 
 # Image resizing
 square: true

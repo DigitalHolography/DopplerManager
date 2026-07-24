@@ -13,15 +13,30 @@ HOLODOPPLER_SETTINGS_SUFFIXES = frozenset({".json", ".yaml", ".yml"})
 
 def sync_processing_defaults(target_root: Path | None = None) -> list[Path]:
     target_root = Path.cwd() / "processing_defaults" if target_root is None else Path(target_root)
-    copied = _copy_holodoppler_settings(
-        _app_root("holodoppler", "holodoppler") / "parameters",
-        target_root / "holodoppler",
-    )
+    copied: list[Path] = []
+    try:
+        copied.extend(
+            _copy_holodoppler_settings(
+                _app_root("holodoppler", "holodoppler") / "parameters",
+                target_root / "holodoppler",
+            )
+        )
+    except metadata.PackageNotFoundError:
+        pass
+
     for distribution, project, target in (
         ("EyeFlow", "EyeFlow", target_root / "eyeflow" / "default_settings.json"),
         ("AngioEye", "AngioEye", target_root / "angioeye" / "default_settings.json"),
     ):
-        copied.append(_copy_file(_app_root(distribution, project) / "default_settings.json", target))
+        try:
+            copied.append(
+                _copy_file(
+                    _app_root(distribution, project) / "default_settings.json",
+                    target,
+                )
+            )
+        except metadata.PackageNotFoundError:
+            continue
     return copied
 
 

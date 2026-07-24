@@ -3,7 +3,7 @@ pipeline_name: "sliding_shack_hartmann"
 # Core parameters
 time_window: 256
 time_stride: 256
-sh_time_accumulation: 8 # number of repetition of sh at each batch
+sh_time_accumulation: 4 # number of repetition of sh at each batch
 first_frame: 0
 end_frame: -1  # -1 means process all frames
 

@@ -100,7 +100,7 @@ def test_build_processing_jobs_keeps_stage_order(tmp_path: Path, monkeypatch) ->
     assert jobs[2].command[:2] == ("ef-command", "--data")
     assert jobs[3].command[:2] == ("ae-command", "--data")
     assert jobs[3].command[jobs[3].command.index("--data") + 1] == str(
-        tmp_path / acquisition_id / f"{acquisition_id}_EF" / "h5" / f"{acquisition_id}_EF.h5"
+        tmp_path / f"{acquisition_id}.holo"
     )
 
 
@@ -195,7 +195,7 @@ def test_eyeflow_can_use_dopplerview_from_same_run(tmp_path: Path, monkeypatch) 
     assert [job.stage for job in jobs] == ["dv", "ef"]
 
 
-def test_angioeye_job_uses_existing_eyeflow_h5_and_absolute_paths(tmp_path: Path, monkeypatch) -> None:
+def test_angioeye_job_uses_source_holo_and_absolute_paths(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setenv("DM_ANGIOEYE_COMMAND", "ae-command")
     acquisition_id = "251031_ALA_L_1"
     acquisition = _acquisition(tmp_path, acquisition_id)
@@ -213,7 +213,7 @@ def test_angioeye_job_uses_existing_eyeflow_h5_and_absolute_paths(tmp_path: Path
     pipelines_path = Path(job.command[job.command.index("--pipelines") + 1])
     output_path = Path(job.command[job.command.index("--output") + 1])
 
-    assert data_path == tmp_path / acquisition_id / f"{acquisition_id}_EF" / "h5" / f"{acquisition_id}_EF.h5"
+    assert data_path == tmp_path / f"{acquisition_id}.holo"
     assert pipelines_path.is_absolute()
     assert output_path.is_absolute()
     assert pipelines_path.is_file()
@@ -317,7 +317,7 @@ def test_angioeye_postprocess_batch_only_is_hidden_for_one_file() -> None:
     assert proposed_angioeye_postprocesses((batch_only,), 2) == (batch_only,)
 
 
-def test_angioeye_postprocess_discovery_does_not_guess_old_descriptor_modes(
+def test_angioeye_postprocess_discovery_supports_old_descriptor_modes(
     monkeypatch,
 ) -> None:
     monkeypatch.setattr(
@@ -328,7 +328,7 @@ def test_angioeye_postprocess_discovery_does_not_guess_old_descriptor_modes(
 
     descriptor = discover_angioeye_postprocesses()[0]
 
-    assert descriptor.input_methods == ()
+    assert descriptor.input_methods == angioeye_postprocess.POSTPROCESS_INPUT_METHODS
 
 
 def test_angioeye_postprocess_requirements_include_selected_pipeline_dag_upstream(
@@ -494,15 +494,9 @@ def test_build_processing_jobs_adds_angioeye_batch_postprocess_job(
     assert job.command == (
         "ae-command",
         "--data",
-        str(
-            tmp_path / first.acquisition_id / f"{first.acquisition_id}_AE" / "h5"
-            / f"{first.acquisition_id}_AE.h5"
-        ),
+        str(tmp_path / f"{first.acquisition_id}.holo"),
         "--data",
-        str(
-            tmp_path / second.acquisition_id / f"{second.acquisition_id}_AE" / "h5"
-            / f"{second.acquisition_id}_AE.h5"
-        ),
+        str(tmp_path / f"{second.acquisition_id}.holo"),
         "--pipelines",
         str(
             tmp_path

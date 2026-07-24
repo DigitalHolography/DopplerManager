@@ -58,3 +58,19 @@ def test_sync_processing_defaults_copies_commit_checkout_files(tmp_path: Path, m
     assert (target / "holodoppler" / "default_parameters_simple.yaml").is_file()
     assert (target / "eyeflow" / "default_settings.json").read_text(encoding="utf-8") == '{"source": "EyeFlow"}'
     assert (target / "angioeye" / "default_settings.json").read_text(encoding="utf-8") == '{"source": "AngioEye"}'
+
+
+def test_sync_processing_defaults_skips_missing_optional_distributions(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    def missing_distribution(name: str):
+        raise release_defaults.metadata.PackageNotFoundError(name)
+
+    monkeypatch.setattr(
+        release_defaults.metadata,
+        "distribution",
+        missing_distribution,
+    )
+
+    assert release_defaults.sync_processing_defaults(tmp_path) == []

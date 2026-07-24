@@ -21,11 +21,14 @@ from .outputs import (
 def run_processing_jobs(
     jobs: Sequence[ProcessingJob],
     on_log: Callable[[str], None],
+    on_job: Callable[[ProcessingJob], None] | None = None,
 ) -> list[JobResult]:
     results: list[JobResult] = []
     failed_acquisitions: set[str] = set()
 
     for job in jobs:
+        if on_job is not None:
+            on_job(job)
         if job.acquisition_id in failed_acquisitions:
             on_log(f"[SKIP] {job.description}: upstream stage failed.")
             continue

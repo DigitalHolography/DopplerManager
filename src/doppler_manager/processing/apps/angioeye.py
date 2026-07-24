@@ -9,7 +9,7 @@ from doppler_manager.processing.core.paths import safe_resolve
 
 
 def build_angioeye_call(
-    eyeflow_h5_path: Path,
+    holo_path: Path,
     pipeline_file: Path,
     output_root: Path,
     postprocess_file: Path | None = None,
@@ -17,7 +17,7 @@ def build_angioeye_call(
     command = (
         *command_prefix_for_stage("ae"),
         "--data",
-        str(eyeflow_h5_path),
+        str(holo_path),
         "--pipelines",
         str(pipeline_file),
         "--output",
@@ -31,7 +31,6 @@ def build_angioeye_call(
 def build_angioeye_job(
     acquisition_id: str,
     holo_path: Path,
-    eyeflow_h5_path: Path,
     pipeline_file: Path,
     temp_root: Path,
     destination: Path,
@@ -41,7 +40,7 @@ def build_angioeye_job(
         acquisition_id=acquisition_id,
         stage="ae",
         command=build_angioeye_call(
-            eyeflow_h5_path,
+            holo_path,
             pipeline_file,
             temp_root,
             postprocess_file,

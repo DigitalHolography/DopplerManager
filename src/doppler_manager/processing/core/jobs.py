@@ -26,8 +26,6 @@ from .constants import PROCESSING_STAGES
 from .models import ProcessingJob
 from .paths import (
     acquisition_dir,
-    expected_eyeflow_h5_path,
-    preferred_stage_h5,
     require_file,
     require_stage_h5,
     safe_resolve,
@@ -204,18 +202,12 @@ def build_processing_jobs(
             if "ef" not in acquisition_stage_set:
                 require_stage_h5(acquisition, "ef")
             assert angioeye_pipeline_file is not None
-            ef_h5_path = (
-                expected_eyeflow_h5_path(acquisition_id, acquisition_root)
-                if "ef" in acquisition_stage_set
-                else preferred_stage_h5(acquisition, "ef")
-            )
             temp_root = angioeye_temp_root(cache_dir, acquisition_id)
             destination = stage_output_dir(acquisition_root, acquisition_id, "ae")
             jobs.append(
                 build_angioeye_job(
                     acquisition_id,
                     holo_path,
-                    ef_h5_path,
                     angioeye_pipeline_file,
                     temp_root,
                     destination,
@@ -232,23 +224,16 @@ def build_processing_jobs(
     if selected_postprocesses:
         # Single-file postprocesses are already part of the AE pipeline job
         # above. For a batch selection, keep the input method truthful by
-        # passing all existing/generated AE H5 files to one filesystem call.
+        # passing all source Holo paths to one filesystem call.
         postprocess_inputs: list[Path] = []
         needs_postprocess_only_job = True
         for acquisition_id in selected_ids:
             acquisition = by_id[acquisition_id]
             acquisition_stage_set = set(stages_by_acquisition[acquisition_id])
-            if "ae" in acquisition_stage_set:
-                holo_path = source_holo_path(acquisition)
-                acquisition_root = acquisition_dir(acquisition, holo_path)
-                postprocess_inputs.append(
-                    stage_output_dir(acquisition_root, acquisition_id, "ae")
-                    / "h5"
-                    / f"{acquisition_id}_AE.h5"
-                )
-            else:
+            holo_path = source_holo_path(acquisition)
+            if "ae" not in acquisition_stage_set:
                 require_stage_h5(acquisition, "ae")
-                postprocess_inputs.append(preferred_stage_h5(acquisition, "ae"))
+            postprocess_inputs.append(holo_path)
             if "ae" in acquisition_stage_set and len(selected_ids) == 1:
                 needs_postprocess_only_job = False
 

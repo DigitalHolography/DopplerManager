@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from functools import lru_cache
@@ -39,8 +40,7 @@ def discover_angioeye_postprocesses() -> tuple[AngioEyePostprocessDescriptor, ..
     AngioEye is an optional processing dependency. Discovery therefore stays
     best-effort so the main scan UI remains usable when AngioEye is absent.
     Older installed AngioEye versions do not expose ``input_methods`` yet;
-    those descriptors cannot be proposed safely because their supported input
-    modes are unknown.
+    those descriptors use the standard dispatcher input modes.
     """
 
     try:
@@ -130,13 +130,7 @@ def build_angioeye_postprocess_call(
     postprocess_file: Path,
     pipeline_file: Path | None = None,
 ) -> tuple[str, ...]:
-    """Build a postprocess-only AngioEye invocation.
-
-    Pass actual HDF5 inputs to the filesystem workflow. A manager-generated
-    Holo ``.txt`` list is not valid for AngioEye's postprocess-only dispatch:
-    that route treats each entry in ``request.holo_paths`` as an actual Holo
-    path and does not expand the list file.
-    """
+    """Build a postprocess-only AngioEye invocation from source Holo paths."""
 
     if isinstance(input_paths, Path):
         paths = (input_paths,)
@@ -187,9 +181,36 @@ def build_angioeye_postprocess_job(
 
 
 def _load_angioeye_postprocess_catalog():
+    _install_angioeye_catalog_compatibility()
     from postprocess import load_postprocess_catalog
 
     return load_postprocess_catalog()
+
+
+def _install_angioeye_catalog_compatibility() -> None:
+    """Bridge the runtime-pipeline helper used by newer AngioEye catalogs.
+
+    EyeFlow and AngioEye currently ship the same top-level ``app_settings``
+    module. Depending on installation order, an older EyeFlow copy can hide
+    ``runtime_pipelines_path`` required by AngioEye's ``pipelines`` package.
+    The installed pipeline package already searches its own package directory,
+    so an absent runtime directory is a safe fallback here.
+    """
+
+    try:
+        import app_settings
+    except ImportError:
+        return
+    if hasattr(app_settings, "runtime_pipelines_path"):
+        return
+
+    configured = os.getenv("ANGIOEYE_PIPELINES_DIR", "").strip()
+    fallback = (
+        Path(configured)
+        if configured
+        else Path(__file__).resolve().parent / "__missing_runtime_pipelines__"
+    )
+    app_settings.runtime_pipelines_path = lambda: fallback
 
 
 def _load_angioeye_pipeline_catalog():
@@ -344,10 +365,10 @@ def _descriptor_from_upstream(
 def _input_methods_for(upstream) -> tuple[str, ...]:
     methods = getattr(upstream, "input_methods", None)
     if methods is None:
-        # A catalog from an AngioEye version predating decorator input-method
-        # metadata cannot be classified safely. Fail closed rather than
-        # offering, for example, a cohort-only postprocess for one file.
-        return ()
+        # Older AngioEye catalogs did not expose input-method metadata. Those
+        # postprocesses used the standard dispatcher and were valid for the
+        # same single-file and batch inputs represented by this manager.
+        return POSTPROCESS_INPUT_METHODS
     normalized: list[str] = []
     for method in methods:
         value = str(method).strip()

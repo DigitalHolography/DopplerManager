@@ -36,6 +36,10 @@ STAGE_OPTIONS = {
 
 LOG_LIMIT = 700
 CUSTOM_HOLODOPPLER_SETTINGS = "Upload custom settings..."
+PROCESSING_LOG_ENTRIES_KEY = "processing_log_entries"
+PROCESSING_LOG_ALL_FILES = "All files"
+PROCESSING_LOG_ALL_APPS = "All apps"
+PROCESSING_LOG_MANAGER_APP = "DopplerManager"
 
 
 @st.cache_resource(show_spinner=False)
@@ -57,7 +61,9 @@ def render_processing_tab(
     filtered_ids = filtered["acquisition"].tolist()
     if not filtered_ids:
         st.warning("No acquisition matches the active filters.")
-        _render_previous_log()
+        _render_processing_summary()
+        if _has_processing_output():
+            _render_processing_log_view([], [])
         return
 
     acquisitions_by_id = {
@@ -93,9 +99,6 @@ def render_processing_tab(
         root_input,
     )
 
-    log_placeholder = st.empty()
-    _render_previous_log(log_placeholder)
-
     can_run = bool(
         selected_ids
         and not missing_tools
@@ -117,6 +120,15 @@ def render_processing_tab(
         if no_incomplete_selected_scope
         else None
     )
+    if not can_run:
+        if no_incomplete_selected_scope:
+            st.caption("Selected stages are already complete for the selected acquisitions.")
+        else:
+            st.caption(
+                "Select at least one acquisition and one stage or postprocess. "
+                "HD also needs a settings JSON file."
+            )
+    _render_processing_summary()
     if no_incomplete_selected_scope:
         _render_disabled_run_button(run_button_help)
         run_clicked = False
@@ -128,6 +140,7 @@ def render_processing_tab(
             width="stretch",
             key="run_processing_button",
         )
+
     if run_clicked:
         try:
             jobs = build_processing_jobs(
@@ -148,22 +161,24 @@ def render_processing_tab(
             st.info("No selected stage needs processing.")
             return
 
+        selected_log_file, selected_log_app, log_placeholder = _render_processing_log_view(
+            selected_ids,
+            selected_stages,
+        )
         _run_jobs_and_refresh(
             jobs=jobs,
             root_input=root_input,
             scan_options=scan_options,
             refresh_scan=refresh_scan,
             log_placeholder=log_placeholder,
+            selected_file_ids=selected_ids,
+            file_filter=selected_log_file,
+            app_filter=selected_log_app,
+            allowed_file_ids=selected_ids,
+            allowed_apps=_processing_app_labels(selected_stages),
         )
-
-    if not can_run:
-        if no_incomplete_selected_scope:
-            st.caption("Selected stages are already complete for the selected acquisitions.")
-        else:
-            st.caption(
-                "Select at least one acquisition and one stage or postprocess. "
-                "HD also needs a settings JSON file."
-            )
+    elif _has_processing_output():
+        _render_processing_log_view(selected_ids, selected_stages)
 
 
 def _render_acquisition_selection(container, filtered_ids: list[str]) -> list[str]:
@@ -419,6 +434,114 @@ def _preferred_index(options: list[Path]) -> int:
         return 0
 
 
+def _render_processing_summary() -> None:
+    summary = st.session_state.get("processing_summary")
+    if not summary:
+        return
+    if "failed" in summary:
+        st.warning(summary)
+    else:
+        st.success(summary)
+
+
+def _has_processing_output() -> bool:
+    return bool(
+        st.session_state.get(PROCESSING_LOG_ENTRIES_KEY)
+        or st.session_state.get("processing_log")
+        or st.session_state.get("processing_summary")
+    )
+
+
+def _processing_app_labels(stages: list[str]) -> tuple[str, ...]:
+    return tuple(
+        dict.fromkeys(_processing_app_label(stage) for stage in stages)
+    )
+
+
+def _render_processing_log_view(
+    selected_file_ids: list[str],
+    selected_stages: list[str],
+) -> tuple[str, str, object]:
+    selected_log_file, selected_log_app = _render_log_filters(
+        selected_file_ids,
+        selected_stages,
+    )
+    st.markdown("#### Log")
+    log_placeholder = st.empty()
+    _render_previous_log(
+        log_placeholder,
+        file_filter=selected_log_file,
+        app_filter=selected_log_app,
+        allowed_file_ids=selected_file_ids,
+        allowed_apps=_processing_app_labels(selected_stages),
+    )
+    return selected_log_file, selected_log_app, log_placeholder
+
+
+def _render_log_filters(
+    selected_file_ids: list[str],
+    selected_stages: list[str],
+) -> tuple[str, str]:
+    file_options = sorted(dict.fromkeys(str(file_id) for file_id in selected_file_ids))
+    app_options = list(_processing_app_labels(selected_stages))
+    file_options = [PROCESSING_LOG_ALL_FILES, *file_options]
+    app_options = [PROCESSING_LOG_ALL_APPS, *app_options]
+
+    file_key = "processing_log_file_filter"
+    app_key = "processing_log_app_filter"
+    if st.session_state.get(file_key) not in file_options:
+        st.session_state[file_key] = file_options[0]
+    if st.session_state.get(app_key) not in app_options:
+        st.session_state[app_key] = app_options[0]
+
+    filter_cols = st.columns([1.4, 1])
+    selected_file = filter_cols[0].selectbox(
+        "File log to show",
+        file_options,
+        key=file_key,
+    )
+    selected_app = filter_cols[1].selectbox(
+        "App",
+        app_options,
+        key=app_key,
+    )
+    return str(selected_file), str(selected_app)
+
+
+def _processing_log_entries() -> list[dict[str, object]]:
+    raw_entries = st.session_state.get(PROCESSING_LOG_ENTRIES_KEY)
+    if isinstance(raw_entries, list) and raw_entries:
+        entries: list[dict[str, object]] = []
+        for raw_entry in raw_entries:
+            if not isinstance(raw_entry, dict):
+                continue
+            files = raw_entry.get("files", ())
+            if isinstance(files, str):
+                files = (files,)
+            elif isinstance(files, (list, tuple)):
+                files = tuple(str(file_id) for file_id in files if file_id)
+            else:
+                files = ()
+            entries.append(
+                {
+                    "line": str(raw_entry.get("line", "")),
+                    "files": files,
+                    "app": str(raw_entry.get("app", "")),
+                }
+            )
+        if entries:
+            return entries
+
+    return [
+        {
+            "line": str(line),
+            "files": (),
+            "app": PROCESSING_LOG_MANAGER_APP,
+        }
+        for line in st.session_state.get("processing_log", [])
+    ]
+
+
 def _run_jobs_and_refresh(
     *,
     jobs,
@@ -426,10 +549,27 @@ def _run_jobs_and_refresh(
     scan_options: ScanOptions,
     refresh_scan,
     log_placeholder,
+    selected_file_ids: list[str],
+    file_filter: str,
+    app_filter: str,
+    allowed_file_ids: list[str],
+    allowed_apps: tuple[str, ...],
 ) -> None:
     log_lines = deque(maxlen=LOG_LIMIT)
+    log_entries = deque(maxlen=LOG_LIMIT)
     last_log_was_progress = False
+    current_file_ids: tuple[str, ...] = ()
+    current_app = PROCESSING_LOG_MANAGER_APP
     st.session_state.processing_log = []
+    st.session_state[PROCESSING_LOG_ENTRIES_KEY] = []
+
+    def set_job_context(job) -> None:
+        nonlocal current_file_ids, current_app
+        if job.acquisition_id == "__angioeye_postprocess__":
+            current_file_ids = tuple(selected_file_ids)
+        else:
+            current_file_ids = (job.acquisition_id,)
+        current_app = _processing_app_label(job.stage)
 
     def append_log(line: str) -> None:
         nonlocal last_log_was_progress
@@ -438,18 +578,42 @@ def _run_jobs_and_refresh(
             line = line[len(PROGRESS_LOG_PREFIX):]
             if last_log_was_progress and log_lines:
                 log_lines[-1] = line
+                log_entries[-1]["line"] = line
             else:
                 log_lines.append(line)
+                log_entries.append(
+                    {
+                        "line": line,
+                        "files": current_file_ids,
+                        "app": current_app,
+                    }
+                )
             last_log_was_progress = True
         else:
             log_lines.append(line)
+            log_entries.append(
+                {
+                    "line": line,
+                    "files": current_file_ids,
+                    "app": current_app,
+                }
+            )
             last_log_was_progress = False
         st.session_state.processing_log = list(log_lines)
-        log_placeholder.code("\n".join(log_lines), language="text")
+        st.session_state[PROCESSING_LOG_ENTRIES_KEY] = list(log_entries)
+        _render_previous_log(
+            log_placeholder,
+            file_filter=file_filter,
+            app_filter=app_filter,
+            allowed_file_ids=allowed_file_ids,
+            allowed_apps=allowed_apps,
+        )
 
-    results = run_processing_jobs(jobs, append_log)
+    results = run_processing_jobs(jobs, append_log, on_job=set_job_context)
     failures = [result for result in results if not result.succeeded]
 
+    current_file_ids = ()
+    current_app = PROCESSING_LOG_MANAGER_APP
     append_log("[SCAN] Refreshing acquisition index...")
     st.session_state.scan_result = refresh_scan(root_input, scan_options)
     append_log("[SCAN] Refresh complete.")
@@ -463,16 +627,55 @@ def _run_jobs_and_refresh(
     st.rerun()
 
 
-def _render_previous_log(log_placeholder=None) -> None:
-    summary = st.session_state.get("processing_summary")
-    if summary:
-        if "failed" in summary:
-            st.warning(summary)
-        else:
-            st.success(summary)
+def _processing_app_label(stage: str) -> str:
+    if stage == "ae_postprocess":
+        return STAGE_OPTIONS["ae"]
+    return STAGE_OPTIONS.get(stage, stage)
 
-    log_lines = st.session_state.get("processing_log", [])
-    if not log_lines:
+
+def _render_previous_log(
+    log_placeholder=None,
+    *,
+    file_filter: str = PROCESSING_LOG_ALL_FILES,
+    app_filter: str = PROCESSING_LOG_ALL_APPS,
+    allowed_file_ids: list[str] | None = None,
+    allowed_apps: tuple[str, ...] | None = None,
+) -> None:
+    entries = _processing_log_entries()
+    if not entries:
         return
+
+    visible_entries = [
+        entry
+        for entry in entries
+        if (
+            allowed_file_ids is None
+            or (
+                allowed_file_ids
+                and bool(set(entry["files"]).intersection(allowed_file_ids))
+            )
+        )
+        and (
+            allowed_apps is None
+            or (
+                allowed_apps
+                and entry["app"] in allowed_apps
+            )
+        )
+        and (
+            file_filter == PROCESSING_LOG_ALL_FILES
+            or file_filter in entry["files"]
+        )
+        and (
+            app_filter == PROCESSING_LOG_ALL_APPS
+            or app_filter == entry["app"]
+        )
+    ]
     target = log_placeholder if log_placeholder is not None else st
-    target.code("\n".join(log_lines), language="text")
+    if not visible_entries:
+        target.caption("No log entries match the selected file and app.")
+        return
+    target.code(
+        "\n".join(str(entry["line"]) for entry in visible_entries),
+        language="text",
+    )
