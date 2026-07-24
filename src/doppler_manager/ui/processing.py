@@ -284,7 +284,6 @@ def _render_postprocess_selection(
     selected_acquisitions: list[AcquisitionResult],
     selected_angioeye_pipelines: Optional[tuple[str, ...]],
 ) -> tuple[str, ...]:
-    st.markdown("##### AngioEye postprocesses")
     if not selected_acquisitions:
         st.caption("Select at least one acquisition to discover compatible postprocesses.")
         return ()

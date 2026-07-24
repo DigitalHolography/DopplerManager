@@ -37,8 +37,8 @@ wheels = [
 
 [[package]]
 name = "angioeye"
-version = "1.21.0"
-source = { git = "https://github.com/DigitalHolography/AngioEye.git?rev=main#70b125bf483b2a5d456f6db8c1e15bef5df4bd87" }
+version = "1.21.1"
+source = { git = "https://github.com/DigitalHolography/AngioEye.git?rev=main#b3b00fd02dec6be7659c519b87794bb4513390ab" }
 dependencies = [
     { name = "h5py" },
     { name = "jinja2" },
@@ -430,8 +430,8 @@ dependencies = [
 
 [[package]]
 name = "eyeflow"
-version = "0.11.3"
-source = { git = "https://github.com/DigitalHolography/EyeFlow.git?rev=main#6adf27a9622e2a3267deba6c930feacf424b5d49" }
+version = "0.11.4"
+source = { git = "https://github.com/DigitalHolography/EyeFlow.git?rev=main#ce86ff5baaab849cb2a9e3e7302b9f903414e333" }
 dependencies = [
     { name = "h5py" },
     { name = "joblib" },
@@ -607,7 +607,7 @@ wheels = [
 [[package]]
 name = "holodoppler"
 version = "0.2.1"
-source = { git = "https://github.com/DigitalHolography/HoloDoppler.git?rev=dev#85416b6ee906587c09df2dc83939b7064fac5277" }
+source = { git = "https://github.com/DigitalHolography/HoloDoppler.git?rev=dev#02a984642c35d3972e22967bf90e12d67ff69598" }
 dependencies = [
     { name = "cinereader" },
     { name = "cupy-cuda13x" },
