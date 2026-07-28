@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-import importlib.util
-import sys
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 from doppler_manager._external_cli_runner import _find_uv_git_cli
 
@@ -32,43 +30,21 @@ from .core import commands as _commands
 from .core import jobs as _jobs
 from .core.commands import command_prefix_for_stage
 from .core.constants import (
-    COMMAND_ENV_VARS,
-    DEFAULT_ANGIOEYE_PIPELINES,
-    DEFAULT_COMMAND_PREFIXES,
-    DEFAULT_EYEFLOW_PIPELINES,
-    DEFAULT_PIPELINES_BY_STAGE,
-    DEFAULT_STAGE_MODULES,
-    PIPELINE_SETTINGS_FOLDERS,
-    PIPELINE_SETTINGS_TOOLS,
     PROCESSING_CLI_SENTINEL,
     PROCESSING_STAGES,
     PROGRESS_LOG_PREFIX,
-    STAGE_OUTPUT_SUFFIXES,
 )
 from .core.models import JobResult, ProcessingJob
-from .core.paths import (
-    acquisition_dir as _acquisition_dir,
-    expected_eyeflow_h5_path as _expected_eyeflow_h5_path,
-    preferred_stage_h5 as _preferred_stage_h5,
-    require_file as _require_file,
-    require_stage_h5 as _require_stage_h5,
-    safe_resolve as _safe_resolve,
-    select_angioeye_h5 as _select_angioeye_h5,
-    source_holo_path as _source_holo_path,
-    stage_needs_processing as _stage_needs_processing,
-    stage_output_dir as _stage_output_dir,
-    validate_stage_destination as _validate_stage_destination,
+from .execution.outputs import (
+    install_angioeye_output,
+    install_eyeflow_output,
+    prepare_processing_output,
 )
-from .execution.outputs import install_angioeye_output, install_eyeflow_output, prepare_processing_output
 from .execution.runner import (
     format_command,
-    quote as _quote,
     run_processing_jobs,
-    run_single_job as _run_single_job,
 )
 from .config.holodoppler_settings import (
-    REQUIRED_HOLODOPPLER_SETTINGS_KEYS,
-    has_settings_keys as _has_settings_keys,
     holodoppler_settings_from_path,
     preferred_holodoppler_settings,
 )
@@ -76,17 +52,20 @@ from .config.holodoppler_settings import (
 
 REPO_PROCESSING_DEFAULTS = _defaults.REPO_PROCESSING_DEFAULTS
 _upstream_pipeline_settings_path = _pipelines.upstream_pipeline_settings_path
-_upstream_holodoppler_settings_dir = _holodoppler_settings.upstream_holodoppler_settings_dir
+_upstream_holodoppler_settings_dir = (
+    _holodoppler_settings.upstream_holodoppler_settings_dir
+)
 _eyeflow_temp_root = eyeflow_temp_root
 _angioeye_temp_root = angioeye_temp_root
 
 
 def _sync_patchable_globals() -> None:
-    _commands._find_uv_git_cli = _find_uv_git_cli
     _pipelines._find_uv_git_cli = _find_uv_git_cli
     _defaults.REPO_PROCESSING_DEFAULTS = REPO_PROCESSING_DEFAULTS
     _pipelines.upstream_pipeline_settings_path = _upstream_pipeline_settings_path
-    _holodoppler_settings.upstream_holodoppler_settings_dir = _upstream_holodoppler_settings_dir
+    _holodoppler_settings.upstream_holodoppler_settings_dir = (
+        _upstream_holodoppler_settings_dir
+    )
 
 
 def processing_defaults_dir() -> Path:
@@ -168,6 +147,11 @@ def missing_default_processing_tools(stages: Sequence[str]) -> list[str]:
 def available_pipelines_for_stage(stage: str) -> tuple[str, ...]:
     _sync_patchable_globals()
     return _pipelines.available_pipelines_for_stage(stage)
+
+
+def discover_processing_pipelines(stage: str) -> tuple[Any, ...]:
+    _sync_patchable_globals()
+    return _pipelines.pipeline_descriptors_for_stage(stage)
 
 
 def default_pipelines_for_stage(stage: str) -> tuple[str, ...]:
@@ -253,6 +237,7 @@ __all__ = [
     "install_angioeye_output",
     "install_eyeflow_output",
     "discover_angioeye_postprocesses",
+    "discover_processing_pipelines",
     "input_method_for_count",
     "missing_default_processing_tools",
     "needed_processing_stages",

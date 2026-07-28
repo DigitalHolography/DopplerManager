@@ -56,14 +56,8 @@ def build_angioeye_job(
 def angioeye_temp_root(cache_dir: Path, acquisition_id: str) -> Path:
     token = time.strftime("%Y%m%d_%H%M%S")
     safe_id = "".join(
-        char if char.isalnum() or char in {"-", "_"} else "_"
-        for char in acquisition_id
+        char if char.isalnum() or char in {"-", "_"} else "_" for char in acquisition_id
     )
-    return safe_resolve(cache_dir) / "processing" / "angioeye_runs" / f"{safe_id}_{token}"
-
-
-# Kept available from the AngioEye app module alongside the pipeline builder.
-from .angioeye_postprocess import (  # noqa: E402
-    build_angioeye_postprocess_call,
-    build_angioeye_postprocess_job,
-)
+    return (
+        safe_resolve(cache_dir) / "processing" / "angioeye_runs" / f"{safe_id}_{token}"
+    )

@@ -1,6 +1,7 @@
 software_pipeline_validation/
 .venv/
 .venv-release/
+.venv-release-runtimes/
 __pycache__/
 *.py[cod]
 *$py.class
@@ -18,4 +19,6 @@ build/
 .idea/
 .streamlit/secrets.toml
 .doppler_cache/
+processing_runtimes/*/.venv/
+processing_runtimes/*/uv.lock
 *.log

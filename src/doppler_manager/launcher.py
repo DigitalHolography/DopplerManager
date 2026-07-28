@@ -78,22 +78,10 @@ def _run_processing_cli_from_argv() -> int:
 
     stage = args[0].lower()
     tool_args = args[1:]
-    if stage == "hd":
-        from holodoppler.cli import main as holodoppler_main
-
-        sys.argv = ["holodoppler", *tool_args]
-        return int(holodoppler_main())
-    if stage == "dv":
-        import runpy
-
-        sys.argv = ["dopplerview", *tool_args]
-        runpy.run_module("dopplerview.cli", run_name="__main__")
-        return 0
-    if stage in {"ef", "ae"}:
+    if stage in {"hd", "dv", "ef", "ae"}:
         from doppler_manager import _external_cli_runner
 
-        tool = "eyeflow" if stage == "ef" else "angioeye"
-        return _external_cli_runner.main([tool, *tool_args])
+        return _external_cli_runner.main([stage, *tool_args])
 
     print(f"Unknown processing stage: {stage}", file=sys.stderr)
     return 2
@@ -117,7 +105,10 @@ def _run(
     app_script = f"from {app_module} import main\n\nmain()\n"
     script_path = _runtime_script_path()
     script_path.parent.mkdir(parents=True, exist_ok=True)
-    if not script_path.exists() or script_path.read_text(encoding="utf-8") != app_script:
+    if (
+        not script_path.exists()
+        or script_path.read_text(encoding="utf-8") != app_script
+    ):
         script_path.write_text(app_script, encoding="utf-8")
 
     port = _available_port()
@@ -333,11 +324,15 @@ def _pid_is_running(pid: int) -> bool:
 
 def _available_port() -> int:
     for port in range(PORT_START, PORT_END + 1):
-        with contextlib.closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
+        with contextlib.closing(
+            socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        ) as sock:
             sock.settimeout(0.2)
             if sock.connect_ex((PORT_HOST, port)) != 0:
                 return port
-    raise RuntimeError(f"No available localhost port found between {PORT_START} and {PORT_END}.")
+    raise RuntimeError(
+        f"No available localhost port found between {PORT_START} and {PORT_END}."
+    )
 
 
 def _open_browser_when_ready(url: str, host: str, port: int, log_path: Path) -> None:
@@ -375,7 +370,9 @@ def _open_browser(url: str, log_path: Path) -> None:
         except OSError as exc:
             _log(log_path, f"os.startfile failed: {exc}")
 
-    _log(log_path, f"Could not open browser automatically. Use this URL manually: {url}")
+    _log(
+        log_path, f"Could not open browser automatically. Use this URL manually: {url}"
+    )
 
 
 def _configure_stdio(log_path: Path) -> None:
@@ -397,10 +394,7 @@ def _log(log_path: Path, message: str) -> None:
 
 
 def _show_startup_error(log_path: Path) -> None:
-    message = (
-        "Doppler Manager could not start.\n\n"
-        f"Diagnostic log:\n{log_path}"
-    )
+    message = f"Doppler Manager could not start.\n\nDiagnostic log:\n{log_path}"
     _show_message("Doppler Manager", message, error=True, log_path=log_path)
 
 

@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import html
 from collections import deque
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 import pandas as pd
 import streamlit as st
@@ -17,6 +18,7 @@ from doppler_manager.processing import (
     bundled_holodoppler_settings_dir,
     default_pipelines_for_stage,
     discover_angioeye_postprocesses,
+    discover_processing_pipelines,
     holodoppler_settings_from_path,
     proposed_angioeye_postprocesses,
     missing_default_processing_tools,
@@ -40,13 +42,31 @@ PROCESSING_LOG_ENTRIES_KEY = "processing_log_entries"
 PROCESSING_LOG_ALL_FILES = "All files"
 PROCESSING_LOG_ALL_APPS = "All apps"
 PROCESSING_LOG_MANAGER_APP = "DopplerManager"
+PROCESSING_INFO_OPTIONS = {
+    "EyeFlow pipelines": "ef",
+    "AngioEye pipelines": "ae",
+    "AngioEye postprocesses": "postprocesses",
+}
+INPUT_METHOD_LABELS = {
+    "single_file": "single file",
+    "file_batch": "file batch",
+    "cohort_batch": "cohort batch",
+    "zip_batch": "ZIP batch",
+}
 
 
 @st.cache_resource(show_spinner=False)
-def _cached_angioeye_postprocesses():
+def _cached_angioeye_postprocesses() -> tuple[Any, ...]:
     """Keep decorator discovery cached across Streamlit reruns."""
 
     return discover_angioeye_postprocesses()
+
+
+@st.cache_resource(show_spinner=False)
+def _cached_processing_pipelines(stage: str) -> tuple[Any, ...]:
+    """Keep decorator discovery cached across Streamlit reruns."""
+
+    return discover_processing_pipelines(stage)
 
 
 def render_processing_tab(
@@ -122,7 +142,9 @@ def render_processing_tab(
     )
     if not can_run:
         if no_incomplete_selected_scope:
-            st.caption("Selected stages are already complete for the selected acquisitions.")
+            st.caption(
+                "Selected stages are already complete for the selected acquisitions."
+            )
         else:
             st.caption(
                 "Select at least one acquisition and one stage or postprocess. "
@@ -161,9 +183,11 @@ def render_processing_tab(
             st.info("No selected stage needs processing.")
             return
 
-        selected_log_file, selected_log_app, log_placeholder = _render_processing_log_view(
-            selected_ids,
-            selected_stages,
+        selected_log_file, selected_log_app, log_placeholder = (
+            _render_processing_log_view(
+                selected_ids,
+                selected_stages,
+            )
         )
         _run_jobs_and_refresh(
             jobs=jobs,
@@ -226,7 +250,16 @@ def _render_processing_options(
     list[str],
 ]:
     with container.container(border=True, key="processing_options"):
-        st.markdown("#### Options")
+        header_cols = st.columns([1, 0.14], vertical_alignment="center")
+        header_cols[0].markdown("#### Options")
+        if header_cols[1].button(
+            "",
+            icon=":material/help_outline:",
+            help="Show pipeline and postprocess descriptions",
+            width="stretch",
+            key="processing_options_info_button",
+        ):
+            _render_processing_info_dialog()
         if not selected_acquisitions:
             _clear_processing_option_state()
             st.caption(
@@ -268,7 +301,7 @@ def _render_processing_options(
             missing_labels = ", ".join(STAGE_OPTIONS[stage] for stage in missing_tools)
             st.warning(
                 f"Missing processing package(s): {missing_labels}. "
-                "Run `uv sync --extra processing`, then restart the app."
+                "Run `scripts\\sync_processing.ps1`, then restart the app."
             )
         if not any(stage in pipeline_selection_stages for stage in ("hd", "ef", "ae")):
             if not selected_angioeye_postprocesses:
@@ -295,12 +328,88 @@ def _clear_processing_option_state() -> None:
         st.session_state.pop(key, None)
 
 
+@st.dialog(
+    "Processing information",
+    width="large",
+    icon=":material/help_outline:",
+    on_dismiss="rerun",
+)
+def _render_processing_info_dialog() -> None:
+    category = st.selectbox(
+        "Information type",
+        list(PROCESSING_INFO_OPTIONS),
+        key="processing_info_category",
+    )
+    stage_or_postprocesses = PROCESSING_INFO_OPTIONS[category]
+
+    if stage_or_postprocesses == "postprocesses":
+        descriptors = tuple(
+            descriptor
+            for descriptor in _cached_angioeye_postprocesses()
+            if descriptor.visibility != "hidden"
+        )
+        _render_processing_information(
+            descriptors,
+            empty_message=(
+                "No AngioEye postprocesses were discovered. Install the optional "
+                "AngioEye processing package and restart the application if needed."
+            ),
+            show_input_methods=True,
+        )
+        return
+
+    _render_processing_information(
+        _cached_processing_pipelines(stage_or_postprocesses),
+        empty_message=(
+            f"No {category.lower()} were discovered. Install the corresponding "
+            "optional processing package and restart the application if needed."
+        ),
+    )
+
+
+def _render_processing_information(
+    descriptors: Sequence[Any],
+    *,
+    empty_message: str,
+    show_input_methods: bool = False,
+) -> None:
+    if not descriptors:
+        st.info(empty_message)
+        return
+
+    for index, descriptor in enumerate(descriptors):
+        if index:
+            st.divider()
+        title = f"**{descriptor.name}**"
+        if show_input_methods:
+            input_methods = ", ".join(
+                INPUT_METHOD_LABELS.get(method, method.replace("_", " "))
+                for method in getattr(descriptor, "input_methods", ())
+            )
+            if input_methods:
+                title += f" | *Allowed inputs: {input_methods}*"
+        st.markdown(title)
+        st.write(descriptor.description or "No description provided by the decorator.")
+        if not descriptor.available:
+            reason = ", ".join(
+                (
+                    *getattr(descriptor, "missing_deps", ()),
+                    *getattr(descriptor, "missing_pipelines", ()),
+                )
+            )
+            if not reason:
+                reason = str(getattr(descriptor, "error_msg", "") or "").strip()
+            st.caption("Unavailable" + (f": {reason}" if reason else "."))
+
+
 def _render_postprocess_selection(
     selected_acquisitions: list[AcquisitionResult],
     selected_angioeye_pipelines: Optional[tuple[str, ...]],
 ) -> tuple[str, ...]:
     if not selected_acquisitions:
-        st.caption("Select at least one acquisition to discover compatible postprocesses.")
+        st.caption(
+            "Select at least one acquisition to discover compatible postprocesses."
+        )
         return ()
 
     loading_dropdown = st.empty()
@@ -332,7 +441,6 @@ def _render_postprocess_selection(
         options,
         default=[],
         key="angioeye_postprocesses",
-        help="One acquisition uses single_file; multiple acquisitions use file_batch.",
     )
     return tuple(selected)
 
@@ -453,9 +561,7 @@ def _has_processing_output() -> bool:
 
 
 def _processing_app_labels(stages: list[str]) -> tuple[str, ...]:
-    return tuple(
-        dict.fromkeys(_processing_app_label(stage) for stage in stages)
-    )
+    return tuple(dict.fromkeys(_processing_app_label(stage) for stage in stages))
 
 
 def _render_processing_log_view(
@@ -575,7 +681,7 @@ def _run_jobs_and_refresh(
         nonlocal last_log_was_progress
         is_progress_update = line.startswith(PROGRESS_LOG_PREFIX)
         if is_progress_update:
-            line = line[len(PROGRESS_LOG_PREFIX):]
+            line = line[len(PROGRESS_LOG_PREFIX) :]
             if last_log_was_progress and log_lines:
                 log_lines[-1] = line
                 log_entries[-1]["line"] = line
@@ -655,21 +761,9 @@ def _render_previous_log(
                 and bool(set(entry["files"]).intersection(allowed_file_ids))
             )
         )
-        and (
-            allowed_apps is None
-            or (
-                allowed_apps
-                and entry["app"] in allowed_apps
-            )
-        )
-        and (
-            file_filter == PROCESSING_LOG_ALL_FILES
-            or file_filter in entry["files"]
-        )
-        and (
-            app_filter == PROCESSING_LOG_ALL_APPS
-            or app_filter == entry["app"]
-        )
+        and (allowed_apps is None or (allowed_apps and entry["app"] in allowed_apps))
+        and (file_filter == PROCESSING_LOG_ALL_FILES or file_filter in entry["files"])
+        and (app_filter == PROCESSING_LOG_ALL_APPS or app_filter == entry["app"])
     ]
     target = log_placeholder if log_placeholder is not None else st
     if not visible_entries:

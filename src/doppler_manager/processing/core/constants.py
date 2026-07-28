@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-import sys
-
-
 PROCESSING_STAGES = ("hd", "dv", "ef", "ae")
 STAGE_OUTPUT_SUFFIXES = {
     "hd": "_HD",
@@ -33,32 +30,3 @@ COMMAND_ENV_VARS = {
     "ef": "DM_EYEFLOW_COMMAND",
     "ae": "DM_ANGIOEYE_COMMAND",
 }
-
-DEFAULT_COMMAND_PREFIXES = {
-    "hd": (
-        sys.executable,
-        "-c",
-        "from holodoppler.cli import main; raise SystemExit(main())",
-    ),
-    "dv": (sys.executable, "-m", "dopplerview.cli"),
-    "ef": (
-        sys.executable,
-        "-m",
-        "doppler_manager._external_cli_runner",
-        "eyeflow",
-    ),
-    "ae": (
-        sys.executable,
-        "-m",
-        "doppler_manager._external_cli_runner",
-        "angioeye",
-    ),
-}
-
-DEFAULT_STAGE_MODULES = {
-    "hd": "holodoppler",
-    "dv": "dopplerview.cli",
-    "ef": "eye_flow",
-    "ae": "angio_eye",
-}
-

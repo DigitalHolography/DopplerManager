@@ -255,6 +255,15 @@ def apply_dark_theme() -> None:
             border-radius: 6px;
         }
 
+        .st-key-processing_options_info_button button {
+            min-height: 2.35rem;
+            padding: 0.15rem 0.3rem !important;
+        }
+
+        .st-key-processing_options_info_button button [data-testid="stIconMaterial"] {
+            font-size: 1.55rem !important;
+        }
+
         .st-key-run_processing_button button:not(:disabled),
         .st-key-scan_button button:not(:disabled) {
             background: var(--dm-action-hover) !important;

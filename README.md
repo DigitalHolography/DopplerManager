@@ -124,16 +124,32 @@ uv sync
 Installation with processing tools:
 
 ```bash
-uv sync --extra processing
+.\scripts\sync_processing.ps1
 ```
 
-The `processing` extra installs upstream dependencies from GitHub:
+The synchronization script installs Doppler Manager itself, then creates a
+separate runtime environment for each processing stage. This separation keeps
+upstream packages from sharing top-level namespaces and also keeps ONNX Runtime
+with the DopplerView runtime that consumes it.
 
-- `HoloDoppler`
-- `DopplerView`
-- `EyeFlowPython`
-- `AngioEye`
-- `onnxruntime`
+The runtime dependency manifest is centralized in
+`[tool.doppler_manager.processing_runtimes]` in `pyproject.toml`:
+
+- `hd`: HoloDoppler
+- `dv`: DopplerView and ONNX Runtime
+- `ef`: EyeFlow
+- `ae`: AngioEye
+
+HoloDoppler uses Python 3.13 through the nested runtime-Python manifest. Its
+current `dev` branch requires Python 3.12 or newer; the runtime manifest also
+pins the compatible `cinereader`/Numba range explicitly so an old cached Numba
+source distribution cannot be selected. The other runtimes continue to use
+the current Python as well.
+
+The environments are installed under `processing_runtimes/<stage>/.venv`.
+Doppler Manager runs every processing CLI through the corresponding isolated
+interpreter; EyeFlow and AngioEye catalogs are queried through the same
+subprocess boundary.
 
 ## Run the Application
 
@@ -149,7 +165,8 @@ On first launch, select a NAS or local root folder and click `Scan`.
 
 ## Build the Windows Installer
 
-The release includes the acquisition scan views, the `Processing` tab, and the optional processing dependencies.
+The release includes the acquisition scan views, the `Processing` tab, and all
+four isolated processing runtimes.
 
 Prerequisites on the Windows build machine:
 
@@ -186,7 +203,8 @@ The packaged entry point is `src\doppler_manager\app.py`, which renders:
 - `Acquisition Details`
 - `Processing`
 
-The build uses an isolated `.venv-release` environment so the local development environment can still be synced with `uv sync --extra processing` when the full app is needed.
+The build uses an isolated `.venv-release` environment and stages the four
+processing runtimes alongside the packaged application.
 
 Pushing a tag `v<version>` also builds and uploads this installer through the Windows release workflow:
 
@@ -230,10 +248,10 @@ Before rerunning a stage, the application deletes only the expected result folde
 Default commands:
 
 ```text
-python -c "from holodoppler.cli import main; raise SystemExit(main())"
-python -m dopplerview.cli
-python -m doppler_manager._external_cli_runner eyeflow
-python -m doppler_manager._external_cli_runner angioeye
+HD: processing_runtimes/holodoppler/.venv/Scripts/python.exe -c "from holodoppler.cli import main; raise SystemExit(main())"
+DV: processing_runtimes/dopplerview/.venv/Scripts/python.exe -m dopplerview.cli
+EF: processing_runtimes/eyeflow/.venv/Scripts/python.exe -c "from launcher import cli_main; raise SystemExit(cli_main())"
+AE: processing_runtimes/angioeye/.venv/Scripts/python.exe -c "from launcher import cli_main; raise SystemExit(cli_main())"
 ```
 
 Commands can be overridden with local executable paths:
@@ -242,6 +260,15 @@ Commands can be overridden with local executable paths:
 - `DM_DOPPLERVIEW_COMMAND`
 - `DM_EYEFLOW_COMMAND`
 - `DM_ANGIOEYE_COMMAND`
+
+The isolated interpreters can also be overridden when a runtime is installed
+elsewhere:
+
+- `DM_HOLODOPPLER_PYTHON`
+- `DM_DOPPLERVIEW_PYTHON`
+- `DM_EYEFLOW_PYTHON`
+- `DM_ANGIOEYE_PYTHON`
+- `DM_PROCESSING_RUNTIME_ROOT`: root containing `holodoppler/`, `dopplerview/`, `eyeflow/`, and `angioeye/`
 
 HoloDoppler settings can be preconfigured with:
 
@@ -279,6 +306,7 @@ uv run pytest
 ## Code Structure
 
 ```text
+processing_runtimes/             Isolated runtime support and environments
 src/doppler_manager/
   app.py                       Streamlit entry point
   launcher.py                  Streamlit server lifecycle and release launcher
@@ -292,8 +320,8 @@ src/doppler_manager/
     config/                    Defaults, settings, and pipeline selection
     core/                      Job models, paths, commands, and orchestration
     execution/                 Subprocess runner and output installation
-  _external_cli_runner.py       EyeFlow/AngioEye wrappers
-  _eyeflow_runtime_limits.py    EyeFlow runtime compatibility and limits
+  _external_cli_runner.py       Isolated processing runtime dispatcher
+  _eyeflow_runtime_limits.py    Legacy EyeFlow runtime compatibility
   scan/
     cache.py                   Streamlit scan cache bridge
     core.py                    Acquisition and status detection

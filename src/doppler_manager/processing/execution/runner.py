@@ -9,6 +9,7 @@ from collections.abc import Callable, Sequence
 
 from doppler_manager.processing.core.constants import PROGRESS_LOG_PREFIX
 from doppler_manager.processing.core.models import JobResult, ProcessingJob
+from doppler_manager.processing.runtimes import runtime_environment
 
 from .outputs import (
     install_angioeye_output,
@@ -86,7 +87,8 @@ def run_single_job(job: ProcessingJob, on_log: Callable[[str], None]) -> JobResu
             shutil.rmtree(temp_root)
         temp_root.mkdir(parents=True, exist_ok=True)
 
-    env = os.environ.copy()
+    runtime_stage = "ae" if job.stage == "ae_postprocess" else job.stage
+    env = runtime_environment(runtime_stage)
     env["PYTHONUNBUFFERED"] = "1"
 
     try:

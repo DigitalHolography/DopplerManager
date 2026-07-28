@@ -26,7 +26,7 @@ def test_processing_cli_sentinel_dispatches_external_runner(monkeypatch) -> None
     )
 
     assert launcher._run_processing_cli_from_argv() == 7
-    assert calls == [["eyeflow", "--data", "sample.holo"]]
+    assert calls == [["ef", "--data", "sample.holo"]]
 
 
 def test_app_entrypoint_imports_processing_modules() -> None:
@@ -43,7 +43,9 @@ def test_app_entrypoint_imports_processing_modules() -> None:
     assert "doppler_manager.ui.processing" in sys.modules
 
 
-def test_scan_root_drop_helper_is_optional_when_component_is_not_registered(monkeypatch) -> None:
+def test_scan_root_drop_helper_is_optional_when_component_is_not_registered(
+    monkeypatch,
+) -> None:
     from doppler_manager.ui import scan
 
     def broken_helper(**_kwargs) -> None:

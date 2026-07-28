@@ -24,7 +24,22 @@ $ReleaseVenv = Join-Path $Root ".venv-release"
 $env:UV_PROJECT_ENVIRONMENT = $ReleaseVenv
 Write-Host "Using isolated release environment: $ReleaseVenv"
 
-uv sync --no-dev --extra processing --group release
+uv sync --no-dev --group release
+
+$RuntimeBuildRoot = Join-Path $Root ".venv-release-runtimes"
+if (Test-Path $RuntimeBuildRoot) {
+    Remove-Item -LiteralPath $RuntimeBuildRoot -Recurse -Force
+}
+New-Item -ItemType Directory -Force -Path $RuntimeBuildRoot | Out-Null
+
+$ReleasePython = Join-Path $ReleaseVenv "Scripts\python.exe"
+& $ReleasePython -m doppler_manager.sync_processing `
+    --environment-root $RuntimeBuildRoot
+if ($LASTEXITCODE -ne 0) {
+    throw "Isolated processing runtime synchronization failed with exit code $LASTEXITCODE."
+}
+
+$env:UV_PROJECT_ENVIRONMENT = $ReleaseVenv
 uv run python -m doppler_manager.release_defaults
 
 $PayloadRoot = Join-Path $Root "build\installer-payload"
@@ -34,6 +49,7 @@ $LegacyDistApp = Join-Path $Root "dist\DopplerManager"
 $InstallerOut = Join-Path $Root "dist\installer"
 $IconPath = Join-Path $Root "packaging\DopplerManager.ico"
 $ProcessingDefaults = Join-Path $Root "processing_defaults"
+$RuntimeBridge = Join-Path $Root "src\doppler_manager\processing\runtime_bridge.py"
 
 foreach ($Path in @($PayloadRoot, $BuildApp, $LegacyDistApp, $InstallerOut)) {
     if (Test-Path $Path) {
@@ -53,19 +69,28 @@ try {
         --icon $IconPath `
         --name DopplerManager `
         --collect-all streamlit `
-        --collect-all holodoppler `
-        --collect-all dopplerview `
-        --collect-all eye_flow `
-        --collect-all angio_eye `
         --collect-data imageio_ffmpeg `
         --add-data "$ProcessingDefaults;processing_defaults" `
+        --add-data "$RuntimeBridge;doppler_manager\processing" `
         --hidden-import streamlit.web.cli `
         --hidden-import watchdog.observers.winapi `
         --hidden-import doppler_manager.app `
+        --hidden-import doppler_manager.processing.runtime_bridge `
         src\doppler_manager\launcher.py
 
     if (-not (Test-Path (Join-Path $DistApp "DopplerManager.exe"))) {
         throw "PyInstaller did not produce the staged DopplerManager.exe."
+    }
+
+    foreach ($Runtime in @("holodoppler", "dopplerview", "eyeflow", "angioeye")) {
+        $SourceRuntime = Join-Path $RuntimeBuildRoot $Runtime
+        $TargetRuntime = Join-Path $DistApp (Join-Path "processing_runtimes" $Runtime)
+        $TargetEnvironment = Join-Path $TargetRuntime ".venv"
+        New-Item -ItemType Directory -Force -Path $TargetRuntime | Out-Null
+        Copy-Item -Path (Join-Path $SourceRuntime ".venv") -Destination $TargetEnvironment -Recurse -Force
+        if ($Runtime -eq "eyeflow") {
+            Copy-Item -LiteralPath (Join-Path $SourceRuntime "runtime_limits.py") -Destination $TargetRuntime -Force
+        }
     }
 
     if (-not $InnoCompiler) {
@@ -106,5 +131,8 @@ finally {
         if (Test-Path $Path) {
             Remove-Item -LiteralPath $Path -Recurse -Force
         }
+    }
+    if (Test-Path $RuntimeBuildRoot) {
+        Remove-Item -LiteralPath $RuntimeBuildRoot -Recurse -Force
     }
 }

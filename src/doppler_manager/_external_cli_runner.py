@@ -9,7 +9,6 @@ from importlib import metadata
 from pathlib import Path
 from types import ModuleType
 
-
 CLI_TOOLS = {
     "eyeflow": {
         "distribution": "EyeFlow",
@@ -29,32 +28,38 @@ CLI_TOOLS = {
 
 
 def main(argv: list[str] | None = None) -> int:
+    stage_aliases = _stage_aliases()
     args = list(sys.argv[1:] if argv is None else argv)
     if not args:
-        available = ", ".join(sorted(CLI_TOOLS))
+        available = ", ".join(sorted(stage_aliases))
         print(f"Expected one CLI tool name: {available}", file=sys.stderr)
         return 2
 
     tool = args.pop(0).lower()
-    try:
-        tool_config = CLI_TOOLS[tool]
-    except KeyError:
-        available = ", ".join(sorted(CLI_TOOLS))
-        print(f"Unknown CLI tool '{tool}'. Expected one of: {available}", file=sys.stderr)
+    if tool not in stage_aliases:
+        available = ", ".join(sorted(stage_aliases))
+        print(
+            f"Unknown CLI tool '{tool}'. Expected one of: {available}", file=sys.stderr
+        )
         return 2
 
-    if tool == "eyeflow":
-        import doppler_manager._eyeflow_runtime_limits as runtime_limits
-
-        sys.modules.setdefault("runtime_limits", runtime_limits)
-
     try:
-        cli_module = _load_tool_cli(tool_config)
+        from doppler_manager.processing.runtimes import run_runtime_cli
+
+        stage = stage_aliases[tool]
+        return run_runtime_cli(stage, args)
     except Exception as exc:  # noqa: BLE001
         print(f"Could not load {tool} CLI: {exc}", file=sys.stderr)
         return 1
 
-    return int(cli_module.main(args))
+
+def _stage_aliases() -> dict[str, str]:
+    from doppler_manager.processing.runtimes import RUNTIMES
+
+    return {
+        **{stage: stage for stage in RUNTIMES},
+        **{runtime.project_name: stage for stage, runtime in RUNTIMES.items()},
+    }
 
 
 def _load_tool_cli(tool_config: dict[str, str]) -> ModuleType:
@@ -90,7 +95,9 @@ def _find_uv_git_cli(tool_config: dict[str, str]) -> Path | None:
         if not checkout_root.is_dir():
             continue
         for pyproject_path in checkout_root.rglob("pyproject.toml"):
-            if not any(part.lower().startswith(commit_prefix) for part in pyproject_path.parts):
+            if not any(
+                part.lower().startswith(commit_prefix) for part in pyproject_path.parts
+            ):
                 continue
             if _project_name(pyproject_path) != tool_config["project"].lower():
                 continue

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from functools import lru_cache
@@ -8,6 +7,10 @@ from pathlib import Path
 
 from doppler_manager.processing.core.commands import command_prefix_for_stage
 from doppler_manager.processing.core.models import ProcessingJob
+from doppler_manager.processing.config.pipelines import (
+    pipeline_catalog as _load_angioeye_pipeline_catalog,
+)
+from doppler_manager.processing.runtimes import runtime_catalog
 
 
 POSTPROCESS_INPUT_METHODS = (
@@ -54,12 +57,10 @@ def discover_angioeye_postprocesses() -> tuple[AngioEyePostprocessDescriptor, ..
 def _discover_from_catalog(loader) -> tuple[AngioEyePostprocessDescriptor, ...]:
     available, missing = loader()
     descriptors = [
-        _descriptor_from_upstream(item, available=True)
-        for item in available
+        _descriptor_from_upstream(item, available=True) for item in available
     ]
     descriptors.extend(
-        _descriptor_from_upstream(item, available=False)
-        for item in missing
+        _descriptor_from_upstream(item, available=False) for item in missing
     )
     return tuple(sorted(descriptors, key=lambda item: item.name.lower()))
 
@@ -95,8 +96,7 @@ def proposed_angioeye_postprocesses(
     candidates = tuple(
         postprocess
         for postprocess in postprocesses
-        if postprocess.visibility != "hidden"
-        and method in postprocess.input_methods
+        if postprocess.visibility != "hidden" and method in postprocess.input_methods
     )
     if not candidates:
         return ()
@@ -157,9 +157,7 @@ def build_angioeye_postprocess_job(
     *,
     pipeline_file: Path | None = None,
 ) -> ProcessingJob:
-    names = tuple(
-        str(name).strip() for name in postprocess_names if str(name).strip()
-    )
+    names = tuple(str(name).strip() for name in postprocess_names if str(name).strip())
     if isinstance(input_paths, Path):
         paths = (input_paths,)
     else:
@@ -181,42 +179,7 @@ def build_angioeye_postprocess_job(
 
 
 def _load_angioeye_postprocess_catalog():
-    _install_angioeye_catalog_compatibility()
-    from postprocess import load_postprocess_catalog
-
-    return load_postprocess_catalog()
-
-
-def _install_angioeye_catalog_compatibility() -> None:
-    """Bridge the runtime-pipeline helper used by newer AngioEye catalogs.
-
-    EyeFlow and AngioEye currently ship the same top-level ``app_settings``
-    module. Depending on installation order, an older EyeFlow copy can hide
-    ``runtime_pipelines_path`` required by AngioEye's ``pipelines`` package.
-    The installed pipeline package already searches its own package directory,
-    so an absent runtime directory is a safe fallback here.
-    """
-
-    try:
-        import app_settings
-    except ImportError:
-        return
-    if hasattr(app_settings, "runtime_pipelines_path"):
-        return
-
-    configured = os.getenv("ANGIOEYE_PIPELINES_DIR", "").strip()
-    fallback = (
-        Path(configured)
-        if configured
-        else Path(__file__).resolve().parent / "__missing_runtime_pipelines__"
-    )
-    app_settings.runtime_pipelines_path = lambda: fallback
-
-
-def _load_angioeye_pipeline_catalog():
-    from pipelines import load_pipeline_catalog
-
-    return load_pipeline_catalog()
+    return runtime_catalog("ae", "postprocesses")
 
 
 @lru_cache(maxsize=8)
@@ -261,10 +224,7 @@ def _pipeline_options_are_satisfied(
     options: tuple[tuple[str, ...], ...],
     selected_pipelines: frozenset[str],
 ) -> bool:
-    return all(
-        any(name in selected_pipelines for name in option)
-        for option in options
-    )
+    return all(any(name in selected_pipelines for name in option) for option in options)
 
 
 def _selected_pipeline_closure(
@@ -355,8 +315,7 @@ def _descriptor_from_upstream(
         ),
         required_options=tuple(str(value) for value in required_options or ()),
         missing_pipelines=tuple(
-            str(value)
-            for value in (getattr(upstream, "missing_pipelines", ()) or ())
+            str(value) for value in (getattr(upstream, "missing_pipelines", ()) or ())
         ),
         visibility=str(getattr(upstream, "visibility", "visible") or "visible"),
     )
@@ -369,6 +328,8 @@ def _input_methods_for(upstream) -> tuple[str, ...]:
         # postprocesses used the standard dispatcher and were valid for the
         # same single-file and batch inputs represented by this manager.
         return POSTPROCESS_INPUT_METHODS
+    if isinstance(methods, str):
+        methods = (methods,)
     normalized: list[str] = []
     for method in methods:
         value = str(method).strip()
