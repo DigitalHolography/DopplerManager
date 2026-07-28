@@ -1,4 +1,6 @@
 import sys
+import time
+from threading import Event
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -6,7 +8,9 @@ import pytest
 
 import doppler_manager._external_cli_runner as external_cli_runner
 import doppler_manager.processing as processing
+import doppler_manager.processing.catalogs as processing_catalogs
 from doppler_manager.processing.execution.runner import run_single_job
+from doppler_manager.processing.execution.session import ProcessingRun
 from doppler_manager.models import AcquisitionResult, FileRef, StageResult
 from doppler_manager.processing import (
     build_processing_jobs,
@@ -326,6 +330,54 @@ def test_angioeye_postprocess_catalog_discovery_is_cached(monkeypatch) -> None:
 
     assert first == second
     assert calls == 1
+
+
+def test_angioeye_postprocess_preload_is_shared_with_discovery(monkeypatch) -> None:
+    started = Event()
+    release = Event()
+    calls = 0
+
+    def load_catalog():
+        nonlocal calls
+        calls += 1
+        started.set()
+        assert release.wait(timeout=2)
+        return ([SimpleNamespace(name="Preloaded", input_methods=["single_file"])], [])
+
+    monkeypatch.setattr(angioeye_postprocess, "runtime_available", lambda _stage: True)
+    monkeypatch.setattr(
+        angioeye_postprocess,
+        "_load_angioeye_postprocess_catalog",
+        load_catalog,
+    )
+    monkeypatch.setattr(processing_catalogs, "_catalog_futures", {})
+
+    assert angioeye_postprocess.preload_angioeye_postprocesses()
+    assert started.wait(timeout=2)
+    release.set()
+
+    assert [item.name for item in discover_angioeye_postprocesses()] == ["Preloaded"]
+    assert calls == 1
+
+
+def test_angioeye_postprocess_preload_skips_unavailable_runtime(monkeypatch) -> None:
+    calls = 0
+
+    def load_catalog():
+        nonlocal calls
+        calls += 1
+        return ([], [])
+
+    monkeypatch.setattr(angioeye_postprocess, "runtime_available", lambda _stage: False)
+    monkeypatch.setattr(
+        angioeye_postprocess,
+        "_load_angioeye_postprocess_catalog",
+        load_catalog,
+    )
+    monkeypatch.setattr(processing_catalogs, "_catalog_futures", {})
+
+    assert not angioeye_postprocess.preload_angioeye_postprocesses()
+    assert calls == 0
 
 
 def test_angioeye_postprocess_batch_only_is_hidden_for_one_file() -> None:
@@ -683,6 +735,50 @@ def test_run_single_job_keeps_progress_as_replaceable_log_lines(tmp_path: Path) 
     ]
 
 
+def test_processing_run_keeps_jobs_and_logs_outside_the_streamlit_rerun(
+    tmp_path: Path,
+) -> None:
+    script = (
+        "import sys, time\n"
+        "print('started', flush=True)\n"
+        "time.sleep(0.15)\n"
+        "print('finished', flush=True)\n"
+    )
+    selected_ids = ["acq-1"]
+    job = processing.ProcessingJob(
+        acquisition_id="acq-1",
+        stage="hd",
+        command=(sys.executable, "-c", script),
+        cwd=tmp_path,
+        description="acq-1: Holodoppler",
+    )
+    run = ProcessingRun(
+        [job],
+        selected_file_ids=selected_ids,
+        allowed_apps=("Holodoppler",),
+    )
+
+    run.start()
+    selected_ids[:] = ["next-round-acquisition"]
+    deadline = time.monotonic() + 5
+    while run.is_running and time.monotonic() < deadline:
+        time.sleep(0.02)
+
+    snapshot = run.snapshot()
+    assert snapshot.status == "finished"
+    assert [entry["line"] for entry in snapshot.log_entries] == [
+        "[START] acq-1: Holodoppler",
+        "[CMD] " + processing.format_command(job.command),
+        "started",
+        "finished",
+        "[OK] acq-1: Holodoppler",
+    ]
+    assert all(entry["files"] == ("acq-1",) for entry in snapshot.log_entries)
+    assert run.selected_file_ids == ("acq-1",)
+    assert run.claim_completion()
+    assert not run.claim_completion()
+
+
 def test_bundled_holodoppler_defaults_are_discovered_and_preferred(
     tmp_path: Path, monkeypatch
 ) -> None:
@@ -889,3 +985,36 @@ def test_discover_processing_pipelines_uses_stage_configuration(
 
     assert [descriptor.name for descriptor in descriptors] == ["selected", "missing"]
     assert descriptors[0].description == "from decorator"
+
+
+def test_processing_pipeline_preload_is_shared_with_discovery(monkeypatch) -> None:
+    started = Event()
+    release = Event()
+
+    monkeypatch.setattr(
+        processing._pipelines,
+        "runtime_available",
+        lambda stage: stage == "ef",
+    )
+    monkeypatch.setattr(
+        processing._pipelines,
+        "available_pipelines_for_stage",
+        lambda _stage: ("preloaded",),
+    )
+
+    def load_catalog(stage):
+        assert stage == "ef"
+        started.set()
+        assert release.wait(timeout=2)
+        return ([SimpleNamespace(name="preloaded", description="Markdown")], [])
+
+    monkeypatch.setattr(processing._pipelines, "pipeline_catalog", load_catalog)
+    monkeypatch.setattr(processing_catalogs, "_catalog_futures", {})
+
+    assert processing.preload_processing_pipelines()
+    assert started.wait(timeout=2)
+    release.set()
+
+    descriptors = processing.discover_processing_pipelines("ef")
+
+    assert [descriptor.name for descriptor in descriptors] == ["preloaded"]

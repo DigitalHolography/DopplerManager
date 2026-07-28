@@ -14,8 +14,13 @@ from doppler_manager.processing.core.constants import (
     PIPELINE_SETTINGS_TOOLS,
 )
 from doppler_manager.processing.core.paths import safe_resolve
+from doppler_manager.processing.catalogs import (
+    load_catalog as _load_preloaded_catalog,
+    preload_catalog as _preload_catalog,
+)
 from doppler_manager.processing.runtimes import (
     RuntimeStage,
+    runtime_available,
     runtime_catalog,
     runtime_project_dir,
 )
@@ -59,8 +64,33 @@ def default_pipelines_for_stage(stage: str) -> tuple[str, ...]:
 def pipeline_descriptors_for_stage(stage: str) -> tuple[PipelineInfo, ...]:
     """Return upstream pipeline descriptors configured for a processing stage."""
 
-    configured_names = set(available_pipelines_for_stage(stage))
+    return _load_preloaded_catalog(
+        f"pipeline:{stage}",
+        lambda: _pipeline_descriptors_for_stage_now(stage),
+    )
+
+
+def preload_processing_pipelines() -> bool:
+    """Start pipeline catalog discovery for the processing-information dialog."""
+
+    started = False
+    for stage in ("ef", "ae"):
+        if not runtime_available(stage):
+            continue
+
+        started = (
+            _preload_catalog(
+                f"pipeline:{stage}",
+                lambda stage=stage: _pipeline_descriptors_for_stage_now(stage),
+            )
+            or started
+        )
+    return started
+
+
+def _pipeline_descriptors_for_stage_now(stage: str) -> tuple[PipelineInfo, ...]:
     try:
+        configured_names = set(available_pipelines_for_stage(stage))
         available, missing = pipeline_catalog(stage)
     except Exception:  # noqa: BLE001
         return ()

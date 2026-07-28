@@ -14,6 +14,7 @@ from .apps.angioeye_postprocess import (
     build_angioeye_postprocess_job,
     discover_angioeye_postprocesses,
     input_method_for_count,
+    preload_angioeye_postprocesses,
     proposed_angioeye_postprocesses,
 )
 from .apps.dopplerview import build_dopplerview_call, build_dopplerview_job
@@ -154,6 +155,21 @@ def discover_processing_pipelines(stage: str) -> tuple[Any, ...]:
     return _pipelines.pipeline_descriptors_for_stage(stage)
 
 
+def preload_processing_pipelines() -> bool:
+    _sync_patchable_globals()
+    return _pipelines.preload_processing_pipelines()
+
+
+def preload_processing_catalogs() -> bool:
+    started = False
+    for preloader in (
+        preload_processing_pipelines,
+        preload_angioeye_postprocesses,
+    ):
+        started = preloader() or started
+    return started
+
+
 def default_pipelines_for_stage(stage: str) -> tuple[str, ...]:
     _sync_patchable_globals()
     return _pipelines.default_pipelines_for_stage(stage)
@@ -241,6 +257,9 @@ __all__ = [
     "input_method_for_count",
     "missing_default_processing_tools",
     "needed_processing_stages",
+    "preload_processing_catalogs",
+    "preload_processing_pipelines",
+    "preload_angioeye_postprocesses",
     "preferred_holodoppler_settings",
     "prepare_processing_output",
     "processing_defaults_dir",

@@ -164,6 +164,24 @@ def apply_dark_theme() -> None:
             background: rgba(17, 24, 39, 0.72);
         }
 
+        .dm-processing-options-heading {
+            display: flex;
+            align-items: center;
+            height: 2.1rem;
+            margin: 0 !important;
+            padding: 0 !important;
+            color: var(--dm-text);
+            font-size: 1.5rem;
+            font-weight: 700;
+            line-height: 1;
+            white-space: nowrap;
+        }
+
+        .st-key-processing_options_header [data-testid="stMarkdownContainer"] {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
         .st-key-detail_main_tabs [data-testid="stTabs"],
         .st-key-main_mode_tabs [data-testid="stTabs"] {
             padding-top: 0.1rem;
@@ -256,8 +274,21 @@ def apply_dark_theme() -> None:
         }
 
         .st-key-processing_options_info_button button {
-            min-height: 2.35rem;
-            padding: 0.15rem 0.3rem !important;
+            width: 2.1rem;
+            min-height: 2.1rem;
+            padding: 0 !important;
+            border: 0 !important;
+            border-radius: 999px !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            color: var(--dm-muted) !important;
+        }
+
+        .st-key-processing_options_info_button button:hover,
+        .st-key-processing_options_info_button button:focus-visible {
+            border: 0 !important;
+            background: var(--dm-action-hover) !important;
+            color: #ffffff !important;
         }
 
         .st-key-processing_options_info_button button [data-testid="stIconMaterial"] {

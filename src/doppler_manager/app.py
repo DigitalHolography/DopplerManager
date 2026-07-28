@@ -4,6 +4,7 @@ from pathlib import Path
 
 import streamlit as st
 
+from doppler_manager.processing import preload_processing_catalogs
 from doppler_manager.scan.cache import refresh_scan, scan_with_options
 from doppler_manager.ui.dashboard import (
     render_filters,
@@ -25,6 +26,7 @@ def main() -> None:
         layout="wide",
         initial_sidebar_state="collapsed",
     )
+    preload_processing_catalogs()
     apply_dark_theme()
 
     default_root = Path.cwd() / "software_pipeline_validation"

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import html
-from collections import deque
+import copy
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Any, Optional
@@ -12,7 +12,6 @@ import streamlit as st
 from doppler_manager.models import AcquisitionResult, ScanResult
 from doppler_manager.processing import (
     PROCESSING_STAGES,
-    PROGRESS_LOG_PREFIX,
     available_pipelines_for_stage,
     build_processing_jobs,
     bundled_holodoppler_settings_dir,
@@ -24,8 +23,8 @@ from doppler_manager.processing import (
     missing_default_processing_tools,
     needed_processing_stages,
     preferred_holodoppler_settings,
-    run_processing_jobs,
 )
+from doppler_manager.processing.execution.session import ProcessingRun
 from doppler_manager.scan import ScanOptions
 
 
@@ -39,6 +38,10 @@ STAGE_OPTIONS = {
 LOG_LIMIT = 700
 CUSTOM_HOLODOPPLER_SETTINGS = "Upload custom settings..."
 PROCESSING_LOG_ENTRIES_KEY = "processing_log_entries"
+PROCESSING_RUN_KEY = "processing_run"
+PROCESSING_RUN_CONTEXT_KEY = "processing_run_context"
+PROCESSING_RUN_FINALIZED_KEY = "processing_run_finalized"
+PROCESSING_CURRENT_SCAN_CONTEXT_KEY = "processing_current_scan_context"
 PROCESSING_LOG_ALL_FILES = "All files"
 PROCESSING_LOG_ALL_APPS = "All apps"
 PROCESSING_LOG_MANAGER_APP = "DopplerManager"
@@ -69,6 +72,46 @@ def _cached_processing_pipelines(stage: str) -> tuple[Any, ...]:
     return discover_processing_pipelines(stage)
 
 
+def _render_processing_run_contents() -> None:
+    run = st.session_state.get(PROCESSING_RUN_KEY)
+    if not isinstance(run, ProcessingRun):
+        return
+
+    snapshot = run.snapshot()
+    selected_file, selected_app = _render_log_filters(
+        list(run.selected_file_ids),
+        [],
+        allowed_apps=run.allowed_apps,
+    )
+    st.markdown("#### Log")
+    log_placeholder = st.empty()
+    _render_previous_log(
+        log_placeholder,
+        file_filter=selected_file,
+        app_filter=selected_app,
+        allowed_file_ids=list(run.selected_file_ids),
+        allowed_apps=run.allowed_apps,
+        entries=snapshot.log_entries,
+    )
+
+    if snapshot.status in {"pending", "running"}:
+        st.info(
+            "Processing is running. Changes to the controls above are saved for "
+            "the next run."
+        )
+        return
+
+    if _finalize_processing_run(run):
+        st.rerun()
+
+
+_render_processing_run_fragment = (
+    st.fragment(run_every="1s")(_render_processing_run_contents)
+    if hasattr(st, "fragment")
+    else _render_processing_run_contents
+)
+
+
 def render_processing_tab(
     scan_result: ScanResult,
     filtered: pd.DataFrame,
@@ -77,12 +120,22 @@ def render_processing_tab(
     refresh_scan,
 ) -> None:
     st.subheader("Processing")
+    st.session_state[PROCESSING_CURRENT_SCAN_CONTEXT_KEY] = _scan_context_key(
+        root_input,
+        scan_options,
+    )
+    processing_run = st.session_state.get(PROCESSING_RUN_KEY)
 
     filtered_ids = filtered["acquisition"].tolist()
     if not filtered_ids:
         st.warning("No acquisition matches the active filters.")
-        _render_processing_summary()
-        if _has_processing_output():
+        if isinstance(processing_run, ProcessingRun):
+            if st.session_state.get(PROCESSING_RUN_FINALIZED_KEY, False):
+                _render_processing_summary()
+            _render_processing_run_panel(processing_run)
+        else:
+            _render_processing_summary()
+        if not isinstance(processing_run, ProcessingRun) and _has_processing_output():
             _render_processing_log_view([], [])
         return
 
@@ -127,6 +180,10 @@ def render_processing_tab(
         and ("ef" not in runnable_stages or selected_eyeflow_pipelines)
         and ("ae" not in runnable_stages or selected_angioeye_pipelines)
     )
+    run_is_active = (
+        isinstance(processing_run, ProcessingRun)
+        and not bool(st.session_state.get(PROCESSING_RUN_FINALIZED_KEY, False))
+    )
     no_incomplete_selected_scope = bool(
         only_incomplete
         and selected_ids
@@ -150,7 +207,8 @@ def render_processing_tab(
                 "Select at least one acquisition and one stage or postprocess. "
                 "HD also needs a settings JSON file."
             )
-    _render_processing_summary()
+    if not run_is_active:
+        _render_processing_summary()
     if no_incomplete_selected_scope:
         _render_disabled_run_button(run_button_help)
         run_clicked = False
@@ -158,7 +216,7 @@ def render_processing_tab(
         run_clicked = st.button(
             "Run Processing",
             type="primary",
-            disabled=not can_run,
+            disabled=not can_run or run_is_active,
             width="stretch",
             key="run_processing_button",
         )
@@ -183,26 +241,98 @@ def render_processing_tab(
             st.info("No selected stage needs processing.")
             return
 
-        selected_log_file, selected_log_app, log_placeholder = (
-            _render_processing_log_view(
-                selected_ids,
-                selected_stages,
-            )
-        )
-        _run_jobs_and_refresh(
-            jobs=jobs,
-            root_input=root_input,
-            scan_options=scan_options,
-            refresh_scan=refresh_scan,
-            log_placeholder=log_placeholder,
+        processing_run = ProcessingRun(
+            jobs,
             selected_file_ids=selected_ids,
-            file_filter=selected_log_file,
-            app_filter=selected_log_app,
-            allowed_file_ids=selected_ids,
             allowed_apps=_processing_app_labels(selected_stages),
+            log_limit=LOG_LIMIT,
         )
+        st.session_state[PROCESSING_RUN_KEY] = processing_run
+        st.session_state[PROCESSING_RUN_CONTEXT_KEY] = (
+            str(root_input),
+            copy.deepcopy(scan_options),
+            refresh_scan,
+        )
+        st.session_state[PROCESSING_RUN_FINALIZED_KEY] = False
+        st.session_state.pop("processing_summary", None)
+        st.session_state.processing_log = []
+        st.session_state[PROCESSING_LOG_ENTRIES_KEY] = []
+        processing_run.start()
+        _render_processing_run_fragment()
+    elif isinstance(processing_run, ProcessingRun):
+        _render_processing_run_panel(processing_run)
     elif _has_processing_output():
         _render_processing_log_view(selected_ids, selected_stages)
+
+
+def _render_processing_run_panel(run: ProcessingRun) -> None:
+    if not st.session_state.get(PROCESSING_RUN_FINALIZED_KEY, False):
+        _render_processing_run_fragment()
+        return
+
+    snapshot = run.snapshot()
+    _render_processing_log_view(
+        list(run.selected_file_ids),
+        [],
+        entries=snapshot.log_entries,
+        allowed_file_ids=list(run.selected_file_ids),
+        allowed_apps=run.allowed_apps,
+    )
+
+
+def _scan_context_key(root_input: str, scan_options: ScanOptions) -> tuple[object, ...]:
+    return (
+        str(root_input),
+        int(scan_options.max_depth),
+        int(scan_options.max_entries),
+        int(scan_options.preview_limit_per_stage),
+        bool(scan_options.read_versions),
+        tuple(sorted(scan_options.holo_filter_ids or ())),
+        tuple(scan_options.holo_filter_entries or ()),
+    )
+
+
+def _finalize_processing_run(run: ProcessingRun) -> bool:
+    if not run.claim_completion():
+        return False
+
+    snapshot = run.snapshot()
+    failures = [result for result in snapshot.results if not result.succeeded]
+    if snapshot.error:
+        summary = f"Processing failed: {snapshot.error}"
+    elif failures:
+        summary = f"Processing finished with {len(failures)} failed job(s)."
+    else:
+        summary = "Processing finished successfully."
+
+    context = st.session_state.get(PROCESSING_RUN_CONTEXT_KEY)
+    current_scan_context = st.session_state.get(PROCESSING_CURRENT_SCAN_CONTEXT_KEY)
+    if isinstance(context, tuple) and len(context) == 3:
+        original_root, original_options, refresh_scan = context
+        if (
+            current_scan_context
+            == _scan_context_key(str(original_root), original_options)
+        ):
+            run.append_manager_log("[SCAN] Refreshing acquisition index...")
+            try:
+                st.session_state.scan_result = refresh_scan(
+                    original_root,
+                    original_options,
+                )
+            except Exception as exc:  # noqa: BLE001
+                run.append_manager_log(f"[SCAN] Refresh failed: {exc}")
+                summary += " Scan refresh failed."
+            else:
+                run.append_manager_log("[SCAN] Refresh complete.")
+
+    snapshot = run.snapshot()
+    st.session_state.processing_log = [
+        str(entry["line"]) for entry in snapshot.log_entries
+    ]
+    st.session_state[PROCESSING_LOG_ENTRIES_KEY] = list(snapshot.log_entries)
+    st.session_state.processing_summary = summary
+    st.session_state[PROCESSING_RUN_FINALIZED_KEY] = True
+    return True
 
 
 def _render_acquisition_selection(container, filtered_ids: list[str]) -> list[str]:
@@ -250,15 +380,25 @@ def _render_processing_options(
     list[str],
 ]:
     with container.container(border=True, key="processing_options"):
-        header_cols = st.columns([1, 0.14], vertical_alignment="center")
-        header_cols[0].markdown("#### Options")
-        if header_cols[1].button(
-            "",
-            icon=":material/help_outline:",
-            help="Show pipeline and postprocess descriptions",
-            width="stretch",
-            key="processing_options_info_button",
+        with st.container(
+            horizontal=True,
+            vertical_alignment="center",
+            gap="small",
+            key="processing_options_header",
         ):
+            st.markdown(
+                '<div class="dm-processing-options-heading">Options</div>',
+                unsafe_allow_html=True,
+            )
+            help_clicked = st.button(
+                "",
+                icon=":material/help_outline:",
+                help="Show pipeline and postprocess descriptions",
+                type="tertiary",
+                width="content",
+                key="processing_options_info_button",
+            )
+        if help_clicked:
             _render_processing_info_dialog()
         if not selected_acquisitions:
             _clear_processing_option_state()
@@ -322,7 +462,6 @@ def _clear_processing_option_state() -> None:
         "ef_pipelines",
         "ae_pipelines",
         "angioeye_postprocesses",
-        "angioeye_postprocesses_loading",
         "hd_settings_upload",
     ):
         st.session_state.pop(key, None)
@@ -335,7 +474,8 @@ def _clear_processing_option_state() -> None:
     on_dismiss="rerun",
 )
 def _render_processing_info_dialog() -> None:
-    category = st.selectbox(
+    selection_columns = st.columns(2)
+    category = selection_columns[0].selectbox(
         "Information type",
         list(PROCESSING_INFO_OPTIONS),
         key="processing_info_category",
@@ -355,6 +495,7 @@ def _render_processing_info_dialog() -> None:
                 "AngioEye processing package and restart the application if needed."
             ),
             show_input_methods=True,
+            selector_container=selection_columns[1],
         )
         return
 
@@ -364,6 +505,7 @@ def _render_processing_info_dialog() -> None:
             f"No {category.lower()} were discovered. Install the corresponding "
             "optional processing package and restart the application if needed."
         ),
+        selector_container=selection_columns[1],
     )
 
 
@@ -372,34 +514,50 @@ def _render_processing_information(
     *,
     empty_message: str,
     show_input_methods: bool = False,
+    selector_container=None,
 ) -> None:
     if not descriptors:
         st.info(empty_message)
         return
 
-    for index, descriptor in enumerate(descriptors):
-        if index:
-            st.divider()
-        title = f"**{descriptor.name}**"
-        if show_input_methods:
-            input_methods = ", ".join(
-                INPUT_METHOD_LABELS.get(method, method.replace("_", " "))
-                for method in getattr(descriptor, "input_methods", ())
+    descriptor_names = [descriptor.name for descriptor in descriptors]
+    selector = st if selector_container is None else selector_container
+    selected_name = selector.selectbox(
+        "Postprocess" if show_input_methods else "Pipeline",
+        descriptor_names,
+        key="processing_info_descriptor",
+    )
+    descriptor = next(
+        descriptor for descriptor in descriptors if descriptor.name == selected_name
+    )
+    _render_processing_descriptor(descriptor, show_input_methods=show_input_methods)
+
+
+def _render_processing_descriptor(
+    descriptor: Any,
+    *,
+    show_input_methods: bool,
+) -> None:
+    title = f"**{descriptor.name}**"
+    if show_input_methods:
+        input_methods = ", ".join(
+            INPUT_METHOD_LABELS.get(method, method.replace("_", " "))
+            for method in getattr(descriptor, "input_methods", ())
+        )
+        if input_methods:
+            title += f"\n\n*Allowed inputs: {input_methods}*"
+    st.markdown(f"## {title}")
+    st.markdown(descriptor.description or "No description provided by the decorator.")
+    if not descriptor.available:
+        reason = ", ".join(
+            (
+                *getattr(descriptor, "missing_deps", ()),
+                *getattr(descriptor, "missing_pipelines", ()),
             )
-            if input_methods:
-                title += f" | *Allowed inputs: {input_methods}*"
-        st.markdown(title)
-        st.write(descriptor.description or "No description provided by the decorator.")
-        if not descriptor.available:
-            reason = ", ".join(
-                (
-                    *getattr(descriptor, "missing_deps", ()),
-                    *getattr(descriptor, "missing_pipelines", ()),
-                )
-            )
-            if not reason:
-                reason = str(getattr(descriptor, "error_msg", "") or "").strip()
-            st.caption("Unavailable" + (f": {reason}" if reason else "."))
+        )
+        if not reason:
+            reason = str(getattr(descriptor, "error_msg", "") or "").strip()
+        st.caption("Unavailable" + (f": {reason}" if reason else "."))
 
 
 def _render_postprocess_selection(
@@ -408,26 +566,16 @@ def _render_postprocess_selection(
 ) -> tuple[str, ...]:
     if not selected_acquisitions:
         st.caption(
-            "Select at least one acquisition to discover compatible postprocesses."
+            "Select at least one acquisition to show compatible postprocesses."
         )
         return ()
 
-    loading_dropdown = st.empty()
-    loading_dropdown.multiselect(
-        "AngioEye postprocesses",
-        ["Discovering compatible postprocesses..."],
-        default=[],
-        disabled=True,
-        key="angioeye_postprocesses_loading",
+    proposed = proposed_angioeye_postprocesses(
+        _cached_angioeye_postprocesses(),
+        len(selected_acquisitions),
+        selected_pipelines=selected_angioeye_pipelines,
     )
-    with st.spinner("Discovering compatible AngioEye postprocesses..."):
-        proposed = proposed_angioeye_postprocesses(
-            _cached_angioeye_postprocesses(),
-            len(selected_acquisitions),
-            selected_pipelines=selected_angioeye_pipelines,
-        )
     if not proposed:
-        loading_dropdown.empty()
         st.caption(
             "No AngioEye postprocess supports this selection size and pipeline "
             "selection. "
@@ -436,7 +584,7 @@ def _render_postprocess_selection(
         return ()
 
     options = [postprocess.name for postprocess in proposed]
-    selected = loading_dropdown.multiselect(
+    selected = st.multiselect(
         "AngioEye postprocesses",
         options,
         default=[],
@@ -567,10 +715,15 @@ def _processing_app_labels(stages: list[str]) -> tuple[str, ...]:
 def _render_processing_log_view(
     selected_file_ids: list[str],
     selected_stages: list[str],
+    *,
+    entries: Sequence[dict[str, object]] | None = None,
+    allowed_file_ids: list[str] | None = None,
+    allowed_apps: tuple[str, ...] | None = None,
 ) -> tuple[str, str, object]:
     selected_log_file, selected_log_app = _render_log_filters(
         selected_file_ids,
         selected_stages,
+        allowed_apps=allowed_apps,
     )
     st.markdown("#### Log")
     log_placeholder = st.empty()
@@ -578,8 +731,15 @@ def _render_processing_log_view(
         log_placeholder,
         file_filter=selected_log_file,
         app_filter=selected_log_app,
-        allowed_file_ids=selected_file_ids,
-        allowed_apps=_processing_app_labels(selected_stages),
+        allowed_file_ids=(
+            selected_file_ids if allowed_file_ids is None else allowed_file_ids
+        ),
+        allowed_apps=(
+            _processing_app_labels(selected_stages)
+            if allowed_apps is None
+            else allowed_apps
+        ),
+        entries=entries,
     )
     return selected_log_file, selected_log_app, log_placeholder
 
@@ -587,9 +747,15 @@ def _render_processing_log_view(
 def _render_log_filters(
     selected_file_ids: list[str],
     selected_stages: list[str],
+    *,
+    allowed_apps: tuple[str, ...] | None = None,
 ) -> tuple[str, str]:
     file_options = sorted(dict.fromkeys(str(file_id) for file_id in selected_file_ids))
-    app_options = list(_processing_app_labels(selected_stages))
+    app_options = list(
+        _processing_app_labels(selected_stages)
+        if allowed_apps is None
+        else allowed_apps
+    )
     file_options = [PROCESSING_LOG_ALL_FILES, *file_options]
     app_options = [PROCESSING_LOG_ALL_APPS, *app_options]
 
@@ -614,10 +780,15 @@ def _render_log_filters(
     return str(selected_file), str(selected_app)
 
 
-def _processing_log_entries() -> list[dict[str, object]]:
-    raw_entries = st.session_state.get(PROCESSING_LOG_ENTRIES_KEY)
-    if isinstance(raw_entries, list) and raw_entries:
-        entries: list[dict[str, object]] = []
+def _processing_log_entries(
+    entries: Sequence[dict[str, object]] | None = None,
+) -> list[dict[str, object]]:
+    using_explicit_entries = entries is not None
+    raw_entries = entries if using_explicit_entries else st.session_state.get(
+        PROCESSING_LOG_ENTRIES_KEY
+    )
+    if isinstance(raw_entries, (list, tuple)) and raw_entries:
+        normalized: list[dict[str, object]] = []
         for raw_entry in raw_entries:
             if not isinstance(raw_entry, dict):
                 continue
@@ -628,15 +799,20 @@ def _processing_log_entries() -> list[dict[str, object]]:
                 files = tuple(str(file_id) for file_id in files if file_id)
             else:
                 files = ()
-            entries.append(
+            normalized.append(
                 {
                     "line": str(raw_entry.get("line", "")),
                     "files": files,
                     "app": str(raw_entry.get("app", "")),
                 }
             )
-        if entries:
-            return entries
+        if normalized:
+            return normalized
+        if using_explicit_entries:
+            return []
+
+    if using_explicit_entries:
+        return []
 
     return [
         {
@@ -646,91 +822,6 @@ def _processing_log_entries() -> list[dict[str, object]]:
         }
         for line in st.session_state.get("processing_log", [])
     ]
-
-
-def _run_jobs_and_refresh(
-    *,
-    jobs,
-    root_input: str,
-    scan_options: ScanOptions,
-    refresh_scan,
-    log_placeholder,
-    selected_file_ids: list[str],
-    file_filter: str,
-    app_filter: str,
-    allowed_file_ids: list[str],
-    allowed_apps: tuple[str, ...],
-) -> None:
-    log_lines = deque(maxlen=LOG_LIMIT)
-    log_entries = deque(maxlen=LOG_LIMIT)
-    last_log_was_progress = False
-    current_file_ids: tuple[str, ...] = ()
-    current_app = PROCESSING_LOG_MANAGER_APP
-    st.session_state.processing_log = []
-    st.session_state[PROCESSING_LOG_ENTRIES_KEY] = []
-
-    def set_job_context(job) -> None:
-        nonlocal current_file_ids, current_app
-        if job.acquisition_id == "__angioeye_postprocess__":
-            current_file_ids = tuple(selected_file_ids)
-        else:
-            current_file_ids = (job.acquisition_id,)
-        current_app = _processing_app_label(job.stage)
-
-    def append_log(line: str) -> None:
-        nonlocal last_log_was_progress
-        is_progress_update = line.startswith(PROGRESS_LOG_PREFIX)
-        if is_progress_update:
-            line = line[len(PROGRESS_LOG_PREFIX) :]
-            if last_log_was_progress and log_lines:
-                log_lines[-1] = line
-                log_entries[-1]["line"] = line
-            else:
-                log_lines.append(line)
-                log_entries.append(
-                    {
-                        "line": line,
-                        "files": current_file_ids,
-                        "app": current_app,
-                    }
-                )
-            last_log_was_progress = True
-        else:
-            log_lines.append(line)
-            log_entries.append(
-                {
-                    "line": line,
-                    "files": current_file_ids,
-                    "app": current_app,
-                }
-            )
-            last_log_was_progress = False
-        st.session_state.processing_log = list(log_lines)
-        st.session_state[PROCESSING_LOG_ENTRIES_KEY] = list(log_entries)
-        _render_previous_log(
-            log_placeholder,
-            file_filter=file_filter,
-            app_filter=app_filter,
-            allowed_file_ids=allowed_file_ids,
-            allowed_apps=allowed_apps,
-        )
-
-    results = run_processing_jobs(jobs, append_log, on_job=set_job_context)
-    failures = [result for result in results if not result.succeeded]
-
-    current_file_ids = ()
-    current_app = PROCESSING_LOG_MANAGER_APP
-    append_log("[SCAN] Refreshing acquisition index...")
-    st.session_state.scan_result = refresh_scan(root_input, scan_options)
-    append_log("[SCAN] Refresh complete.")
-
-    if failures:
-        st.session_state.processing_summary = (
-            f"Processing finished with {len(failures)} failed job(s)."
-        )
-    else:
-        st.session_state.processing_summary = "Processing finished successfully."
-    st.rerun()
 
 
 def _processing_app_label(stage: str) -> str:
@@ -746,14 +837,15 @@ def _render_previous_log(
     app_filter: str = PROCESSING_LOG_ALL_APPS,
     allowed_file_ids: list[str] | None = None,
     allowed_apps: tuple[str, ...] | None = None,
+    entries: Sequence[dict[str, object]] | None = None,
 ) -> None:
-    entries = _processing_log_entries()
-    if not entries:
+    normalized_entries = _processing_log_entries(entries)
+    if not normalized_entries:
         return
 
     visible_entries = [
         entry
-        for entry in entries
+        for entry in normalized_entries
         if (
             allowed_file_ids is None
             or (

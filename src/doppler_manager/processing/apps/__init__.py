@@ -8,6 +8,7 @@ from .angioeye_postprocess import (
     build_angioeye_postprocess_job,
     discover_angioeye_postprocesses,
     input_method_for_count,
+    preload_angioeye_postprocesses,
     proposed_angioeye_postprocesses,
 )
 from .dopplerview import build_dopplerview_call, build_dopplerview_job
@@ -32,5 +33,6 @@ __all__ = [
     "discover_angioeye_postprocesses",
     "eyeflow_temp_root",
     "input_method_for_count",
+    "preload_angioeye_postprocesses",
     "proposed_angioeye_postprocesses",
 ]

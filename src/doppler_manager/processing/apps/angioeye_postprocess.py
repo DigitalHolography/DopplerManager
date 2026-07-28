@@ -10,7 +10,11 @@ from doppler_manager.processing.core.models import ProcessingJob
 from doppler_manager.processing.config.pipelines import (
     pipeline_catalog as _load_angioeye_pipeline_catalog,
 )
-from doppler_manager.processing.runtimes import runtime_catalog
+from doppler_manager.processing.catalogs import (
+    load_catalog as _load_preloaded_catalog,
+    preload_catalog as _preload_catalog,
+)
+from doppler_manager.processing.runtimes import runtime_available, runtime_catalog
 
 
 POSTPROCESS_INPUT_METHODS = (
@@ -19,7 +23,6 @@ POSTPROCESS_INPUT_METHODS = (
     "cohort_batch",
     "zip_batch",
 )
-
 
 @dataclass(frozen=True)
 class AngioEyePostprocessDescriptor:
@@ -46,11 +49,35 @@ def discover_angioeye_postprocesses() -> tuple[AngioEyePostprocessDescriptor, ..
     those descriptors use the standard dispatcher input modes.
     """
 
+    return _load_preloaded_catalog(
+        "angioeye:postprocesses",
+        _discover_angioeye_postprocesses_now,
+    )
+
+
+def preload_angioeye_postprocesses() -> bool:
+    """Start AngioEye postprocess discovery without blocking app startup.
+
+    Discovery is only useful when the isolated AngioEye runtime is available.
+    The returned task is shared with subsequent calls to
+    :func:`discover_angioeye_postprocesses`, so opening the processing options
+    cannot start a second catalog subprocess while the preload is running.
+    """
+
+    if not runtime_available("ae"):
+        return False
+
+    return _preload_catalog(
+        "angioeye:postprocesses",
+        _discover_angioeye_postprocesses_now,
+    )
+
+
+def _discover_angioeye_postprocesses_now() -> tuple[AngioEyePostprocessDescriptor, ...]:
     try:
-        descriptors = _discover_from_catalog(_load_angioeye_postprocess_catalog)
+        return _discover_from_catalog(_load_angioeye_postprocess_catalog)
     except Exception:  # noqa: BLE001
         return ()
-    return descriptors
 
 
 @lru_cache(maxsize=8)
