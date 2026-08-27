@@ -79,7 +79,7 @@ $env:DM_VERSION = $Version
 New-Item -ItemType Directory -Force -Path $InstallerOut | Out-Null
 & $InnoCompiler (Join-Path $Root "packaging\DopplerManagerScan.iss")
 
-$Installer = Join-Path $InstallerOut "DopplerManagerScan-$Version-setup.exe"
+$Installer = Join-Path $InstallerOut "DopplerManager-$Version-setup.exe"
 if (-not (Test-Path $Installer)) {
     throw "Inno Setup did not produce $Installer."
 }

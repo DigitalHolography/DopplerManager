@@ -36,6 +36,8 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
+          name: Doppler manager ${{ github.ref_name }}
           generate_release_notes: true
-          prerelease: true
+          prerelease: false
+          fail_on_unmatched_files: true
           files: dist/installer/*.exe

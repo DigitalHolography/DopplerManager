@@ -5,7 +5,7 @@
 #define MyAppVersion GetEnv("DM_VERSION")
 
 #if MyAppVersion == ""
-  #define MyAppVersion "0.4.0"
+  #define MyAppVersion "1.7.0"
 #endif
 
 [Setup]
@@ -19,7 +19,7 @@ DisableDirPage=yes
 DisableProgramGroupPage=yes
 UsePreviousAppDir=no
 OutputDir=..\dist\installer
-OutputBaseFilename=DopplerManagerScan-{#MyAppVersion}-setup
+OutputBaseFilename=DopplerManager-{#MyAppVersion}-setup
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern

@@ -165,13 +165,13 @@ Build the installer:
 To override the release version:
 
 ```powershell
-.\scripts\build_scan_release.ps1 -Version 0.4.0
+.\scripts\build_scan_release.ps1 -Version 1.7.0
 ```
 
 The script builds `dist\DopplerManagerScan\DopplerManagerScan.exe` with PyInstaller, then creates:
 
 ```text
-dist\installer\DopplerManagerScan-<version>-setup.exe
+dist\installer\DopplerManager-<version>-setup.exe
 ```
 
 The installer uses Inno Setup and installs the application under:
@@ -190,8 +190,8 @@ The build uses an isolated `.venv-release` environment so the local development 
 Pushing a tag `v<version>` also builds and uploads this installer through the Windows release workflow:
 
 ```powershell
-git tag v0.4.0
-git push origin v0.4.0
+git tag v1.7.0
+git push origin v1.7.0
 ```
 
 If the installed executable does not open a browser on another PC, check the diagnostic log:
