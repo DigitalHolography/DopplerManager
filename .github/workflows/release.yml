@@ -34,10 +34,14 @@ jobs:
           .\scripts\build_scan_release.ps1 -Version $Version
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
-        with:
-          name: Doppler manager ${{ github.ref_name }}
-          generate_release_notes: true
-          prerelease: false
-          fail_on_unmatched_files: true
-          files: dist/installer/*.exe
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $Version = "${{ github.ref_name }}".TrimStart("v")
+          $Installer = "dist/installer/DopplerManager-$Version-setup.exe"
+          gh release create "${{ github.ref_name }}" $Installer `
+            --verify-tag `
+            --title "Doppler manager ${{ github.ref_name }}" `
+            --generate-notes `
+            --latest
