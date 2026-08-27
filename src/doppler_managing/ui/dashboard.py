@@ -323,7 +323,7 @@ def _render_export_button(container, scan_result, filtered: pd.DataFrame) -> Non
     )
 
     container.download_button(
-        "Export list",
+        "Explort lists",
         data=zip_bytes,
         file_name="doppler_pipeline_missing_holo_lists.zip",
         mime="application/zip",
