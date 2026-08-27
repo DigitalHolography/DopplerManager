@@ -30,8 +30,14 @@ jobs:
         shell: powershell
         run: .\scripts\build_scan_release.ps1 -Version 1.7.0
 
-      - name: Upload installer to v1.7.0
+      - name: Replace incomplete v1.7.0 release
         shell: powershell
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload v1.7.0 "dist/installer/DopplerManager-1.7.0-setup.exe" --clobber
+        run: |
+          gh release delete v1.7.0 --yes
+          gh release create v1.7.0 "dist/installer/DopplerManager-1.7.0-setup.exe" `
+            --verify-tag `
+            --title "Doppler manager v1.7.0" `
+            --generate-notes `
+            --latest
