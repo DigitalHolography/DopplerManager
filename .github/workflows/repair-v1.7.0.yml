@@ -1,0 +1,37 @@
+name: Repair v1.7.0 release asset
+
+on:
+  push:
+    branches:
+      - release-v1.7.0-repair
+
+jobs:
+  windows-installer:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install Inno Setup
+        shell: powershell
+        run: choco install innosetup --no-progress -y
+
+      - name: Build v1.7.0 installer
+        shell: powershell
+        run: .\scripts\build_scan_release.ps1 -Version 1.7.0
+
+      - name: Upload installer to v1.7.0
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload v1.7.0 "dist/installer/DopplerManager-1.7.0-setup.exe" --clobber
