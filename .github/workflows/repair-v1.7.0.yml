@@ -14,30 +14,106 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Prepare draft release
+        id: release
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $Headers = @{
+            Authorization = "Bearer $env:GH_TOKEN"
+            Accept = "application/vnd.github+json"
+            "X-GitHub-Api-Version" = "2022-11-28"
+          }
+          $ApiBase = "https://api.github.com/repos/${{ github.repository }}"
+          $Releases = Invoke-RestMethod -Headers $Headers -Uri "$ApiBase/releases?per_page=100"
+          $Release = $Releases | Where-Object { $_.tag_name -eq "v1.7.0" } | Select-Object -First 1
+
+          if ($Release -and -not $Release.draft) {
+            if ($Release.assets.Count -gt 0) {
+              Add-Content -LiteralPath $env:GITHUB_OUTPUT -Value "already_published=true"
+              Add-Content -LiteralPath $env:GITHUB_OUTPUT -Value "asset_exists=true"
+              Add-Content -LiteralPath $env:GITHUB_OUTPUT -Value "release_id=$($Release.id)"
+              exit 0
+            }
+            Invoke-RestMethod -Method Delete -Headers $Headers -Uri "$ApiBase/releases/$($Release.id)"
+            $Release = $null
+          }
+
+          if (-not $Release) {
+            $Body = @{
+              tag_name = "v1.7.0"
+              name = "Doppler manager v1.7.0"
+              draft = $true
+              prerelease = $false
+              generate_release_notes = $true
+            } | ConvertTo-Json
+            $Release = Invoke-RestMethod -Method Post -Headers $Headers -Uri "$ApiBase/releases" `
+              -Body $Body -ContentType "application/json"
+          }
+
+          $Asset = $Release.assets | Where-Object { $_.name -eq "DopplerManager-1.7.0-setup.exe" } | Select-Object -First 1
+          Add-Content -LiteralPath $env:GITHUB_OUTPUT -Value "already_published=false"
+          Add-Content -LiteralPath $env:GITHUB_OUTPUT -Value ("asset_exists=$($null -ne $Asset)".ToLowerInvariant())
+          Add-Content -LiteralPath $env:GITHUB_OUTPUT -Value "release_id=$($Release.id)"
+
       - name: Install uv
+        if: steps.release.outputs.asset_exists != 'true'
         uses: astral-sh/setup-uv@v5
 
       - name: Install Python
+        if: steps.release.outputs.asset_exists != 'true'
         uses: actions/setup-python@v5
         with:
           python-version: "3.13"
 
       - name: Install Inno Setup
+        if: steps.release.outputs.asset_exists != 'true'
         shell: powershell
         run: choco install innosetup --no-progress -y
 
       - name: Build v1.7.0 installer
+        if: steps.release.outputs.asset_exists != 'true'
         shell: powershell
         run: .\scripts\build_scan_release.ps1 -Version 1.7.0
 
-      - name: Replace incomplete v1.7.0 release
+      - name: Upload installer asset
+        if: steps.release.outputs.asset_exists != 'true'
         shell: powershell
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release delete v1.7.0 --yes
-          gh release create v1.7.0 "dist/installer/DopplerManager-1.7.0-setup.exe" `
-            --verify-tag `
-            --title "Doppler manager v1.7.0" `
-            --generate-notes `
-            --latest
+          $Headers = @{
+            Authorization = "Bearer $env:GH_TOKEN"
+            Accept = "application/vnd.github+json"
+            "X-GitHub-Api-Version" = "2022-11-28"
+          }
+          $ReleaseId = "${{ steps.release.outputs.release_id }}"
+          $AssetName = "DopplerManager-1.7.0-setup.exe"
+          $UploadName = [Uri]::EscapeDataString($AssetName)
+          Invoke-RestMethod -Method Post -Headers $Headers `
+            -Uri "https://uploads.github.com/repos/${{ github.repository }}/releases/$ReleaseId/assets?name=$UploadName" `
+            -InFile "dist/installer/$AssetName" `
+            -ContentType "application/octet-stream"
+
+      - name: Publish v1.7.0 release
+        if: steps.release.outputs.already_published != 'true'
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $Headers = @{
+            Authorization = "Bearer $env:GH_TOKEN"
+            Accept = "application/vnd.github+json"
+            "X-GitHub-Api-Version" = "2022-11-28"
+          }
+          $Body = @{
+            name = "Doppler manager v1.7.0"
+            draft = $false
+            prerelease = $false
+            make_latest = "true"
+          } | ConvertTo-Json
+          $ReleaseId = "${{ steps.release.outputs.release_id }}"
+          Invoke-RestMethod -Method Patch -Headers $Headers `
+            -Uri "https://api.github.com/repos/${{ github.repository }}/releases/$ReleaseId" `
+            -Body $Body -ContentType "application/json"
