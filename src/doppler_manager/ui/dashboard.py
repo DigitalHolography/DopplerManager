@@ -321,7 +321,7 @@ def _render_export_button(container, scan_result, filtered: pd.DataFrame) -> Non
     )
 
     container.download_button(
-        "Export list",
+        "Explort lists",
         data=zip_bytes,
         file_name="doppler_manager_scan_lists.zip",
         mime="application/zip",
