@@ -102,15 +102,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $Headers = @{
-            Authorization = "Bearer $env:GH_TOKEN"
-            Accept = "application/vnd.github+json"
-            "X-GitHub-Api-Version" = "2022-11-28"
-          }
-          $Body = @{
-            draft = $false
-          } | ConvertTo-Json
           $ReleaseId = "${{ steps.release.outputs.release_id }}"
-          Invoke-RestMethod -Method Patch -Headers $Headers `
-            -Uri "https://api.github.com/repos/${{ github.repository }}/releases/$ReleaseId" `
-            -Body $Body -ContentType "application/json"
+          $Result = gh api --method PATCH `
+            "repos/${{ github.repository }}/releases/$ReleaseId" `
+            -F draft=false 2>&1
+          if ($LASTEXITCODE -ne 0) {
+            $Message = (($Result | Out-String).Trim() -replace "`r?`n", " ")
+            Write-Output "::error title=GitHub release publish failed::$Message"
+            exit 1
+          }
