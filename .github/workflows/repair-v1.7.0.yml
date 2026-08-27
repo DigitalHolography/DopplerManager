@@ -102,12 +102,4 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $ReleaseId = "${{ steps.release.outputs.release_id }}"
-          $Result = gh api --method PATCH `
-            "repos/${{ github.repository }}/releases/$ReleaseId" `
-            -F draft=false 2>&1
-          if ($LASTEXITCODE -ne 0) {
-            $Message = (($Result | Out-String).Trim() -replace "`r?`n", " ")
-            Write-Output "::error title=GitHub release publish failed::$Message"
-            exit 1
-          }
+          gh release edit v1.7.0 --draft=false
