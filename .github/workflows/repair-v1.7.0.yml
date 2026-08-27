@@ -102,4 +102,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release edit v1.7.0 --draft=false
+          $ErrorActionPreference = "Continue"
+          $PSNativeCommandUseErrorActionPreference = $false
+          $Result = & gh release edit v1.7.0 --draft=false 2>&1
+          $ExitCode = $LASTEXITCODE
+          if ($ExitCode -ne 0) {
+            $Message = (($Result | Out-String).Trim() -replace "`r?`n", " ")
+            Write-Output "::error file=.github/workflows/repair-v1.7.0.yml,title=GitHub release publish failed::$Message"
+            exit $ExitCode
+          }
