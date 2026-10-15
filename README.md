@@ -188,7 +188,7 @@ Build the installer:
 To override the release version:
 
 ```powershell
-.\scripts\build_installer.ps1 -Version 1.7.2
+.\scripts\build_installer.ps1 -Version 1.7.3
 ```
 
 The script stages the PyInstaller application under `build\installer-payload`, packages it with Inno Setup, then creates:
@@ -215,8 +215,8 @@ processing runtimes alongside the packaged application.
 Pushing a tag `v<version>` also builds and uploads this installer through the Windows release workflow:
 
 ```powershell
-git tag v1.7.2
-git push origin v1.7.2
+git tag v1.7.3
+git push origin v1.7.3
 ```
 
 If the installed executable does not open a browser on another PC, check the diagnostic log:

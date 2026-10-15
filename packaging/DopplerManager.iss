@@ -5,8 +5,12 @@
 #define MyAppVersion GetEnv("DM_VERSION")
 #define MyAppIcon "..\packaging\DopplerManager.ico"
 
+#ifndef MyAppSourceDir
+  #define MyAppSourceDir "..\build\installer-payload\DopplerManager"
+#endif
+
 #if MyAppVersion == ""
-  #define MyAppVersion "1.7.2"
+  #define MyAppVersion "1.7.3"
 #endif
 
 [Setup]
@@ -38,7 +42,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "..\build\installer-payload\DopplerManager\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#MyAppSourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [InstallDelete]
 Type: files; Name: "{autodesktop}\Doppler Manager Scan.lnk"

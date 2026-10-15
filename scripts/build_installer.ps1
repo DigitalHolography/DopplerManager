@@ -50,6 +50,7 @@ $InstallerOut = Join-Path $Root "dist\installer"
 $IconPath = Join-Path $Root "packaging\DopplerManager.ico"
 $ProcessingDefaults = Join-Path $Root "processing_defaults"
 $RuntimeBridge = Join-Path $Root "src\doppler_manager\processing\runtime_bridge.py"
+$MappedPayloadDrive = $null
 
 foreach ($Path in @($PayloadRoot, $BuildApp, $LegacyDistApp, $InstallerOut)) {
     if (Test-Path $Path) {
@@ -114,7 +115,22 @@ try {
 
     $env:DM_VERSION = $Version
     New-Item -ItemType Directory -Force -Path $InstallerOut | Out-Null
-    & $InnoCompiler (Join-Path $Root "packaging\DopplerManager.iss")
+    # Keep compiler source paths short enough for deeply nested runtime headers.
+    foreach ($DriveCode in 90..71) {
+        $CandidateDrive = "$([char]$DriveCode):"
+        if (Get-PSDrive -Name ([string][char]$DriveCode) -ErrorAction SilentlyContinue) {
+            continue
+        }
+        & subst.exe $CandidateDrive $DistApp
+        if ($LASTEXITCODE -eq 0) {
+            $MappedPayloadDrive = $CandidateDrive
+            break
+        }
+    }
+    if (-not $MappedPayloadDrive) {
+        throw "No free drive letter was available for the installer payload."
+    }
+    & $InnoCompiler "/DMyAppSourceDir=$MappedPayloadDrive" (Join-Path $Root "packaging\DopplerManager.iss")
     if ($LASTEXITCODE -ne 0) {
         throw "Inno Setup failed with exit code $LASTEXITCODE."
     }
@@ -127,6 +143,9 @@ try {
     Write-Host "Installer ready: $Installer"
 }
 finally {
+    if ($MappedPayloadDrive) {
+        & subst.exe $MappedPayloadDrive /D
+    }
     foreach ($Path in @($PayloadRoot, $BuildApp)) {
         if (Test-Path $Path) {
             Remove-Item -LiteralPath $Path -Recurse -Force
