@@ -90,10 +90,7 @@ def _find_uv_git_cli(tool_config: dict[str, str]) -> Path | None:
         return None
 
     commit_prefix = commit_id[:7].lower()
-    for cache_root in _uv_cache_roots():
-        checkout_root = cache_root / "git-v0" / "checkouts"
-        if not checkout_root.is_dir():
-            continue
+    for checkout_root in _uv_git_checkout_roots():
         for pyproject_path in checkout_root.rglob("pyproject.toml"):
             if not any(
                 part.lower().startswith(commit_prefix) for part in pyproject_path.parts
@@ -128,6 +125,15 @@ def _uv_cache_roots() -> list[Path]:
             seen.add(resolved)
             roots.append(resolved)
     return roots
+
+
+def _uv_git_checkout_roots() -> list[Path]:
+    return [
+        checkout_root
+        for cache_root in _uv_cache_roots()
+        for checkout_root in sorted(cache_root.glob("git-v*/checkouts"))
+        if checkout_root.is_dir()
+    ]
 
 
 def _project_name(pyproject_path: Path) -> str | None:

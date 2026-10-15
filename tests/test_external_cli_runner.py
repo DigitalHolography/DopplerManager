@@ -1,14 +1,18 @@
 import json
 from pathlib import Path
 
+import pytest
+
 import doppler_manager._external_cli_runner as external_cli_runner
 
 
+@pytest.mark.parametrize("git_cache", ["git-v0", "git-v1"])
 def test_load_tool_cli_prefers_uv_checkout_over_colliding_installed_cli(
     tmp_path: Path,
     monkeypatch,
+    git_cache: str,
 ) -> None:
-    checkout = tmp_path / "uv-cache" / "git-v0" / "checkouts" / "repo" / "abcdef0"
+    checkout = tmp_path / "uv-cache" / git_cache / "checkouts" / "repo" / "abcdef0"
     checkout_src = checkout / "src"
     checkout_src.mkdir(parents=True)
     (checkout / "pyproject.toml").write_text(

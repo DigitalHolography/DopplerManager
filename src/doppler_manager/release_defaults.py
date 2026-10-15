@@ -5,7 +5,7 @@ import shutil
 from importlib import metadata
 from pathlib import Path
 
-from ._external_cli_runner import _project_name, _uv_cache_roots
+from ._external_cli_runner import _project_name, _uv_git_checkout_roots
 
 
 HOLODOPPLER_SETTINGS_SUFFIXES = frozenset({".json", ".yaml", ".yml"})
@@ -54,10 +54,7 @@ def _app_root(
     commit = direct_url.get("vcs_info", {}).get("commit_id", "")[:7].lower()
     if not commit:
         raise RuntimeError(f"{distribution} was not installed from a pinned git commit.")
-    for cache_root in _uv_cache_roots():
-        checkout_root = cache_root / "git-v0" / "checkouts"
-        if not checkout_root.is_dir():
-            continue
+    for checkout_root in _uv_git_checkout_roots():
         for pyproject in checkout_root.rglob("pyproject.toml"):
             has_commit = any(part.lower().startswith(commit) for part in pyproject.parts)
             if has_commit and _project_name(pyproject) == project.lower():

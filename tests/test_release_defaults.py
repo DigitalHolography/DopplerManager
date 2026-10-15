@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pytest
+
 import doppler_manager.release_defaults as release_defaults
 
 
@@ -8,7 +10,10 @@ def _write(path: Path, text: str = "{}") -> None:
     path.write_text(text, encoding="utf-8")
 
 
-def test_sync_processing_defaults_copies_commit_checkout_files(tmp_path: Path, monkeypatch) -> None:
+@pytest.mark.parametrize("git_cache", ["git-v0", "git-v1"])
+def test_sync_processing_defaults_copies_commit_checkout_files(
+    tmp_path: Path, monkeypatch, git_cache: str
+) -> None:
     commits = {
         "holodoppler": "05d0b7c822648283e7dd5809a7a71cee5730aebd",
         "EyeFlow": "2d42e4a03483d73bdb13a2b4cf71f7dac4042ab4",
@@ -17,7 +22,7 @@ def test_sync_processing_defaults_copies_commit_checkout_files(tmp_path: Path, m
     projects = {"holodoppler": "holodoppler", "EyeFlow": "EyeFlow", "AngioEye": "AngioEye"}
     cache = tmp_path / "uv-cache"
     for distribution, commit in commits.items():
-        root = cache / "git-v0" / "checkouts" / distribution / commit[:7]
+        root = cache / git_cache / "checkouts" / distribution / commit[:7]
         _write(root / "pyproject.toml", f'[project]\nname = "{projects[distribution]}"\n')
         if distribution == "holodoppler":
             for name in (

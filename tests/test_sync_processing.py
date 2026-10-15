@@ -17,8 +17,9 @@ def _write(path: Path, content: str) -> None:
     "site_packages", ["Lib/site-packages", "lib/python3.13/site-packages"]
 )
 @pytest.mark.parametrize("custom_root", [False, True])
+@pytest.mark.parametrize("git_cache", ["git-v0", "git-v1"])
 def test_sync_restores_defaults_when_package_versions_are_unchanged(
-    tmp_path: Path, monkeypatch, site_packages: str, custom_root: bool
+    tmp_path: Path, monkeypatch, site_packages: str, custom_root: bool, git_cache: str
 ) -> None:
     workspace = tmp_path / "workspace"
     runtime_root = (
@@ -51,7 +52,7 @@ def test_sync_restores_defaults_when_package_versions_are_unchanged(
             dist_info / "direct_url.json",
             json.dumps({"vcs_info": {"commit_id": commit}}),
         )
-        checkout = cache / "git-v0" / "checkouts" / project / commit[:7]
+        checkout = cache / git_cache / "checkouts" / project / commit[:7]
         _write(checkout / "pyproject.toml", f'[project]\nname = "{project}"\n')
         if project == "holodoppler":
             relative = Path("holodoppler/default_parameters_simple.yaml")
