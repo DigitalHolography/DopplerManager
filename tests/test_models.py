@@ -1,4 +1,4 @@
-from doppler_managing.models import AcquisitionResult, StageResult
+from doppler_manager.models import AcquisitionResult, StageResult
 
 
 def test_acquisition_row_includes_deduplicated_warning_messages() -> None:

@@ -1,17 +1,30 @@
 import sys
+import time
+from threading import Event
 from pathlib import Path
+from types import SimpleNamespace
 
-import doppler_managing.processing as processing
-from doppler_managing.models import AcquisitionResult, FileRef, StageResult
-from doppler_managing.processing import (
+import pytest
+
+import doppler_manager._external_cli_runner as external_cli_runner
+import doppler_manager.processing as processing
+import doppler_manager.processing.catalogs as processing_catalogs
+from doppler_manager.processing.execution.runner import run_single_job
+from doppler_manager.processing.execution.session import ProcessingRun
+from doppler_manager.models import AcquisitionResult, FileRef, StageResult
+from doppler_manager.processing import (
     build_processing_jobs,
+    discover_angioeye_postprocesses,
     discover_holodoppler_settings,
     install_angioeye_output,
     install_eyeflow_output,
     missing_default_processing_tools,
     needed_processing_stages,
     preferred_holodoppler_settings,
+    processing_defaults_dir,
+    proposed_angioeye_postprocesses,
 )
+import doppler_manager.processing.apps.angioeye_postprocess as angioeye_postprocess
 
 
 def _write(path: Path, content: bytes = b"x") -> None:
@@ -22,7 +35,12 @@ def _write(path: Path, content: bytes = b"x") -> None:
 def _acquisition(tmp_path: Path, acquisition_id: str) -> AcquisitionResult:
     holo_path = tmp_path / f"{acquisition_id}.holo"
     acquisition_dir = tmp_path / acquisition_id
-    hd_h5 = acquisition_dir / f"{acquisition_id}_HD" / "h5" / f"{acquisition_id}_HD_output.h5"
+    hd_h5 = (
+        acquisition_dir
+        / f"{acquisition_id}_HD"
+        / "h5"
+        / f"{acquisition_id}_HD_output.h5"
+    )
     dv_h5 = acquisition_dir / f"{acquisition_id}_DV" / "h5" / f"{acquisition_id}_DV.h5"
     ef_h5 = acquisition_dir / f"{acquisition_id}_EF" / "h5" / f"{acquisition_id}_EF.h5"
     _write(holo_path)
@@ -88,11 +106,14 @@ def test_build_processing_jobs_keeps_stage_order(tmp_path: Path, monkeypatch) ->
         str(tmp_path / f"{acquisition_id}.holo"),
         str(settings_path),
     )
-    assert jobs[1].command[:2] == ("dv-command", str(tmp_path / f"{acquisition_id}.holo"))
+    assert jobs[1].command[:2] == (
+        "dv-command",
+        str(tmp_path / f"{acquisition_id}.holo"),
+    )
     assert jobs[2].command[:2] == ("ef-command", "--data")
     assert jobs[3].command[:2] == ("ae-command", "--data")
     assert jobs[3].command[jobs[3].command.index("--data") + 1] == str(
-        tmp_path / acquisition_id / f"{acquisition_id}_EF" / "h5" / f"{acquisition_id}_EF.h5"
+        tmp_path / f"{acquisition_id}.holo"
     )
 
 
@@ -153,24 +174,49 @@ def test_eyeflow_job_uses_absolute_generated_paths(tmp_path: Path, monkeypatch) 
     assert pipelines_path.is_file()
 
 
-def test_eyeflow_job_does_not_require_dopplerview_h5(tmp_path: Path, monkeypatch) -> None:
+def test_eyeflow_job_requires_existing_dopplerview_h5(
+    tmp_path: Path, monkeypatch
+) -> None:
     monkeypatch.setenv("DM_EYEFLOW_COMMAND", "ef-command")
     acquisition_id = "251031_ALA_L_1"
     acquisition = _acquisition(tmp_path, acquisition_id)
-    acquisition.stages["dv"] = StageResult(code="dv", label="DopplerView", status="not_started")
+    acquisition.stages["dv"] = StageResult(
+        code="dv", label="DopplerView", status="not_started"
+    )
+
+    with pytest.raises(FileNotFoundError, match="DV .h5 file is required"):
+        build_processing_jobs(
+            [acquisition],
+            [acquisition_id],
+            ["ef"],
+            hd_settings_path=None,
+            cache_dir=tmp_path / ".doppler_cache",
+        )
+
+
+def test_eyeflow_can_use_dopplerview_from_same_run(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setenv("DM_DOPPLERVIEW_COMMAND", "dv-command")
+    monkeypatch.setenv("DM_EYEFLOW_COMMAND", "ef-command")
+    acquisition_id = "251031_ALA_L_1"
+    acquisition = _acquisition(tmp_path, acquisition_id)
+    acquisition.stages["dv"] = StageResult(
+        code="dv", label="DopplerView", status="not_started"
+    )
 
     jobs = build_processing_jobs(
         [acquisition],
         [acquisition_id],
-        ["ef"],
+        ["ef", "dv"],
         hd_settings_path=None,
         cache_dir=tmp_path / ".doppler_cache",
     )
 
-    assert [job.stage for job in jobs] == ["ef"]
+    assert [job.stage for job in jobs] == ["dv", "ef"]
 
 
-def test_angioeye_job_uses_existing_eyeflow_h5_and_absolute_paths(tmp_path: Path, monkeypatch) -> None:
+def test_angioeye_job_uses_source_holo_and_absolute_paths(
+    tmp_path: Path, monkeypatch
+) -> None:
     monkeypatch.setenv("DM_ANGIOEYE_COMMAND", "ae-command")
     acquisition_id = "251031_ALA_L_1"
     acquisition = _acquisition(tmp_path, acquisition_id)
@@ -188,14 +234,16 @@ def test_angioeye_job_uses_existing_eyeflow_h5_and_absolute_paths(tmp_path: Path
     pipelines_path = Path(job.command[job.command.index("--pipelines") + 1])
     output_path = Path(job.command[job.command.index("--output") + 1])
 
-    assert data_path == tmp_path / acquisition_id / f"{acquisition_id}_EF" / "h5" / f"{acquisition_id}_EF.h5"
+    assert data_path == tmp_path / f"{acquisition_id}.holo"
     assert pipelines_path.is_absolute()
     assert output_path.is_absolute()
     assert pipelines_path.is_file()
-    assert "--trim-source" in job.command
+    assert "--keep-source" not in job.command
 
 
-def test_build_processing_jobs_uses_selected_ef_and_ae_pipelines(tmp_path: Path, monkeypatch) -> None:
+def test_build_processing_jobs_uses_selected_ef_and_ae_pipelines(
+    tmp_path: Path, monkeypatch
+) -> None:
     monkeypatch.setenv("DM_EYEFLOW_COMMAND", "ef-command")
     monkeypatch.setenv("DM_ANGIOEYE_COMMAND", "ae-command")
     acquisition_id = "251031_ALA_L_1"
@@ -224,7 +272,319 @@ def test_build_processing_jobs_uses_selected_ef_and_ae_pipelines(tmp_path: Path,
     )
 
 
-def test_build_processing_jobs_can_skip_completed_stages(tmp_path: Path, monkeypatch) -> None:
+def test_angioeye_postprocess_discovery_keeps_decorator_input_methods(
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr(
+        angioeye_postprocess,
+        "_load_angioeye_postprocess_catalog",
+        lambda: (
+            [
+                SimpleNamespace(
+                    name="Single and batch",
+                    description="description",
+                    input_methods=["single_file", "file_batch"],
+                    available=True,
+                ),
+                SimpleNamespace(
+                    name="Hidden batch",
+                    input_methods=["file_batch"],
+                    available=True,
+                    visibility="hidden",
+                ),
+            ],
+            [],
+        ),
+    )
+
+    discovered = discover_angioeye_postprocesses()
+    single_and_batch = next(
+        item for item in discovered if item.name == "Single and batch"
+    )
+
+    assert single_and_batch.input_methods == ("single_file", "file_batch")
+    assert [item.name for item in proposed_angioeye_postprocesses(discovered, 1)] == [
+        "Single and batch"
+    ]
+    assert [item.name for item in proposed_angioeye_postprocesses(discovered, 2)] == [
+        "Single and batch"
+    ]
+
+
+def test_angioeye_postprocess_catalog_discovery_is_cached(monkeypatch) -> None:
+    calls = 0
+
+    def load_catalog():
+        nonlocal calls
+        calls += 1
+        return ([SimpleNamespace(name="Cached", input_methods=["single_file"])], [])
+
+    monkeypatch.setattr(
+        angioeye_postprocess,
+        "_load_angioeye_postprocess_catalog",
+        load_catalog,
+    )
+
+    first = discover_angioeye_postprocesses()
+    second = discover_angioeye_postprocesses()
+
+    assert first == second
+    assert calls == 1
+
+
+def test_angioeye_postprocess_preload_is_shared_with_discovery(monkeypatch) -> None:
+    started = Event()
+    release = Event()
+    calls = 0
+
+    def load_catalog():
+        nonlocal calls
+        calls += 1
+        started.set()
+        assert release.wait(timeout=2)
+        return ([SimpleNamespace(name="Preloaded", input_methods=["single_file"])], [])
+
+    monkeypatch.setattr(angioeye_postprocess, "runtime_available", lambda _stage: True)
+    monkeypatch.setattr(
+        angioeye_postprocess,
+        "_load_angioeye_postprocess_catalog",
+        load_catalog,
+    )
+    monkeypatch.setattr(processing_catalogs, "_catalog_futures", {})
+
+    assert angioeye_postprocess.preload_angioeye_postprocesses()
+    assert started.wait(timeout=2)
+    release.set()
+
+    assert [item.name for item in discover_angioeye_postprocesses()] == ["Preloaded"]
+    assert calls == 1
+
+
+def test_angioeye_postprocess_preload_skips_unavailable_runtime(monkeypatch) -> None:
+    calls = 0
+
+    def load_catalog():
+        nonlocal calls
+        calls += 1
+        return ([], [])
+
+    monkeypatch.setattr(angioeye_postprocess, "runtime_available", lambda _stage: False)
+    monkeypatch.setattr(
+        angioeye_postprocess,
+        "_load_angioeye_postprocess_catalog",
+        load_catalog,
+    )
+    monkeypatch.setattr(processing_catalogs, "_catalog_futures", {})
+
+    assert not angioeye_postprocess.preload_angioeye_postprocesses()
+    assert calls == 0
+
+
+def test_angioeye_postprocess_batch_only_is_hidden_for_one_file() -> None:
+    batch_only = angioeye_postprocess.AngioEyePostprocessDescriptor(
+        name="Batch only",
+        input_methods=("file_batch", "cohort_batch", "zip_batch"),
+    )
+
+    assert proposed_angioeye_postprocesses((batch_only,), 1) == ()
+    assert proposed_angioeye_postprocesses((batch_only,), 2) == (batch_only,)
+
+
+def test_angioeye_postprocess_discovery_supports_old_descriptor_modes(
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr(
+        angioeye_postprocess,
+        "_load_angioeye_postprocess_catalog",
+        lambda: ([SimpleNamespace(name="Legacy")], []),
+    )
+
+    descriptor = discover_angioeye_postprocesses()[0]
+
+    assert descriptor.input_methods == angioeye_postprocess.POSTPROCESS_INPUT_METHODS
+
+
+def test_angioeye_postprocess_requirements_include_selected_pipeline_dag_upstream(
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr(
+        angioeye_postprocess,
+        "_load_angioeye_pipeline_catalog",
+        lambda: (
+            [
+                SimpleNamespace(
+                    name="waveform_shape_metrics",
+                    dag_produces=(),
+                    dag_requires=(),
+                ),
+                SimpleNamespace(
+                    name="pdf_generator",
+                    dag_produces=(),
+                    dag_requires=("waveform_shape_metrics",),
+                ),
+            ],
+            [],
+        ),
+    )
+    descriptor = angioeye_postprocess.AngioEyePostprocessDescriptor(
+        name="PDF summary",
+        available=False,
+        missing_pipelines=("waveform_shape_metrics",),
+        required_pipelines=("waveform_shape_metrics",),
+        input_methods=("single_file",),
+    )
+
+    assert proposed_angioeye_postprocesses((descriptor,), 1, ()) == ()
+    assert proposed_angioeye_postprocesses(
+        (descriptor,),
+        1,
+        ("pdf_generator",),
+    ) == (descriptor,)
+
+
+def test_angioeye_postprocess_missing_catalog_pipeline_can_be_satisfied_by_run(
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr(
+        angioeye_postprocess,
+        "_load_angioeye_pipeline_catalog",
+        lambda: ([], []),
+    )
+    descriptor = angioeye_postprocess.AngioEyePostprocessDescriptor(
+        name="Waveform report",
+        available=False,
+        missing_pipelines=("waveform_shape_metrics",),
+        required_pipelines=("waveform_shape_metrics",),
+        input_methods=("single_file",),
+    )
+
+    assert proposed_angioeye_postprocesses((descriptor,), 1, ()) == ()
+    assert proposed_angioeye_postprocesses(
+        (descriptor,),
+        1,
+        ("waveform_shape_metrics",),
+    ) == (descriptor,)
+
+
+def test_angioeye_postprocess_requirements_accept_selected_pipeline_option_group(
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr(
+        angioeye_postprocess,
+        "_load_angioeye_pipeline_catalog",
+        lambda: ([], []),
+    )
+    descriptor = angioeye_postprocess.AngioEyePostprocessDescriptor(
+        name="Waveform report",
+        available=True,
+        required_pipeline_options=(
+            ("waveform_shape_metrics", "waveform_shape_metrics_denoised"),
+            ("persisted_summary",),
+        ),
+        input_methods=("file_batch",),
+    )
+
+    assert proposed_angioeye_postprocesses(
+        (descriptor,),
+        2,
+        ("waveform_shape_metrics_denoised", "persisted_summary"),
+    ) == (descriptor,)
+    assert (
+        proposed_angioeye_postprocesses(
+            (descriptor,),
+            2,
+            ("waveform_shape_metrics_denoised",),
+        )
+        == ()
+    )
+
+
+def test_build_processing_jobs_embeds_single_file_postprocess_in_angioeye_job(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    monkeypatch.setenv("DM_ANGIOEYE_COMMAND", "ae-command")
+    acquisition_id = "251031_ALA_L_1"
+    acquisition = _acquisition(tmp_path, acquisition_id)
+
+    jobs = build_processing_jobs(
+        [acquisition],
+        [acquisition_id],
+        ["ae"],
+        hd_settings_path=None,
+        cache_dir=tmp_path / ".doppler_cache",
+        angioeye_postprocesses=["HTML summary"],
+    )
+
+    assert [job.stage for job in jobs] == ["ae"]
+    job = jobs[0]
+    assert job.command[-2:] == (
+        "--postprocesses",
+        str(tmp_path / ".doppler_cache" / "processing" / "angioeye_postprocesses.txt"),
+    )
+    assert "--keep-source" not in job.command
+    assert Path(job.command[-1]).read_text(encoding="utf-8") == "HTML summary\n"
+
+
+def test_build_processing_jobs_adds_angioeye_batch_postprocess_job(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    monkeypatch.setenv("DM_ANGIOEYE_COMMAND", "ae-command")
+    first = _acquisition(tmp_path, "251031_ALA_L_1")
+    second = _acquisition(tmp_path, "251031_ALA_L_2")
+    for acquisition in (first, second):
+        acquisition_id = acquisition.acquisition_id
+        ae_h5 = (
+            tmp_path
+            / acquisition_id
+            / f"{acquisition_id}_AE"
+            / "h5"
+            / f"{acquisition_id}_AE.h5"
+        )
+        _write(ae_h5)
+        acquisition.stages["ae"] = StageResult(
+            code="ae",
+            label="AngioEye",
+            h5_files=[FileRef.from_path(ae_h5, "h5")],
+            status="complete",
+        )
+
+    jobs = build_processing_jobs(
+        [first, second],
+        [first.acquisition_id, second.acquisition_id],
+        [],
+        hd_settings_path=None,
+        cache_dir=tmp_path / ".doppler_cache",
+        angioeye_postprocesses=["Report", "Report"],
+    )
+
+    assert len(jobs) == 1
+    job = jobs[0]
+    assert job.stage == "ae_postprocess"
+    assert job.command == (
+        "ae-command",
+        "--data",
+        str(tmp_path / f"{first.acquisition_id}.holo"),
+        "--data",
+        str(tmp_path / f"{second.acquisition_id}.holo"),
+        "--pipelines",
+        str(
+            tmp_path
+            / ".doppler_cache"
+            / "processing"
+            / "angioeye_postprocess_pipelines.txt"
+        ),
+        "--postprocesses",
+        str(tmp_path / ".doppler_cache" / "processing" / "angioeye_postprocesses.txt"),
+    )
+    assert Path(job.command[6]).read_text(encoding="utf-8") == ""
+    assert Path(job.command[8]).read_text(encoding="utf-8") == "Report\n"
+
+
+def test_build_processing_jobs_can_skip_completed_stages(
+    tmp_path: Path, monkeypatch
+) -> None:
     monkeypatch.setenv("DM_ANGIOEYE_COMMAND", "ae-command")
     acquisition_id = "251031_ALA_L_1"
     acquisition = _acquisition(tmp_path, acquisition_id)
@@ -281,7 +641,9 @@ def test_install_angioeye_output_replaces_expected_stage_folder(tmp_path: Path) 
     assert any("AngioEye" in line for line in logs)
 
 
-def test_run_processing_jobs_deletes_existing_stage_folder_before_launch(tmp_path: Path) -> None:
+def test_run_processing_jobs_deletes_existing_stage_folder_before_launch(
+    tmp_path: Path,
+) -> None:
     acquisition_id = "251031_ALA_L_1"
     destination = tmp_path / acquisition_id / f"{acquisition_id}_HD"
     _write(destination / "h5" / "old.h5")
@@ -307,14 +669,35 @@ def test_run_processing_jobs_deletes_existing_stage_folder_before_launch(tmp_pat
     assert any(line.startswith("[DELETE]") for line in logs)
 
 
-def test_missing_default_processing_tools_respects_command_override(monkeypatch) -> None:
-    monkeypatch.setattr(processing.importlib.util, "find_spec", lambda _name: None)
+def test_missing_default_processing_tools_respects_command_override(
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr(processing._commands, "runtime_available", lambda _stage: False)
 
     assert missing_default_processing_tools(["hd"]) == ["hd"]
 
     monkeypatch.setenv("DM_HOLODOPPLER_COMMAND", "holodoppler.exe")
 
     assert missing_default_processing_tools(["hd"]) == []
+
+
+def test_missing_default_processing_tools_accepts_isolated_runtime(monkeypatch) -> None:
+    monkeypatch.setattr(processing._commands, "runtime_available", lambda _stage: True)
+
+    assert missing_default_processing_tools(["ef", "ae"]) == []
+
+
+def test_frozen_processing_command_prefix_uses_launcher_dispatch(monkeypatch) -> None:
+    monkeypatch.setattr(processing._commands.sys, "frozen", True, raising=False)
+    monkeypatch.setattr(
+        processing._commands.sys, "executable", r"C:\App\DopplerManager.exe"
+    )
+
+    assert processing.command_prefix_for_stage("dv") == (
+        r"C:\App\DopplerManager.exe",
+        processing.PROCESSING_CLI_SENTINEL,
+        "dv",
+    )
 
 
 def test_run_single_job_keeps_progress_as_replaceable_log_lines(tmp_path: Path) -> None:
@@ -338,7 +721,7 @@ def test_run_single_job_keeps_progress_as_replaceable_log_lines(tmp_path: Path) 
     )
     logs: list[str] = []
 
-    result = processing._run_single_job(job, logs.append)
+    result = run_single_job(job, logs.append)
 
     assert result.succeeded
     progress = processing.PROGRESS_LOG_PREFIX
@@ -352,17 +735,286 @@ def test_run_single_job_keeps_progress_as_replaceable_log_lines(tmp_path: Path) 
     ]
 
 
-def test_bundled_holodoppler_defaults_are_discovered_and_preferred(tmp_path: Path, monkeypatch) -> None:
+def test_processing_run_keeps_jobs_and_logs_outside_the_streamlit_rerun(
+    tmp_path: Path,
+) -> None:
+    script = (
+        "import sys, time\n"
+        "print('started', flush=True)\n"
+        "time.sleep(0.15)\n"
+        "print('finished', flush=True)\n"
+    )
+    selected_ids = ["acq-1"]
+    job = processing.ProcessingJob(
+        acquisition_id="acq-1",
+        stage="hd",
+        command=(sys.executable, "-c", script),
+        cwd=tmp_path,
+        description="acq-1: Holodoppler",
+    )
+    run = ProcessingRun(
+        [job],
+        selected_file_ids=selected_ids,
+        allowed_apps=("Holodoppler",),
+    )
+
+    run.start()
+    selected_ids[:] = ["next-round-acquisition"]
+    deadline = time.monotonic() + 5
+    while run.is_running and time.monotonic() < deadline:
+        time.sleep(0.02)
+
+    snapshot = run.snapshot()
+    assert snapshot.status == "finished"
+    assert [entry["line"] for entry in snapshot.log_entries] == [
+        "[START] acq-1: Holodoppler",
+        "[CMD] " + processing.format_command(job.command),
+        "started",
+        "finished",
+        "[OK] acq-1: Holodoppler",
+    ]
+    assert all(entry["files"] == ("acq-1",) for entry in snapshot.log_entries)
+    assert run.selected_file_ids == ("acq-1",)
+    assert run.claim_completion()
+    assert not run.claim_completion()
+
+
+def test_bundled_holodoppler_defaults_are_discovered_and_preferred(
+    tmp_path: Path, monkeypatch
+) -> None:
     defaults_dir = tmp_path / "processing_defaults" / "holodoppler"
     default_settings = defaults_dir / "default_parameters.json"
     debug_settings = defaults_dir / "default_parameters_debug.json"
+    simple_settings = defaults_dir / "default_parameters_simple.yaml"
     _write(default_settings, b"{}")
     _write(debug_settings, b'{"temporal_transformation": "FourierTransform"}')
-    monkeypatch.setattr(processing, "REPO_PROCESSING_DEFAULTS", tmp_path / "processing_defaults")
+    _write(simple_settings, b"temporal_transformation: FourierTransform")
+    monkeypatch.setattr(processing, "_upstream_holodoppler_settings_dir", lambda: None)
+    monkeypatch.setattr(
+        processing, "REPO_PROCESSING_DEFAULTS", tmp_path / "processing_defaults"
+    )
     monkeypatch.chdir(tmp_path)
 
     discovered = discover_holodoppler_settings(tmp_path)
 
     assert default_settings in discovered
     assert debug_settings in discovered
-    assert preferred_holodoppler_settings(discovered) == debug_settings
+    assert simple_settings in discovered
+    assert preferred_holodoppler_settings(discovered) == simple_settings
+
+
+def test_holodoppler_defaults_prefer_installed_tool_parameters(
+    tmp_path: Path, monkeypatch
+) -> None:
+    upstream_dir = (
+        tmp_path
+        / "uv-cache"
+        / "git-v0"
+        / "checkouts"
+        / "holodoppler"
+        / "abcdef0"
+        / "parameters"
+    )
+    upstream_settings = upstream_dir / "default_parameters.json"
+    repo_settings = (
+        tmp_path / "processing_defaults" / "holodoppler" / "default_parameters.json"
+    )
+    _write(
+        upstream_settings,
+        b'{"source": "upstream", "temporal_transformation": "FourierTransform"}',
+    )
+    _write(
+        repo_settings,
+        b'{"source": "repo", "temporal_transformation": "FourierTransform"}',
+    )
+    monkeypatch.setattr(
+        processing, "_upstream_holodoppler_settings_dir", lambda: upstream_dir
+    )
+    monkeypatch.setattr(
+        processing, "REPO_PROCESSING_DEFAULTS", tmp_path / "processing_defaults"
+    )
+    monkeypatch.chdir(tmp_path)
+
+    discovered = discover_holodoppler_settings(tmp_path)
+
+    assert upstream_settings in discovered
+    assert repo_settings in discovered
+    assert preferred_holodoppler_settings(discovered) == upstream_settings
+
+
+def test_processing_defaults_dir_prefers_pyinstaller_bundle(
+    tmp_path: Path, monkeypatch
+) -> None:
+    bundled = tmp_path / "_internal" / "processing_defaults"
+    bundled.mkdir(parents=True)
+    exe_defaults = tmp_path / "installed" / "processing_defaults"
+    exe_defaults.mkdir(parents=True)
+    monkeypatch.setattr(
+        processing._defaults.sys, "_MEIPASS", str(tmp_path / "_internal"), raising=False
+    )
+    monkeypatch.setattr(processing._defaults.sys, "frozen", True, raising=False)
+    monkeypatch.setattr(
+        processing._defaults.sys,
+        "executable",
+        str(tmp_path / "installed" / "DopplerManager.exe"),
+    )
+    monkeypatch.setattr(
+        processing,
+        "REPO_PROCESSING_DEFAULTS",
+        tmp_path / "repo" / "processing_defaults",
+    )
+
+    assert processing_defaults_dir() == bundled
+
+
+def test_processing_defaults_dir_uses_installed_exe_neighbor(
+    tmp_path: Path, monkeypatch
+) -> None:
+    exe_defaults = tmp_path / "installed" / "processing_defaults"
+    exe_defaults.mkdir(parents=True)
+    monkeypatch.delattr(processing._defaults.sys, "_MEIPASS", raising=False)
+    monkeypatch.setattr(processing._defaults.sys, "frozen", True, raising=False)
+    monkeypatch.setattr(
+        processing._defaults.sys,
+        "executable",
+        str(tmp_path / "installed" / "DopplerManager.exe"),
+    )
+    monkeypatch.setattr(
+        processing,
+        "REPO_PROCESSING_DEFAULTS",
+        tmp_path / "repo" / "processing_defaults",
+    )
+
+    assert processing_defaults_dir() == exe_defaults
+
+
+def test_pipeline_defaults_prefer_installed_tool_settings(
+    tmp_path: Path, monkeypatch
+) -> None:
+    checkout = tmp_path / "uv-cache" / "git-v0" / "checkouts" / "repo" / "abcdef0"
+    upstream_settings = checkout / "default_settings.json"
+    _write(
+        checkout / "pyproject.toml",
+        b'[project]\nname = "EyeFlow"\n',
+    )
+    _write(checkout / "src" / "cli.py", b'"""Run EyeFlow pipelines."""\n')
+    _write(
+        upstream_settings,
+        (
+            b'{"pipeline_visibility": {'
+            b'"upstream_selected": true, '
+            b'"upstream_available": false'
+            b"}}"
+        ),
+    )
+
+    class FakeDistribution:
+        def read_text(self, name: str) -> str | None:
+            if name != "direct_url.json":
+                return None
+            return (
+                '{"url": "https://github.com/DigitalHolography/EyeFlowPython.git", '
+                '"vcs_info": {"vcs": "git", "commit_id": "abcdef0123456789"}}'
+            )
+
+    monkeypatch.setenv("UV_CACHE_DIR", str(tmp_path / "uv-cache"))
+    monkeypatch.setattr(
+        external_cli_runner.metadata,
+        "distribution",
+        lambda _name: FakeDistribution(),
+    )
+
+    repo_defaults = tmp_path / "processing_defaults" / "eyeflow"
+    _write(
+        repo_defaults / "default_settings.json",
+        b'{"pipeline_visibility": {"repo_selected": true}}',
+    )
+    monkeypatch.setattr(
+        processing, "REPO_PROCESSING_DEFAULTS", tmp_path / "processing_defaults"
+    )
+
+    assert processing.available_pipelines_for_stage("ef") == (
+        "upstream_selected",
+        "upstream_available",
+        "waveform_shape_metrics",
+    )
+    assert processing.default_pipelines_for_stage("ef") == ("upstream_selected",)
+
+
+def test_pipeline_defaults_fall_back_to_repo_settings(
+    tmp_path: Path, monkeypatch
+) -> None:
+    repo_defaults = tmp_path / "processing_defaults" / "angioeye"
+    _write(
+        repo_defaults / "default_settings.json",
+        (b'{"pipeline_visibility": {"repo_selected": true, "repo_available": false}}'),
+    )
+    monkeypatch.setattr(
+        processing, "REPO_PROCESSING_DEFAULTS", tmp_path / "processing_defaults"
+    )
+    monkeypatch.setattr(
+        processing, "_upstream_pipeline_settings_path", lambda _stage: None
+    )
+
+    assert processing.available_pipelines_for_stage("ae") == (
+        "repo_selected",
+        "repo_available",
+        "waveform_shape_metrics",
+    )
+    assert processing.default_pipelines_for_stage("ae") == ("repo_selected",)
+
+
+def test_discover_processing_pipelines_uses_stage_configuration(
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr(
+        processing._pipelines,
+        "available_pipelines_for_stage",
+        lambda _stage: ("selected", "missing"),
+    )
+    monkeypatch.setattr(
+        processing._pipelines,
+        "pipeline_catalog",
+        lambda _stage: (
+            [SimpleNamespace(name="selected", description="from decorator")],
+            [SimpleNamespace(name="missing", description="unavailable")],
+        ),
+    )
+
+    descriptors = processing.discover_processing_pipelines("ef")
+
+    assert [descriptor.name for descriptor in descriptors] == ["selected", "missing"]
+    assert descriptors[0].description == "from decorator"
+
+
+def test_processing_pipeline_preload_is_shared_with_discovery(monkeypatch) -> None:
+    started = Event()
+    release = Event()
+
+    monkeypatch.setattr(
+        processing._pipelines,
+        "runtime_available",
+        lambda stage: stage == "ef",
+    )
+    monkeypatch.setattr(
+        processing._pipelines,
+        "available_pipelines_for_stage",
+        lambda _stage: ("preloaded",),
+    )
+
+    def load_catalog(stage):
+        assert stage == "ef"
+        started.set()
+        assert release.wait(timeout=2)
+        return ([SimpleNamespace(name="preloaded", description="Markdown")], [])
+
+    monkeypatch.setattr(processing._pipelines, "pipeline_catalog", load_catalog)
+    monkeypatch.setattr(processing_catalogs, "_catalog_futures", {})
+
+    assert processing.preload_processing_pipelines()
+    assert started.wait(timeout=2)
+    release.set()
+
+    descriptors = processing.discover_processing_pipelines("ef")
+
+    assert [descriptor.name for descriptor in descriptors] == ["preloaded"]

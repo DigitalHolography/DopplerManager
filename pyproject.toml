@@ -1,27 +1,41 @@
 [project]
 name = "doppler-manager"
-version = "0.4.0"
+version = "1.7.1"
 description = "Streamlit MVP for detecting and verifying Holodoppler processing pipelines on NAS folders."
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "h5py>=3.10",
     "imageio-ffmpeg>=0.5",
     "pandas>=2.0,<3",
     "pyarrow>=23,<24",
+    "pyyaml>=6",
     "streamlit>=1.35",
 ]
 
 [project.scripts]
-dopplermanager = "doppler_managing.app:launch"
+dopplermanager = "doppler_manager.launcher:launch"
+sync = "doppler_manager.sync_processing:main"
 
-[project.optional-dependencies]
-processing = [
-    "holodoppler @ git+https://github.com/DigitalHolography/HoloDopplerPython.git@doppler_managing",
-    "dopplerview @ git+https://github.com/DigitalHolography/DopplerView.git@doppler_managing",
-    "onnxruntime>=1.25,<1.26",
-    "EyeFlow @ git+https://github.com/DigitalHolography/EyeFlowPython.git@doppler_managing",
-    "AngioEye @ git+https://github.com/DigitalHolography/AngioEye.git@doppler_managing",
+[tool.doppler_manager.processing_runtimes]
+hd = [
+    "holodoppler @ git+https://github.com/DigitalHolography/HoloDoppler.git@main",
+    "cinereader>=1.4.3",
+    "numba>=0.65.1,<0.67",
 ]
+dv = [
+    "dopplerview @ git+https://github.com/DigitalHolography/DopplerView.git@main",
+    "onnxruntime>=1.25,<1.26",
+]
+ef = [
+    "EyeFlow @ git+https://github.com/DigitalHolography/EyeFlow.git@main",
+]
+ae = [
+    "AngioEye @ git+https://github.com/DigitalHolography/AngioEye.git@main",
+]
+
+[tool.doppler_manager.processing_runtimes.python]
+hd = "3.13"
 
 [build-system]
 requires = ["hatchling"]
@@ -32,7 +46,7 @@ dev = ["pytest>=8.0"]
 release = ["pyinstaller>=6.0,<7"]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/doppler_managing"]
+packages = ["src/doppler_manager"]
 
 [tool.hatch.metadata]
 allow-direct-references = true

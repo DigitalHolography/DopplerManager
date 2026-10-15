@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-import doppler_managing._external_cli_runner as external_cli_runner
+import doppler_manager._external_cli_runner as external_cli_runner
 
 
 def test_load_tool_cli_prefers_uv_checkout_over_colliding_installed_cli(

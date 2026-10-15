@@ -14,7 +14,7 @@ The supported processing chain is:
 
 | Stage | Tool        | Expected inputs                            | Recognized outputs                                               |
 | ----- | ----------- | ------------------------------------------ | ---------------------------------------------------------------- |
-| HD    | HoloDoppler | Raw `<id>.holo` acquisition and settings JSON | `<id>_HD/h5/<id>_HD_output.h5`, JSON files, version TXT, previews |
+| HD    | HoloDoppler | Raw `<id>.holo` acquisition and settings JSON | `<id>_HD/h5/<id>_HD_output.h5`, JSON files, H5 app versions, previews |
 | DV    | DopplerView | Acquisition with an available HD output    | `<id>_DV/h5/<id>_DV.h5`, config JSON, outputs under `output/`    |
 | EF    | EyeFlow     | Acquisition with available HD and DV outputs | `<id>_EF/h5/<id>_EF.h5`, JSON files, previews                    |
 | AE    | AngioEye    | EF `.h5` file                              | `<id>_AE/h5/<id>_AE.h5`                                         |
@@ -79,7 +79,7 @@ The Streamlit application provides three main tabs:
 - `Acquisition Details`: select a filtered acquisition, view status badges, and inspect `Parameters`, `Versions`, and `Media Preview` tabs.
 - `Processing`: select acquisitions and stages to run or rerun, choose HoloDoppler settings, choose EyeFlow/AngioEye pipelines, follow real-time logs, and refresh the scan automatically after processing.
 
-The scan bar accepts a typed or pasted path, a folder selected with `Browse`, and dropped paths when the browser provides a usable local path. Scan options control maximum depth, maximum inspected entries, indexed media per stage, and version-file reading. The `Input filter` expander accepts an optional `.txt` filter list. When a filter list is uploaded, each non-empty line is treated as a `.holo` filename, full path, or acquisition ID, and only matching acquisitions are scanned. By default, no filter is applied.
+The scan bar accepts a typed or pasted path, a folder selected with `Browse`, and dropped paths when the browser provides a usable local path. Scan options control maximum depth, maximum inspected entries, indexed media per stage, and H5 app-version reading. The `Versions` detail tab reads the JSON dictionary stored at `/app_versions/` in each H5 and displays the complete dictionary, including upstream versions recorded by downstream applications. A stale upstream version is shown as a warning on the downstream stage, never as an error. Legacy text version files remain available in the detail view when present. The `Input filter` expander accepts an optional `.txt` filter list. When a filter list is uploaded, each non-empty line is treated as a `.holo` filename, full path, or acquisition ID, and only matching acquisitions are scanned. By default, no filter is applied.
 
 ## Media Preview
 
@@ -99,17 +99,17 @@ Generated MP4 files for AVI previews are stored in `%LOCALAPPDATA%\DopplerManage
 
 The `Acquisition Index` tab exposes one scan-list export:
 
-- `doppler_pipeline_missing_holo_lists.zip`
+- `doppler_manager_scan_lists.zip`
 
 The ZIP contains five text files:
 
-- `list_hd.txt`
-- `list_dv.txt`
-- `list_ef.txt`
-- `list_ae.txt`
-- `list_all.txt`
+- `missing_HD.txt`
+- `missing_DV.txt`
+- `missing_EF.txt`
+- `missing_AE.txt`
+- `all_scan_paths.txt`
 
-The stage-specific files contain the `.holo` paths, limited to the active dashboard filters, for acquisitions where the corresponding stage is not already `complete`. `list_all.txt` contains every `.holo` path observed during the filesystem scan, without applying the dashboard filters or optional `.holo` filter list.
+The stage-specific files contain the `.holo` paths, limited to the active dashboard filters, for acquisitions where the corresponding stage is not already `complete`. `all_scan_paths.txt` contains every `.holo` path observed during the filesystem scan, without applying the dashboard filters or optional `.holo` filter list.
 
 ## Installation
 
@@ -124,16 +124,38 @@ uv sync
 Installation with processing tools:
 
 ```bash
-uv sync --extra processing
+uv run sync
 ```
 
-The `processing` extra installs upstream dependencies from GitHub:
+The synchronization script installs Doppler Manager itself, then creates a
+separate runtime environment for each processing stage. This separation keeps
+upstream packages from sharing top-level namespaces and also keeps ONNX Runtime
+with the DopplerView runtime that consumes it.
 
-- `HoloDopplerPython`
-- `DopplerView`
-- `EyeFlowPython`
-- `AngioEye`
-- `onnxruntime`
+On Windows, `.\scripts\sync_processing.ps1` runs the same synchronization.
+Both commands refresh the AE, EF, and HD files in `processing_defaults/` from
+the installed upstream commits on every successful run, even when package
+versions are unchanged. Deleted files and edited settings are restored from
+those upstream defaults.
+
+The runtime dependency manifest is centralized in
+`[tool.doppler_manager.processing_runtimes]` in `pyproject.toml`:
+
+- `hd`: HoloDoppler
+- `dv`: DopplerView and ONNX Runtime
+- `ef`: EyeFlow
+- `ae`: AngioEye
+
+HoloDoppler uses Python 3.13 through the nested runtime-Python manifest. Its
+current `dev` branch requires Python 3.12 or newer; the runtime manifest also
+pins the compatible `cinereader`/Numba range explicitly so an old cached Numba
+source distribution cannot be selected. The other runtimes continue to use
+the current Python as well.
+
+The environments are installed under `processing_runtimes/<stage>/.venv`.
+Doppler Manager runs every processing CLI through the corresponding isolated
+interpreter; EyeFlow and AngioEye catalogs are queried through the same
+subprocess boundary.
 
 ## Run the Application
 
@@ -147,9 +169,10 @@ Running `streamlit run` directly bypasses this lifecycle check.
 
 On first launch, select a NAS or local root folder and click `Scan`.
 
-## Build the Scan-Only Windows Installer
+## Build the Windows Installer
 
-The scan-only release excludes the `Processing` tab and does not install the optional processing dependencies.
+The release includes the acquisition scan views, the `Processing` tab, and all
+four isolated processing runtimes.
 
 Prerequisites on the Windows build machine:
 
@@ -159,51 +182,53 @@ Prerequisites on the Windows build machine:
 Build the installer:
 
 ```powershell
-.\scripts\build_scan_release.ps1
+.\scripts\build_installer.ps1
 ```
 
 To override the release version:
 
 ```powershell
-.\scripts\build_scan_release.ps1 -Version 0.4.0
+.\scripts\build_installer.ps1 -Version 1.7.1
 ```
 
-The script builds `dist\DopplerManagerScan\DopplerManagerScan.exe` with PyInstaller, then creates:
+The script stages the PyInstaller application under `build\installer-payload`, packages it with Inno Setup, then creates:
 
 ```text
-dist\installer\DopplerManagerScan-<version>-setup.exe
+dist\installer\DopplerManager-<version>-setup.exe
 ```
 
 The installer uses Inno Setup and installs the application under:
 
 ```text
-C:\Program Files\DopplerManager\<version>\
+%LOCALAPPDATA%\Programs\DopplerManager\<version>\
 ```
 
-The packaged entry point is `src\doppler_managing\app_scan.py`, which only renders:
+The packaged entry point is `src\doppler_manager\app.py`, which renders:
 
 - `Acquisition Index`
 - `Acquisition Details`
+- `Processing`
 
-The build uses an isolated `.venv-release` environment so the local development environment can still be synced with `uv sync --extra processing` when the full app is needed.
+The build uses an isolated `.venv-release` environment and stages the four
+processing runtimes alongside the packaged application.
 
 Pushing a tag `v<version>` also builds and uploads this installer through the Windows release workflow:
 
 ```powershell
-git tag v0.4.0
-git push origin v0.4.0
+git tag v1.7.1
+git push origin v1.7.1
 ```
 
 If the installed executable does not open a browser on another PC, check the diagnostic log:
 
 ```text
-%LOCALAPPDATA%\DopplerManager\logs\DopplerManagerScan.log
+%LOCALAPPDATA%\DopplerManager\logs\DopplerManager.log
 ```
 
 The installer also creates Start Menu shortcuts named:
 
-- `Doppler Manager Scan diagnostic log`
-- `Stop Doppler Manager Scan`
+- `Doppler Manager diagnostic log`
+- `Stop Doppler Manager`
 
 Launching the app again while it is already running reopens the existing local Streamlit server instead of starting another copy.
 
@@ -229,10 +254,10 @@ Before rerunning a stage, the application deletes only the expected result folde
 Default commands:
 
 ```text
-python -c "from holodoppler.cli import main; raise SystemExit(main())"
-python -m dopplerview.cli
-python -m doppler_managing._external_cli_runner eyeflow
-python -m doppler_managing._external_cli_runner angioeye
+HD: processing_runtimes/holodoppler/.venv/Scripts/python.exe -c "from holodoppler.cli import main; raise SystemExit(main())"
+DV: processing_runtimes/dopplerview/.venv/Scripts/python.exe -m dopplerview.cli
+EF: processing_runtimes/eyeflow/.venv/Scripts/python.exe -c "from launcher import cli_main; raise SystemExit(cli_main())"
+AE: processing_runtimes/angioeye/.venv/Scripts/python.exe -c "from launcher import cli_main; raise SystemExit(cli_main())"
 ```
 
 Commands can be overridden with local executable paths:
@@ -242,12 +267,25 @@ Commands can be overridden with local executable paths:
 - `DM_EYEFLOW_COMMAND`
 - `DM_ANGIOEYE_COMMAND`
 
+The isolated interpreters can also be overridden when a runtime is installed
+elsewhere:
+
+- `DM_HOLODOPPLER_PYTHON`
+- `DM_DOPPLERVIEW_PYTHON`
+- `DM_EYEFLOW_PYTHON`
+- `DM_ANGIOEYE_PYTHON`
+- `DM_PROCESSING_RUNTIME_ROOT`: root containing `holodoppler/`, `dopplerview/`, `eyeflow/`, and `angioeye/`
+
 HoloDoppler settings can be preconfigured with:
 
-- `DM_HOLODOPPLER_SETTINGS`: path to a JSON file
-- `DM_HOLODOPPLER_SETTINGS_DIR`: path to a folder containing JSON files
+- `DM_HOLODOPPLER_SETTINGS`: path to a JSON or YAML file
+- `DM_HOLODOPPLER_SETTINGS_DIR`: path to a folder containing JSON or YAML files
 
-Settings discovery also checks `processing_defaults/holodoppler/`, `parameters/`, `HoloDopplerPython/parameters/`, and matching folders under the scanned root. When multiple files are available, the application prefers a JSON file containing `temporal_transformation`, which is required by the current HoloDoppler CLI.
+Settings discovery checks the installed HoloDoppler package, bundled defaults,
+the scanned root's `parameters/` folder, and the explicit environment overrides
+above. When available, `default_parameters_debug.json` is selected by default.
+Only settings containing `temporal_transformation`, which is required by the
+current HoloDoppler CLI, are preferred.
 
 ## EF and AE Pipelines
 
@@ -274,14 +312,29 @@ uv run pytest
 ## Code Structure
 
 ```text
-src/doppler_managing/
+processing_runtimes/             Isolated runtime support and environments
+src/doppler_manager/
   app.py                       Streamlit entry point
+  launcher.py                  Streamlit server lifecycle and release launcher
   models.py                    Scan data models
-  scanner.py                   Acquisition and status detection
-  processing.py                Job construction and execution
-  _external_cli_runner.py       EyeFlow/AngioEye wrappers
-  _eyeflow_runtime_limits.py    EyeFlow runtime compatibility and limits
+  processing/                  Job construction, external app calls, and execution
+    apps/                      External app command builders
+      holodoppler.py           HoloDoppler command builder
+      dopplerview.py           DopplerView command builder
+      eyeflow.py               EyeFlow command builder
+      angioeye.py              AngioEye command builder
+    config/                    Defaults, settings, and pipeline selection
+    core/                      Job models, paths, commands, and orchestration
+    execution/                 Subprocess runner and output installation
+  _external_cli_runner.py       Isolated processing runtime dispatcher
+  _eyeflow_runtime_limits.py    Legacy EyeFlow runtime compatibility
+  scan/
+    cache.py                   Streamlit scan cache bridge
+    core.py                    Acquisition and status detection
+    filters.py                 .holo filter list parsing
+    options.py                 Scan options and defaults
   ui/
+    scan.py                     Scan bar, filter upload, and scan messages
     dashboard.py                Index, filters, and exports
     detail.py                   Parameters, versions, and acquisition details
     media.py                    Image/video previews

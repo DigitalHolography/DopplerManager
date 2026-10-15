@@ -1,30 +1,65 @@
 from __future__ import annotations
 
 import importlib
+import runpy
 import sys
 
 
-def test_scan_entrypoint_does_not_import_processing_modules() -> None:
+def test_release_launcher_imports_as_a_script() -> None:
+    from doppler_manager import launcher
+
+    namespace = runpy.run_path(launcher.__file__, run_name="packaged_launcher_test")
+
+    assert callable(namespace["main"])
+
+
+def test_processing_cli_sentinel_dispatches_external_runner(monkeypatch) -> None:
+    from doppler_manager import _external_cli_runner, launcher
+
+    calls = []
+    monkeypatch.setattr(
+        _external_cli_runner,
+        "main",
+        lambda args: calls.append(args) or 7,
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "DopplerManager.exe",
+            launcher.PROCESSING_CLI_SENTINEL,
+            "ef",
+            "--data",
+            "sample.holo",
+        ],
+    )
+
+    assert launcher._run_processing_cli_from_argv() == 7
+    assert calls == [["ef", "--data", "sample.holo"]]
+
+
+def test_app_entrypoint_imports_processing_modules() -> None:
     for module_name in (
-        "doppler_managing.app_core",
-        "doppler_managing.app_scan",
-        "doppler_managing.processing",
-        "doppler_managing.ui.processing",
+        "doppler_manager.app",
+        "doppler_manager.processing",
+        "doppler_manager.ui.processing",
     ):
         sys.modules.pop(module_name, None)
 
-    importlib.import_module("doppler_managing.app_scan")
+    importlib.import_module("doppler_manager.app")
 
-    assert "doppler_managing.processing" not in sys.modules
-    assert "doppler_managing.ui.processing" not in sys.modules
+    assert "doppler_manager.processing" in sys.modules
+    assert "doppler_manager.ui.processing" in sys.modules
 
 
-def test_scan_root_drop_helper_is_optional_when_component_is_not_registered(monkeypatch) -> None:
-    from doppler_managing import app_core
+def test_scan_root_drop_helper_is_optional_when_component_is_not_registered(
+    monkeypatch,
+) -> None:
+    from doppler_manager.ui import scan
 
     def broken_helper(**_kwargs) -> None:
         raise ValueError("Component 'scan_root_drop_helper' is not registered")
 
-    monkeypatch.setattr(app_core, "_SCAN_ROOT_DROP_HELPER", broken_helper)
+    monkeypatch.setattr(scan, "_SCAN_ROOT_DROP_HELPER", broken_helper)
 
-    app_core._render_scan_root_drop_helper()
+    scan._render_scan_root_drop_helper()
