@@ -1,7 +1,16 @@
 from __future__ import annotations
 
 import importlib
+import runpy
 import sys
+
+
+def test_release_launcher_imports_as_a_script() -> None:
+    from doppler_manager import launcher
+
+    namespace = runpy.run_path(launcher.__file__, run_name="packaged_launcher_test")
+
+    assert callable(namespace["main"])
 
 
 def test_processing_cli_sentinel_dispatches_external_runner(monkeypatch) -> None:

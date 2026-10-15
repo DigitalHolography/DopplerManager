@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from doppler_manager.processing.runtimes import RUNTIMES
+from doppler_manager.release_defaults import sync_processing_defaults
 
 
 @dataclass(frozen=True)
@@ -37,12 +38,18 @@ def main() -> int:
         ready_marker.unlink(missing_ok=True)
         _run_uv("pip", "install", "--python", str(python), *spec.requirements)
         ready_marker.write_text("ready\n", encoding="utf-8")
+
+    for path in sync_processing_defaults(
+        workspace / "processing_defaults",
+        environment_root=runtime_root,
+    ):
+        print(f"Synced {path}")
     return 0
 
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Synchronize isolated processing runtimes."
+        description="Synchronize isolated processing runtimes and their default settings."
     )
     parser.add_argument(
         "--environment-root",
@@ -149,3 +156,7 @@ def _copy_runtime_support_files(workspace: Path, stage: str, target: Path) -> No
 
 def _run_uv(*args: str) -> None:
     subprocess.run(("uv", *args), check=True)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

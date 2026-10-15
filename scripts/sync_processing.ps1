@@ -14,7 +14,7 @@ try {
     $managerPython = Join-Path $workspace ".venv\Scripts\python.exe"
     & $managerPython -m doppler_manager.sync_processing
     if ($LASTEXITCODE -ne 0) {
-        throw "Isolated processing runtime synchronization failed with exit code $LASTEXITCODE."
+        throw "Processing runtime and default settings synchronization failed with exit code $LASTEXITCODE."
     }
 }
 finally {

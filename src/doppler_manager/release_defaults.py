@@ -11,13 +11,17 @@ from ._external_cli_runner import _project_name, _uv_cache_roots
 HOLODOPPLER_SETTINGS_SUFFIXES = frozenset({".json", ".yaml", ".yml"})
 
 
-def sync_processing_defaults(target_root: Path | None = None) -> list[Path]:
+def sync_processing_defaults(
+    target_root: Path | None = None,
+    *,
+    environment_root: Path | None = None,
+) -> list[Path]:
     target_root = Path.cwd() / "processing_defaults" if target_root is None else Path(target_root)
     copied: list[Path] = []
     try:
         copied.extend(
             _copy_holodoppler_settings(
-                _app_root("holodoppler", "holodoppler") / "parameters",
+                _app_root("holodoppler", "holodoppler", environment_root) / "parameters",
                 target_root / "holodoppler",
             )
         )
@@ -31,7 +35,7 @@ def sync_processing_defaults(target_root: Path | None = None) -> list[Path]:
         try:
             copied.append(
                 _copy_file(
-                    _app_root(distribution, project) / "default_settings.json",
+                    _app_root(distribution, project, environment_root) / "default_settings.json",
                     target,
                 )
             )
@@ -40,8 +44,13 @@ def sync_processing_defaults(target_root: Path | None = None) -> list[Path]:
     return copied
 
 
-def _app_root(distribution: str, project: str) -> Path:
-    direct_url = json.loads(metadata.distribution(distribution).read_text("direct_url.json") or "{}")
+def _app_root(
+    distribution: str,
+    project: str,
+    environment_root: Path | None = None,
+) -> Path:
+    installed = _distribution(distribution, project, environment_root)
+    direct_url = json.loads(installed.read_text("direct_url.json") or "{}")
     commit = direct_url.get("vcs_info", {}).get("commit_id", "")[:7].lower()
     if not commit:
         raise RuntimeError(f"{distribution} was not installed from a pinned git commit.")
@@ -54,6 +63,25 @@ def _app_root(distribution: str, project: str) -> Path:
             if has_commit and _project_name(pyproject) == project.lower():
                 return pyproject.parent
     raise FileNotFoundError(f"Could not find {distribution} checkout for commit {commit}.")
+
+
+def _distribution(
+    name: str,
+    project: str,
+    environment_root: Path | None,
+) -> metadata.Distribution:
+    if environment_root is None:
+        return metadata.distribution(name)
+
+    environment = Path(environment_root) / project.lower() / ".venv"
+    search_paths = [
+        environment / "Lib" / "site-packages",
+        *(environment / "lib").glob("python*/site-packages"),
+    ]
+    for installed in metadata.distributions(path=[str(path) for path in search_paths]):
+        if installed.metadata.get("Name", "").lower() == name.lower():
+            return installed
+    raise metadata.PackageNotFoundError(name)
 
 
 def _copy_holodoppler_settings(source_dir: Path, target_dir: Path) -> list[Path]:

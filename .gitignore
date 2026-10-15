@@ -19,6 +19,7 @@ build/
 .idea/
 .streamlit/secrets.toml
 .doppler_cache/
+processing_defaults/
 processing_runtimes/*/.venv/
 processing_runtimes/*/uv.lock
 *.log

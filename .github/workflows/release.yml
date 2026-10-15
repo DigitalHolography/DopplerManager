@@ -6,7 +6,7 @@ on:
       - "v*"
 
 jobs:
-  windows-scan-installer:
+  windows-installer:
     runs-on: windows-latest
     permissions:
       contents: write
@@ -22,16 +22,19 @@ jobs:
         with:
           python-version: "3.13"
 
+      - name: Run tests
+        run: uv run --locked pytest -q
+
       - name: Install Inno Setup
         shell: powershell
         run: choco install innosetup --no-progress -y
 
-      - name: Build scan-only installer
+      - name: Build Windows installer
         shell: powershell
         run: |
           $Version = "${{ github.ref_name }}"
           $Version = $Version.TrimStart("v")
-          .\scripts\build_scan_release.ps1 -Version $Version
+          .\scripts\build_installer.ps1 -Version $Version
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1

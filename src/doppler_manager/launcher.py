@@ -17,7 +17,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Protocol
 
-from .release_defaults import sync_processing_defaults
+from doppler_manager.release_defaults import sync_processing_defaults
 
 
 APP_NAME = "DopplerManager"
@@ -127,6 +127,8 @@ def _run(
         f"--server.fileWatcherType={file_watcher_type}",
         "--global.developmentMode=false",
         "--browser.gatherUsageStats=false",
+        "--theme.base=dark",
+        "--theme.primaryColor=#0e7490",
     ]
     try:
         raise SystemExit(streamlit_cli.main())

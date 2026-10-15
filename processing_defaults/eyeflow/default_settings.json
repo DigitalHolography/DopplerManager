@@ -1,7 +1,0 @@
-{
-  "pipeline_visibility": {
-    "pdf_report_generator": true,
-    "waveform_shape_metrics": false
-  },
-  "ui_mode": "minimal"
-}

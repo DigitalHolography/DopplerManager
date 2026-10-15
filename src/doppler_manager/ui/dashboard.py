@@ -271,7 +271,6 @@ def _regex_patterns_from_text(text: str) -> list[str]:
 def render_overview_table(frame: pd.DataFrame) -> None:
     headers = [
         "Acquisition",
-        "Global",
         "HD",
         "DV",
         "EF",
@@ -295,7 +294,6 @@ def render_overview_table(frame: pd.DataFrame) -> None:
             [
                 "<tr>",
                 _plain_cell(row["acquisition"], class_name="dm-acquisition-cell"),
-                _status_cell(row["status"]),
                 *[_status_cell(row[f"{stage}_status"]) for stage in STAGE_ORDER],
                 _count_cell(row["warnings"], warning_messages),
                 _count_cell(row["errors"]),

@@ -6,7 +6,7 @@
 #define MyAppIcon "..\packaging\DopplerManager.ico"
 
 #if MyAppVersion == ""
-  #define MyAppVersion "0.4.0"
+  #define MyAppVersion "1.7.1"
 #endif
 
 [Setup]

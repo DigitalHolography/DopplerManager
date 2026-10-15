@@ -124,13 +124,19 @@ uv sync
 Installation with processing tools:
 
 ```bash
-.\scripts\sync_processing.ps1
+uv run sync
 ```
 
 The synchronization script installs Doppler Manager itself, then creates a
 separate runtime environment for each processing stage. This separation keeps
 upstream packages from sharing top-level namespaces and also keeps ONNX Runtime
 with the DopplerView runtime that consumes it.
+
+On Windows, `.\scripts\sync_processing.ps1` runs the same synchronization.
+Both commands refresh the AE, EF, and HD files in `processing_defaults/` from
+the installed upstream commits on every successful run, even when package
+versions are unchanged. Deleted files and edited settings are restored from
+those upstream defaults.
 
 The runtime dependency manifest is centralized in
 `[tool.doppler_manager.processing_runtimes]` in `pyproject.toml`:
@@ -182,7 +188,7 @@ Build the installer:
 To override the release version:
 
 ```powershell
-.\scripts\build_installer.ps1 -Version 0.4.0
+.\scripts\build_installer.ps1 -Version 1.7.1
 ```
 
 The script stages the PyInstaller application under `build\installer-payload`, packages it with Inno Setup, then creates:
@@ -209,8 +215,8 @@ processing runtimes alongside the packaged application.
 Pushing a tag `v<version>` also builds and uploads this installer through the Windows release workflow:
 
 ```powershell
-git tag v0.4.0
-git push origin v0.4.0
+git tag v1.7.1
+git push origin v1.7.1
 ```
 
 If the installed executable does not open a browser on another PC, check the diagnostic log:

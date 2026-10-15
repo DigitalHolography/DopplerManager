@@ -14,10 +14,10 @@ def apply_dark_theme() -> None:
             --dm-border: #2a3548;
             --dm-text: #e5e7eb;
             --dm-muted: #9ca3af;
-            --dm-accent: #38bdf8;
+            --dm-accent: #22d3ee;
             --dm-action-bg: #111827;
             --dm-action-border: #2a3548;
-            --dm-action-hover: var(--primary-color, var(--st-primary-color, #ff4b4b));
+            --dm-action-hover: var(--primary-color, var(--st-primary-color, #0e7490));
         }
 
         .stApp {
@@ -369,21 +369,16 @@ def apply_dark_theme() -> None:
 
         .dm-index-table th:nth-child(1),
         .dm-index-table td:nth-child(1) {
-            width: 18%;
+            width: 26%;
         }
 
-        .dm-index-table th:nth-child(2),
-        .dm-index-table td:nth-child(2) {
-            width: 12%;
+        .dm-index-table th:nth-child(n+2):nth-child(-n+5),
+        .dm-index-table td:nth-child(n+2):nth-child(-n+5) {
+            width: 10%;
         }
 
-        .dm-index-table th:nth-child(n+3):nth-child(-n+6),
-        .dm-index-table td:nth-child(n+3):nth-child(-n+6) {
-            width: 9%;
-        }
-
-        .dm-index-table th:nth-child(n+7),
-        .dm-index-table td:nth-child(n+7) {
+        .dm-index-table th:nth-child(n+6),
+        .dm-index-table td:nth-child(n+6) {
             width: 6%;
         }
 
