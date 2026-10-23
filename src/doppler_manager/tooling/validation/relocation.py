@@ -3,7 +3,7 @@ from pathlib import Path
 import uuid
 
 from doppler_manager.runtime.manifest import selected_generation
-from .startup import validate
+from .startup import validate, validate_http
 
 
 def validate_relocated(root: Path, *, output: Path, frozen: bool = False) -> list[dict]:
@@ -22,6 +22,9 @@ def validate_relocated(root: Path, *, output: Path, frozen: bool = False) -> lis
         generation = selected_generation(moved / "_internal/processing_runtimes")
         if generation is None:
             raise RuntimeError("Frozen bundle is missing its runtime manifest")
-        return validate(generation, output=output, frozen_exe=moved / "DopplerManager.exe")
+        executable = moved / "DopplerManager.exe"
+        results = validate(generation, output=output, frozen_exe=executable)
+        results.append(validate_http([str(executable)], output=output / "http"))
+        return results
     finally:
         moved.rename(root)

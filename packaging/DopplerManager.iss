@@ -45,6 +45,8 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Source: "{#MyAppSourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [InstallDelete]
+; Remove the incomplete optional parser left by earlier frozen builds.
+Type: filesandordirs; Name: "{app}\_internal\httptools"
 Type: files; Name: "{autodesktop}\Doppler Manager Scan.lnk"
 Type: files; Name: "{autoprograms}\Doppler Manager Scan *.lnk"
 Type: files; Name: "{autoprograms}\Doppler Manager Scan {#MyAppVersion}.lnk"

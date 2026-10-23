@@ -13,10 +13,8 @@ from .validation.startup import validate
 from .validation.relocation import validate_relocated
 
 
-def prepare(workspace: Path, runtime_root: Path, output: Path, defaults: Path) -> tuple[Path, Path]:
-    generation = selected_generation(runtime_root)
-    if generation is None:
-        raise RuntimeError("Build runtimes have not been synchronized")
+def stage_runtimes(generation: Path, output: Path) -> Path:
+    """Keep frozen paths short enough for Windows installer file operations."""
     data = json.loads((generation / "runtime.json").read_text(encoding="utf-8"))
     plan = json.loads((generation / "dependency-plan.json").read_text(encoding="utf-8"))
     output.mkdir(parents=True, exist_ok=True)
@@ -24,12 +22,17 @@ def prepare(workspace: Path, runtime_root: Path, output: Path, defaults: Path) -
     # Build outputs must be new directories; never delete a live runtime.
     payload.mkdir()
     apps = {app: profile for app, profile in data["apps"].items() if app != "manager"}
-    paths = {path for profile in apps.values() for path in profile["paths"]}
+    paths = sorted({path for profile in apps.values() for path in profile["paths"]})
+    compact_paths = {path: f"p/{index:x}" for index, path in enumerate(paths)}
+    apps = {
+        app: {**profile, "paths": [compact_paths[path] for path in profile["paths"]]}
+        for app, profile in apps.items()
+    }
     bases = {Path(profile["python"]).parts[1] for profile in apps.values()}
     for version in bases:
         shutil.copytree(generation / "python" / version, payload / "python" / version)
     for relative in paths:
-        shutil.copytree(generation / relative, payload / relative)
+        shutil.copytree(generation / relative, payload / compact_paths[relative])
     shutil.copy2(generation / "bootstrap.py", payload / "bootstrap.py")
     shutil.copy2(generation / "dependency-plan.json", payload / "dependency-plan.json")
     if (generation / "installed-dependencies.json").is_file():
@@ -40,10 +43,22 @@ def prepare(workspace: Path, runtime_root: Path, output: Path, defaults: Path) -
     # Frozen runtime lookup uses the same generation manifest as development.
     container = output / "processing_runtimes"
     container.mkdir()
-    destination = container / "generations" / plan["id"]
+    # The installed application has one immutable generation. Its identity stays
+    # in the manifests; repeating its hash in every pathname wastes path budget.
+    destination = container / "generations" / "0"
     destination.parent.mkdir()
     payload.rename(destination)
-    (container / "current.json").write_text(json.dumps({"generation": f"generations/{plan['id']}"}), encoding="utf-8")
+    (container / "current.json").write_text(json.dumps({"generation": "generations/0"}), encoding="utf-8")
+    return container
+
+
+def prepare(workspace: Path, runtime_root: Path, output: Path, defaults: Path) -> tuple[Path, Path]:
+    generation = selected_generation(runtime_root)
+    if generation is None:
+        raise RuntimeError("Build runtimes have not been synchronized")
+    data = json.loads((generation / "runtime.json").read_text(encoding="utf-8"))
+    plan = json.loads((generation / "dependency-plan.json").read_text(encoding="utf-8"))
+    container = stage_runtimes(generation, output)
     manager_paths = [str(generation / path) for path in data["apps"]["manager"]["paths"]]
     source = workspace / "src"
     spec = output / "DopplerManager.spec"
@@ -56,7 +71,9 @@ def prepare(workspace: Path, runtime_root: Path, output: Path, defaults: Path) -
         f"({str(source / 'doppler_manager/processing/runtime_bridge.py')!r}, 'doppler_manager/processing')]\n"
         f"a = Analysis([{str(source / 'doppler_manager/launcher.py')!r}], "
         f"pathex={[str(source), *manager_paths]!r}, binaries=binaries, datas=datas, "
-        "excludes=['doppler_manager.tooling'], hiddenimports=hiddenimports + ['streamlit.web.cli', 'watchdog.observers.winapi', "
+        # Uvicorn's optional httptools import can become a namespace containing
+        # only extension modules in a frozen build. Use its required h11 backend.
+        "excludes=['doppler_manager.tooling', 'httptools'], hiddenimports=hiddenimports + ['streamlit.web.cli', 'watchdog.observers.winapi', "
         "'doppler_manager.app', 'doppler_manager.processing.runtime_bridge'])\n"
         "pyz = PYZ(a.pure)\n"
         "exe = EXE(pyz, a.scripts, [], exclude_binaries=True, name='DopplerManager', "

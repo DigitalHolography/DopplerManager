@@ -131,7 +131,8 @@ def _run(
     url = f"http://{PORT_HOST}:{port}"
     _log(log_path, f"Starting Streamlit on {url}.")
     _write_server_state(port=port, url=url, fingerprint=fingerprint, log_path=log_path)
-    _open_browser_when_ready(url, PORT_HOST, port, log_path)
+    if "--no-browser" not in sys.argv:
+        _open_browser_when_ready(url, PORT_HOST, port, log_path)
 
     sys.argv = [
         "streamlit",

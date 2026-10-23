@@ -49,3 +49,38 @@ def test_validation_rejects_output_inside_runtime(tmp_path):
     with pytest.raises(ValueError, match="outside"):
         relocation.validate_relocated(runtime, output=runtime / "evidence")
     assert list(runtime.iterdir()) == []
+
+
+@pytest.mark.parametrize("broken", [False, True])
+def test_http_probe_requires_responses_and_frontend_assets(tmp_path, broken):
+    script = tmp_path / "server.py"
+    script.write_text('''
+import json, os
+from pathlib import Path
+from http.server import BaseHTTPRequestHandler, HTTPServer
+class Handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        if BROKEN:
+            self.close_connection = True
+            return
+        body = (b'ok' if self.path == '/_stcore/health' else
+                b'console.log("loaded")' if self.path == '/app.js' else
+                b'<script src="./app.js"></script>')
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(body)
+server = HTTPServer(('127.0.0.1', 0), Handler)
+state = Path(os.environ['LOCALAPPDATA']) / 'DopplerManager/server_state.json'
+state.parent.mkdir(parents=True, exist_ok=True)
+state.write_text(json.dumps({'url': f'http://127.0.0.1:{server.server_port}'}))
+server.serve_forever()
+'''.replace("BROKEN", repr(broken)))
+    output = tmp_path / "http"
+    if broken:
+        with pytest.raises(RuntimeError, match="did not answer HTTP requests"):
+            startup.validate_http([sys.executable, str(script)], output=output, timeout=1)
+    else:
+        record = startup.validate_http([sys.executable, str(script)], output=output, timeout=10)
+        assert record["returncode"] == 0
+        assert record["assets"] == ["./app.js"]
+        assert (output / "validation.json").is_file()
