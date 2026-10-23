@@ -1,0 +1,17 @@
+[project]
+name = "dm-plan-manager"
+version = "0.0.0"
+requires-python = "==3.13.14"
+dependencies = [
+  "packaging>=24",
+  "h5py>=3.10",
+  "imageio-ffmpeg>=0.5",
+  "pandas>=2.0,<3",
+  "pyarrow>=23,<24",
+  "pyyaml>=6",
+  "streamlit>=1.35",
+  "pyinstaller>=6.0,<7"
+]
+[tool.uv]
+package = false
+environments = ["sys_platform == 'win32'"]

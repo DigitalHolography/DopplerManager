@@ -1,0 +1,10 @@
+[project]
+name = "dm-plan-holodoppler"
+version = "0.0.0"
+requires-python = "==3.13.14"
+dependencies = [
+  "holodoppler @ git+https://github.com/DigitalHolography/HoloDoppler.git@054de5f958fcc7bc5bcdc397792449369c1014b6"
+]
+[tool.uv]
+package = false
+environments = ["sys_platform == 'win32'"]

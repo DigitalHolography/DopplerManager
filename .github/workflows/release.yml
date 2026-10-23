@@ -25,6 +25,9 @@ jobs:
       - name: Run tests
         run: uv run --locked pytest -q
 
+      - name: Validate committed dependency plan
+        run: uv run --locked sync --locked --plan-only
+
       - name: Install Inno Setup
         shell: powershell
         run: choco install innosetup --no-progress -y

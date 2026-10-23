@@ -21,7 +21,7 @@ def test_launcher_uses_roaming_logs_but_keeps_runtime_local(monkeypatch, tmp_pat
 
 def test_processing_logs_capture_each_file_and_preserve_reruns(tmp_path):
     script = (
-        "import sys; print('normal output'); print('échec', file=sys.stderr); "
+        "import sys; print('normal output'); print('Ã©chec', file=sys.stderr); "
         "raise RuntimeError('processing failed')"
     )
     first = ProcessingJob(
@@ -38,7 +38,7 @@ def test_processing_logs_capture_each_file_and_preserve_reruns(tmp_path):
     first_path = logs.logs_dir() / "DopplerView/test.log"
     second_path = logs.logs_dir() / "DopplerView/second_test.log"
     content = first_path.read_text(encoding="utf-8")
-    for text in ("normal output", "échec", "Traceback", "processing failed", "exited with code 1", str(tmp_path), "[CMD]"):
+    for text in ("normal output", "Ã©chec", "Traceback", "processing failed", "exited with code 1", str(tmp_path), "[CMD]"):
         assert text in content
     assert "[ACQUISITION] second_test" in second_path.read_text(encoding="utf-8")
     assert "second_test" not in content

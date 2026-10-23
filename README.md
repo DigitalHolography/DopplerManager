@@ -127,35 +127,49 @@ Installation with processing tools:
 uv run sync
 ```
 
-The synchronization script installs Doppler Manager itself, then creates a
-separate runtime environment for each processing stage. This separation keeps
-upstream packages from sharing top-level namespaces and also keeps ONNX Runtime
-with the DopplerView runtime that consumes it.
+Synchronization consumes `dependencies/windows-x86_64/runtime-lock.json` and its generated uv
+projects and lockfiles. The graph covers DopplerManager, HoloDoppler, DopplerView,
+EyeFlow, and AngioEye. The resolver selects the fewest supported Python versions;
+identical package artifacts are installed once and exposed only to their app
+profiles. Different versions and each app's top-level modules remain isolated.
+The graph records sources, hashes, dependency edges, app ownership and Python
+assignments. DopplerManager's frozen interpreter is accounted for separately.
 
-On Windows, `.\scripts\sync_processing.ps1` runs the same synchronization.
-Both commands refresh the AE, EF, and HD files in `processing_defaults/` from
-the installed upstream commits on every successful run, even when package
-versions are unchanged. Deleted files and edited settings are restored from
-those upstream defaults.
+```powershell
+# Inspect or create a plan without changing processing environments:
+uv run sync --plan-only
+# Deliberately refresh upstream commits and dependency locks:
+uv run sync --refresh --plan-only
+# Install exactly the recorded plan:
+uv run sync --locked
+```
 
-The runtime dependency manifest is centralized in
-`[tool.doppler_manager.processing_runtimes]` in `pyproject.toml`:
+Inputs live in `[tool.doppler_manager.processing_runtimes]` and
+`[tool.doppler_manager.dependency_plan]` in `pyproject.toml`. The initial Python
+candidate preference is 3.13, then 3.14, then 3.12. HoloDoppler's Python and package
+requirements come from its upstream metadata. Resolution errors
+caused by network or build failures are not treated as version incompatibility.
+Ordinary sync does not silently refresh a stale plan: refresh and review its
+lock changes first. Commit the runtime lock and selected app project/lock files together. Candidate
+resolutions and Python downloads stay in `.cache/doppler-manager/`.
 
-- `hd`: HoloDoppler
-- `dv`: DopplerView and ONNX Runtime
-- `ef`: EyeFlow
-- `ae`: AngioEye
+Complete portable Python installations and shared package directories are stored
+in immutable `processing_runtimes/generations/<id>/` directories. A validated
+`current.json` pointer selects the generation for new jobs. Existing generations
+and legacy `<app>/.venv` environments are retained for running jobs. Automatic
+cleanup is deliberately disabled. Do not edit shared package directories.
 
-HoloDoppler uses Python 3.13 through the nested runtime-Python manifest. Its
-current `dev` branch requires Python 3.12 or newer; the runtime manifest also
-pins the compatible `cinereader`/Numba range explicitly so an old cached Numba
-source distribution cannot be selected. The other runtimes continue to use
-the current Python as well.
+To sync while the manager's development executable is in use, avoid uv's attempt
+to reinstall that executable and invoke the module directly:
 
-The environments are installed under `processing_runtimes/<stage>/.venv`.
-Doppler Manager runs every processing CLI through the corresponding isolated
-interpreter; EyeFlow and AngioEye catalogs are queried through the same
-subprocess boundary.
+```powershell
+.venv\Scripts\python.exe -m doppler_manager.tooling.sync --locked
+```
+
+On Windows, `.\scripts\sync_processing.ps1` also invokes that module. Successful
+sync restores AE, EF and HD files in `processing_defaults/` from locked upstream
+commits, even when the runtime generation is unchanged. For an isolated build or
+test, supply `--environment-root <directory>` and `--defaults-output <directory>`.
 
 ## Run the Application
 
@@ -166,10 +180,17 @@ uv run dopplermanager
 The development command stops any recorded Doppler Manager server before starting
 the full application with Streamlit file watching enabled.
 Running `streamlit run` directly bypasses this lifecycle check.
+After graph synchronization, the development launcher delegates to the locked
+manager profile while loading this checkout's source, so file watching still
+works. The uv project environment serves as the tool host; the five app profiles
+use the graph's selected dependencies and interpreters.
 
 On first launch, select a NAS or local root folder and click `Scan`.
 
 ## Build the Windows Installer
+
+The runtime/tooling boundary and lock layout are documented in
+[Dependency tooling architecture](docs/dependency-tooling-architecture.md).
 
 The release includes the acquisition scan views, the `Processing` tab, and all
 four isolated processing runtimes.
@@ -191,7 +212,9 @@ To override the release version:
 .\scripts\build_installer.ps1 -Version 1.7.3
 ```
 
-The script stages the PyInstaller application under `build\installer-payload`, packages it with Inno Setup, then creates:
+The script consumes the committed dependency plan, generates a PyInstaller spec,
+and stages a new isolated build under `build/release-<id>/`. It packages the
+validated result with Inno Setup and creates:
 
 ```text
 dist\installer\DopplerManager-<version>-setup.exe
@@ -209,8 +232,12 @@ The packaged entry point is `src\doppler_manager\app.py`, which renders:
 - `Acquisition Details`
 - `Processing`
 
-The build uses an isolated `.venv-release` environment and stages the four
-processing runtimes alongside the packaged application.
+Builds never overwrite the development runtimes. They retain generated specs,
+validation results and the graph with the staged payload. The external processing
+payload bypasses PyInstaller's manager binary analysis and includes complete
+Python installations. All app imports and processing CLI help commands must pass
+after relocation, including dispatch through the frozen executable, before Inno
+Setup runs. Python need not be installed on the destination machine.
 
 Pushing a tag `v<version>` also builds and uploads this installer through the Windows release workflow:
 
@@ -261,14 +288,11 @@ HD -> DV -> EF -> AE
 
 Before rerunning a stage, the application deletes only the expected result folder for the selected acquisition and stage, for example `<id>/<id>_EF`. After execution, it automatically scans again and keeps the latest logs in the interface.
 
-Default commands:
-
-```text
-HD: processing_runtimes/holodoppler/.venv/Scripts/python.exe -c "from holodoppler.cli import main; raise SystemExit(main())"
-DV: processing_runtimes/dopplerview/.venv/Scripts/python.exe -m dopplerview.cli
-EF: processing_runtimes/eyeflow/.venv/Scripts/python.exe -c "from launcher import cli_main; raise SystemExit(cli_main())"
-AE: processing_runtimes/angioeye/.venv/Scripts/python.exe -c "from launcher import cli_main; raise SystemExit(cli_main())"
-```
+Default commands select the active generation's complete Python installation and
+run its bootstrap with `-I -S`. The bootstrap exposes only that app's package paths
+before invoking `holodoppler.cli`, `dopplerview.cli`, or the isolated EyeFlow and
+AngioEye `launcher` modules. Legacy `.venv` environments remain a fallback until
+a generation has been synchronized.
 
 Commands can be overridden with local executable paths:
 
@@ -336,8 +360,9 @@ src/doppler_manager/
     config/                    Defaults, settings, and pipeline selection
     core/                      Job models, paths, commands, and orchestration
     execution/                 Subprocess runner and output installation
+  runtime/                     App definitions, manifests, bootstrap and process isolation
+  tooling/                     Dependency, sync, validation and release tools
   _external_cli_runner.py       Isolated processing runtime dispatcher
-  _eyeflow_runtime_limits.py    Legacy EyeFlow runtime compatibility
   scan/
     cache.py                   Streamlit scan cache bridge
     core.py                    Acquisition and status detection
@@ -359,3 +384,16 @@ Other useful folders:
 - `software_pipeline_validation/`: local validation dataset
 - `.doppler_cache/`: video-preview cache and temporary processing files
 - `tests/`: unit tests for scanner, processing, and CLI wrappers
+
+### Runtime validation
+
+Use the shared validator instead of creating one-off scripts:
+
+```powershell
+.venv\Scripts\python.exe -m doppler_manager.tooling.validation --runtime-root <runtimes> --output build/validation/<run>
+.venv\Scripts\python.exe -m doppler_manager.tooling.validation --runtime-root <frozen-app> --output build/validation/<run> --frozen --relocate
+```
+
+Reports and temporary app data are written only to the output directory.
+`--relocate` makes a disposable copy; it never renames the supplied runtime.
+These checks validate startup and CLI dispatch, not full acquisition processing.

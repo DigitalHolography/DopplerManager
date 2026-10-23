@@ -4,66 +4,31 @@ import json
 import os
 import subprocess
 import sys
-from dataclasses import dataclass
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Any, Literal
+from typing import Any
 
-
-RuntimeStage = Literal["hd", "dv", "ef", "ae"]
-
-
-@dataclass(frozen=True)
-class ProcessingRuntime:
-    stage: RuntimeStage
-    project_name: str
-    environment_variable: str
-    launcher_args: tuple[str, ...]
-
-
-RUNTIMES: dict[RuntimeStage, ProcessingRuntime] = {
-    "hd": ProcessingRuntime(
-        stage="hd",
-        project_name="holodoppler",
-        environment_variable="DM_HOLODOPPLER_PYTHON",
-        launcher_args=(
-            "-c",
-            "from holodoppler.cli import main; raise SystemExit(main())",
-        ),
-    ),
-    "dv": ProcessingRuntime(
-        stage="dv",
-        project_name="dopplerview",
-        environment_variable="DM_DOPPLERVIEW_PYTHON",
-        launcher_args=("-m", "dopplerview.cli"),
-    ),
-    "ef": ProcessingRuntime(
-        stage="ef",
-        project_name="eyeflow",
-        environment_variable="DM_EYEFLOW_PYTHON",
-        launcher_args=(
-            "-c",
-            "from launcher import cli_main; raise SystemExit(cli_main())",
-        ),
-    ),
-    "ae": ProcessingRuntime(
-        stage="ae",
-        project_name="angioeye",
-        environment_variable="DM_ANGIOEYE_PYTHON",
-        launcher_args=(
-            "-c",
-            "from launcher import cli_main; raise SystemExit(cli_main())",
-        ),
-    ),
-}
-
+from doppler_manager.runtime.external_process import run_external
+from doppler_manager.runtime.apps import RUNTIMES, ProcessingRuntime, RuntimeStage
+from doppler_manager.runtime.manifest import active_generation as _generation, invocation
 
 class ProcessingRuntimeError(RuntimeError):
     """Raised when an isolated processing runtime cannot answer a request."""
 
 
+def runtime_invocation(stage: RuntimeStage, args: tuple[str, ...]) -> tuple[str, ...]:
+    generation = _generation()
+    override = os.getenv(RUNTIMES[stage].environment_variable, "").strip()
+    if generation is not None and not override:
+        return invocation(generation, RUNTIMES[stage].project_name, args)
+    return (str(runtime_python(stage)), *args)
+
+
 def runtime_project_dir(stage: RuntimeStage) -> Path:
     runtime = RUNTIMES[stage]
+    generation = _generation()
+    if generation is not None:
+        return generation / "support" / runtime.project_name
     configured_root = os.getenv("DM_PROCESSING_RUNTIME_ROOT", "").strip()
     if configured_root:
         return Path(configured_root).expanduser() / runtime.project_name
@@ -86,6 +51,9 @@ def runtime_project_dir(stage: RuntimeStage) -> Path:
 
 
 def runtime_ready_marker(stage: RuntimeStage) -> Path:
+    generation = _generation()
+    if generation is not None:
+        return generation / "ready.json"
     return runtime_project_dir(stage) / ".venv" / ".doppler_manager_ready"
 
 
@@ -94,6 +62,11 @@ def runtime_python(stage: RuntimeStage) -> Path:
     configured_python = os.getenv(runtime.environment_variable, "").strip()
     if configured_python:
         return Path(configured_python).expanduser()
+
+    generation = _generation()
+    if generation is not None:
+        data = json.loads((generation / "runtime.json").read_text(encoding="utf-8"))
+        return generation / data["apps"][runtime.project_name]["python"]
 
     environment_dir = runtime_project_dir(stage) / ".venv"
     if os.name == "nt":
@@ -112,10 +85,7 @@ def runtime_available(stage: RuntimeStage) -> bool:
 def runtime_command_prefix(stage: RuntimeStage) -> tuple[str, ...]:
     """Return the command prefix for the selected isolated runtime CLI."""
 
-    return (
-        str(runtime_python(stage)),
-        *RUNTIMES[stage].launcher_args,
-    )
+    return runtime_invocation(stage, RUNTIMES[stage].launcher_args)
 
 
 def runtime_catalog(
@@ -133,8 +103,8 @@ def runtime_catalog(
 
     project_dir = runtime_project_dir(stage)
     try:
-        completed = subprocess.run(
-            (str(python), str(_bridge_path()), catalog),
+        completed = run_external(
+            runtime_invocation(stage, (str(_bridge_path()), catalog)),
             cwd=project_dir if project_dir.is_dir() else None,
             env=runtime_environment(stage),
             capture_output=True,
@@ -163,7 +133,7 @@ def run_runtime_cli(stage: RuntimeStage, args: list[str]) -> int:
     """Run an upstream CLI using only its isolated runtime environment."""
 
     try:
-        completed = subprocess.run(
+        completed = run_external(
             (*runtime_command_prefix(stage), *args),
             env=runtime_environment(stage),
             check=False,
@@ -195,10 +165,13 @@ def _bridge_path() -> Path:
 def runtime_environment(stage: RuntimeStage) -> dict[str, str]:
     environment = os.environ.copy()
     environment.pop("PYTHONPATH", None)
-    if stage == "ef":
-        project_dir = runtime_project_dir(stage)
-        if project_dir.is_dir():
-            environment["PYTHONPATH"] = str(project_dir)
+    environment.pop("PYTHONHOME", None)
+    if getattr(sys, "frozen", False) and os.name != "nt":
+        original = environment.pop("LD_LIBRARY_PATH_ORIG", None)
+        if original is None:
+            environment.pop("LD_LIBRARY_PATH", None)
+        else:
+            environment["LD_LIBRARY_PATH"] = original
     return environment
 
 

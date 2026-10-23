@@ -1,0 +1,5151 @@
+{
+  "schema": 1,
+  "input_hash": "aa14dbe872616c44e422c786e7d7981c13d09eb32af0a35404b8ccd851de87fe",
+  "inputs": {
+    "apps": {
+      "manager": {
+        "requirements": [
+          "packaging>=24",
+          "h5py>=3.10",
+          "imageio-ffmpeg>=0.5",
+          "pandas>=2.0,<3",
+          "pyarrow>=23,<24",
+          "pyyaml>=6",
+          "streamlit>=1.35",
+          "pyinstaller>=6.0,<7"
+        ],
+        "requires_python": ">=3.13"
+      },
+      "holodoppler": {
+        "stage": "hd",
+        "requirements": [
+          "holodoppler @ git+https://github.com/DigitalHolography/HoloDoppler.git@main"
+        ],
+        "requires_python": ">=3.10"
+      },
+      "dopplerview": {
+        "stage": "dv",
+        "requirements": [
+          "dopplerview @ git+https://github.com/DigitalHolography/DopplerView.git@main",
+          "onnxruntime>=1.25,<1.26"
+        ],
+        "requires_python": ">=3.10"
+      },
+      "eyeflow": {
+        "stage": "ef",
+        "requirements": [
+          "EyeFlow @ git+https://github.com/DigitalHolography/EyeFlow.git@main"
+        ],
+        "requires_python": ">=3.10"
+      },
+      "angioeye": {
+        "stage": "ae",
+        "requirements": [
+          "AngioEye @ git+https://github.com/DigitalHolography/AngioEye.git@main"
+        ],
+        "requires_python": ">=3.10"
+      }
+    },
+    "candidates": [
+      "3.13",
+      "3.14",
+      "3.12"
+    ],
+    "platform": "Windows",
+    "machine": "AMD64"
+  },
+  "apps": {
+    "manager": {
+      "python": "3.13.14",
+      "nodes": [
+        "00b70757c34c4e26aa4d0257",
+        "05f146cf8e67a7ef2859af9a",
+        "14fe4c89e07a55c88161f67a",
+        "15fa5f442652ad6a5b86bf9e",
+        "1c994f9b8f36711bc64317b3",
+        "1f3da75fac482cb5c4bba92c",
+        "21068964f383364e52cb94d6",
+        "25aa8de3a4230ae674db5d77",
+        "2618ba2d54e2b50dfaa91e43",
+        "29f8f8fadc16f97a50644438",
+        "2ba75a43839d1c2c6a4998c8",
+        "2e146f95e3ec0523e758e00f",
+        "35e1146433e8b3f00fa8766b",
+        "4232969fef824fc21eb175fb",
+        "44a6eec8e5c204b68943c4ea",
+        "50e7b2fe389e920589861640",
+        "5d0093e8b6cc39822e37dd32",
+        "5e33f08e269aeaa487e0a8c1",
+        "6119a16d6c26208893fddd77",
+        "6259c2257f86a983df302a97",
+        "63651b5159fe1fcffa1483a4",
+        "641d15c89f2e23ee4a74713f",
+        "6a544b7678bdf7fe1dfb29bb",
+        "6c47429bab17e3c38c02ff2d",
+        "6e7a4b0e1241e55eb1b01e78",
+        "7dd2901de0a48cb40c459cf4",
+        "81d8b05b1ad8a0177dace02b",
+        "876356780c33caba1bfe746e",
+        "9100c7d9ac380167e4f84c37",
+        "957e0335c2aaaf562108c93a",
+        "97e9f96035042410cb829e61",
+        "98405f0453ca7853fe3517f2",
+        "9c1b206444c8d88235b900cd",
+        "aa9825ea6e1c733e11cb45a3",
+        "b35f99111bbdb959ec961109",
+        "bb445e73c6e0236203e62629",
+        "bd5685590718539a5840ea6d",
+        "bfe5e4e3ed873855a1f505b9",
+        "c38a84b0cf76f64f73463fcf",
+        "c63940b112e351996f4954d0",
+        "cb12e0a15dfb4e0189665dec",
+        "cc63d4e21c528165228e5c32",
+        "e270dae3a0dd2318d0af03a8",
+        "e28c0dbf4874b2c62ed73fe2",
+        "fb98a1e1d22a49cdc05c2999"
+      ],
+      "edges": [
+        {
+          "from": "bd5685590718539a5840ea6d",
+          "to": "876356780c33caba1bfe746e",
+          "requirement": {
+            "name": "jinja2",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "bd5685590718539a5840ea6d",
+          "to": "21068964f383364e52cb94d6",
+          "requirement": {
+            "name": "jsonschema",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "bd5685590718539a5840ea6d",
+          "to": "63651b5159fe1fcffa1483a4",
+          "requirement": {
+            "name": "narwhals",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "bd5685590718539a5840ea6d",
+          "to": "25aa8de3a4230ae674db5d77",
+          "requirement": {
+            "name": "packaging",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "bd5685590718539a5840ea6d",
+          "to": "50e7b2fe389e920589861640",
+          "requirement": {
+            "name": "typing-extensions",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "c38a84b0cf76f64f73463fcf",
+          "to": "fb98a1e1d22a49cdc05c2999",
+          "requirement": {
+            "name": "idna",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "c38a84b0cf76f64f73463fcf",
+          "to": "50e7b2fe389e920589861640",
+          "requirement": {
+            "name": "typing-extensions",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "1c994f9b8f36711bc64317b3",
+          "to": "44a6eec8e5c204b68943c4ea",
+          "requirement": {
+            "name": "numpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "876356780c33caba1bfe746e",
+          "to": "05f146cf8e67a7ef2859af9a",
+          "requirement": {
+            "name": "markupsafe",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "21068964f383364e52cb94d6",
+          "to": "6119a16d6c26208893fddd77",
+          "requirement": {
+            "name": "attrs",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "21068964f383364e52cb94d6",
+          "to": "9100c7d9ac380167e4f84c37",
+          "requirement": {
+            "name": "jsonschema-specifications",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "21068964f383364e52cb94d6",
+          "to": "5d0093e8b6cc39822e37dd32",
+          "requirement": {
+            "name": "referencing",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "21068964f383364e52cb94d6",
+          "to": "2e146f95e3ec0523e758e00f",
+          "requirement": {
+            "name": "rpds-py",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "9100c7d9ac380167e4f84c37",
+          "to": "5d0093e8b6cc39822e37dd32",
+          "requirement": {
+            "name": "referencing",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "14fe4c89e07a55c88161f67a",
+          "to": "44a6eec8e5c204b68943c4ea",
+          "requirement": {
+            "name": "numpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "14fe4c89e07a55c88161f67a",
+          "to": "bfe5e4e3ed873855a1f505b9",
+          "requirement": {
+            "name": "python-dateutil",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "14fe4c89e07a55c88161f67a",
+          "to": "29f8f8fadc16f97a50644438",
+          "requirement": {
+            "name": "pytz",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "14fe4c89e07a55c88161f67a",
+          "to": "35e1146433e8b3f00fa8766b",
+          "requirement": {
+            "name": "tzdata",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "81d8b05b1ad8a0177dace02b",
+          "to": "876356780c33caba1bfe746e",
+          "requirement": {
+            "name": "jinja2",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "81d8b05b1ad8a0177dace02b",
+          "to": "44a6eec8e5c204b68943c4ea",
+          "requirement": {
+            "name": "numpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "e28c0dbf4874b2c62ed73fe2",
+          "to": "bb445e73c6e0236203e62629",
+          "requirement": {
+            "name": "altgraph",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "e28c0dbf4874b2c62ed73fe2",
+          "to": "25aa8de3a4230ae674db5d77",
+          "requirement": {
+            "name": "packaging",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "e28c0dbf4874b2c62ed73fe2",
+          "to": "6c47429bab17e3c38c02ff2d",
+          "requirement": {
+            "name": "pefile",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "e28c0dbf4874b2c62ed73fe2",
+          "to": "9c1b206444c8d88235b900cd",
+          "requirement": {
+            "name": "pyinstaller-hooks-contrib",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "e28c0dbf4874b2c62ed73fe2",
+          "to": "c63940b112e351996f4954d0",
+          "requirement": {
+            "name": "pywin32-ctypes",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "e28c0dbf4874b2c62ed73fe2",
+          "to": "00b70757c34c4e26aa4d0257",
+          "requirement": {
+            "name": "setuptools",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "9c1b206444c8d88235b900cd",
+          "to": "25aa8de3a4230ae674db5d77",
+          "requirement": {
+            "name": "packaging",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "bfe5e4e3ed873855a1f505b9",
+          "to": "4232969fef824fc21eb175fb",
+          "requirement": {
+            "name": "six",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "bfe5e4e3ed873855a1f505b9",
+          "to": "35e1146433e8b3f00fa8766b",
+          "requirement": {
+            "name": "tzdata",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "5d0093e8b6cc39822e37dd32",
+          "to": "6119a16d6c26208893fddd77",
+          "requirement": {
+            "name": "attrs",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "5d0093e8b6cc39822e37dd32",
+          "to": "2e146f95e3ec0523e758e00f",
+          "requirement": {
+            "name": "rpds-py",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "7dd2901de0a48cb40c459cf4",
+          "to": "15fa5f442652ad6a5b86bf9e",
+          "requirement": {
+            "name": "certifi",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "7dd2901de0a48cb40c459cf4",
+          "to": "6259c2257f86a983df302a97",
+          "requirement": {
+            "name": "charset-normalizer",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "7dd2901de0a48cb40c459cf4",
+          "to": "fb98a1e1d22a49cdc05c2999",
+          "requirement": {
+            "name": "idna",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "7dd2901de0a48cb40c459cf4",
+          "to": "e270dae3a0dd2318d0af03a8",
+          "requirement": {
+            "name": "urllib3",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "6a544b7678bdf7fe1dfb29bb",
+          "to": "c38a84b0cf76f64f73463fcf",
+          "requirement": {
+            "name": "anyio",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "97e9f96035042410cb829e61",
+          "to": "bd5685590718539a5840ea6d",
+          "requirement": {
+            "name": "altair",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "97e9f96035042410cb829e61",
+          "to": "c38a84b0cf76f64f73463fcf",
+          "requirement": {
+            "name": "anyio",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "97e9f96035042410cb829e61",
+          "to": "641d15c89f2e23ee4a74713f",
+          "requirement": {
+            "name": "click",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "97e9f96035042410cb829e61",
+          "to": "957e0335c2aaaf562108c93a",
+          "requirement": {
+            "name": "itsdangerous",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "97e9f96035042410cb829e61",
+          "to": "44a6eec8e5c204b68943c4ea",
+          "requirement": {
+            "name": "numpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "97e9f96035042410cb829e61",
+          "to": "25aa8de3a4230ae674db5d77",
+          "requirement": {
+            "name": "packaging",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "97e9f96035042410cb829e61",
+          "to": "14fe4c89e07a55c88161f67a",
+          "requirement": {
+            "name": "pandas",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "97e9f96035042410cb829e61",
+          "to": "cc63d4e21c528165228e5c32",
+          "requirement": {
+            "name": "pillow",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "97e9f96035042410cb829e61",
+          "to": "98405f0453ca7853fe3517f2",
+          "requirement": {
+            "name": "protobuf",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "97e9f96035042410cb829e61",
+          "to": "2618ba2d54e2b50dfaa91e43",
+          "requirement": {
+            "name": "pyarrow",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "97e9f96035042410cb829e61",
+          "to": "81d8b05b1ad8a0177dace02b",
+          "requirement": {
+            "name": "pydeck",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "97e9f96035042410cb829e61",
+          "to": "5e33f08e269aeaa487e0a8c1",
+          "requirement": {
+            "name": "python-multipart",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "97e9f96035042410cb829e61",
+          "to": "7dd2901de0a48cb40c459cf4",
+          "requirement": {
+            "name": "requests",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "97e9f96035042410cb829e61",
+          "to": "6a544b7678bdf7fe1dfb29bb",
+          "requirement": {
+            "name": "starlette",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "97e9f96035042410cb829e61",
+          "to": "50e7b2fe389e920589861640",
+          "requirement": {
+            "name": "typing-extensions",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "97e9f96035042410cb829e61",
+          "to": "b35f99111bbdb959ec961109",
+          "requirement": {
+            "name": "uvicorn",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "97e9f96035042410cb829e61",
+          "to": "1f3da75fac482cb5c4bba92c",
+          "requirement": {
+            "name": "watchdog",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "97e9f96035042410cb829e61",
+          "to": "6e7a4b0e1241e55eb1b01e78",
+          "requirement": {
+            "name": "websockets",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "b35f99111bbdb959ec961109",
+          "to": "641d15c89f2e23ee4a74713f",
+          "requirement": {
+            "name": "click",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "b35f99111bbdb959ec961109",
+          "to": "aa9825ea6e1c733e11cb45a3",
+          "requirement": {
+            "name": "h11",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        }
+      ],
+      "requirements": [
+        "packaging>=24",
+        "h5py>=3.10",
+        "imageio-ffmpeg>=0.5",
+        "pandas>=2.0,<3",
+        "pyarrow>=23,<24",
+        "pyyaml>=6",
+        "streamlit>=1.35",
+        "pyinstaller>=6.0,<7"
+      ],
+      "direct_dependencies": [
+        {
+          "name": "h5py",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "imageio-ffmpeg",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "packaging",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "pandas",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "pyarrow",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "pyinstaller",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "pyyaml",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "streamlit",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "stage": null
+    },
+    "holodoppler": {
+      "python": "3.13.14",
+      "nodes": [
+        "121b36486858fafa7cf7e253",
+        "1c994f9b8f36711bc64317b3",
+        "20338883980515d534eccf6b",
+        "25aa8de3a4230ae674db5d77",
+        "2ba75a43839d1c2c6a4998c8",
+        "2ce9d09157ca9457255fe377",
+        "2d533768ca92dd533567520e",
+        "2dd22287ef4ee44ce2196347",
+        "2fd6955a86e4fb3126084ae6",
+        "31d2dc97d0ae43cd61d15319",
+        "32ad7765a1824b542527c07b",
+        "3352ba99c78b770cb7e74aaa",
+        "35e1146433e8b3f00fa8766b",
+        "4232969fef824fc21eb175fb",
+        "63010bad04e20910832a118f",
+        "76ad8fe08b42c935b883b9f0",
+        "8e258e86e27264ebcaeb7222",
+        "acb9d5dc795e3c5b8f03d773",
+        "bfe5e4e3ed873855a1f505b9",
+        "c33b4646fdad469f89c889cf",
+        "c531be8b238828dfa6a63457",
+        "cb12e0a15dfb4e0189665dec",
+        "cc63d4e21c528165228e5c32",
+        "e6b740f3730366040b7d30f5",
+        "ec0abfffcad62baa5e1c3bc1",
+        "fe219ff217014d50fdf8496b"
+      ],
+      "edges": [
+        {
+          "from": "c531be8b238828dfa6a63457",
+          "to": "63010bad04e20910832a118f",
+          "requirement": {
+            "name": "numpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "32ad7765a1824b542527c07b",
+          "to": "fe219ff217014d50fdf8496b",
+          "requirement": {
+            "name": "cuda-pathfinder",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "32ad7765a1824b542527c07b",
+          "to": "63010bad04e20910832a118f",
+          "requirement": {
+            "name": "numpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "1c994f9b8f36711bc64317b3",
+          "to": "63010bad04e20910832a118f",
+          "requirement": {
+            "name": "numpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "2dd22287ef4ee44ce2196347",
+          "to": "32ad7765a1824b542527c07b",
+          "requirement": {
+            "name": "cupy-cuda13x",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "2dd22287ef4ee44ce2196347",
+          "to": "1c994f9b8f36711bc64317b3",
+          "requirement": {
+            "name": "h5py",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "2dd22287ef4ee44ce2196347",
+          "to": "2fd6955a86e4fb3126084ae6",
+          "requirement": {
+            "name": "imageio",
+            "extra": [
+              "ffmpeg"
+            ],
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "2dd22287ef4ee44ce2196347",
+          "to": "76ad8fe08b42c935b883b9f0",
+          "requirement": {
+            "name": "matplotlib",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "2dd22287ef4ee44ce2196347",
+          "to": "63010bad04e20910832a118f",
+          "requirement": {
+            "name": "numpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "2dd22287ef4ee44ce2196347",
+          "to": "2ce9d09157ca9457255fe377",
+          "requirement": {
+            "name": "opencv-python",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "2dd22287ef4ee44ce2196347",
+          "to": "cc63d4e21c528165228e5c32",
+          "requirement": {
+            "name": "pillow",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "2dd22287ef4ee44ce2196347",
+          "to": "2ba75a43839d1c2c6a4998c8",
+          "requirement": {
+            "name": "pyyaml",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "2dd22287ef4ee44ce2196347",
+          "to": "ec0abfffcad62baa5e1c3bc1",
+          "requirement": {
+            "name": "scipy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "2dd22287ef4ee44ce2196347",
+          "to": "31d2dc97d0ae43cd61d15319",
+          "requirement": {
+            "name": "sv-ttk",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "2dd22287ef4ee44ce2196347",
+          "to": "c33b4646fdad469f89c889cf",
+          "requirement": {
+            "name": "tkinterdnd2",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "2dd22287ef4ee44ce2196347",
+          "to": "121b36486858fafa7cf7e253",
+          "requirement": {
+            "name": "tqdm",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "2fd6955a86e4fb3126084ae6",
+          "to": "63010bad04e20910832a118f",
+          "requirement": {
+            "name": "numpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "2fd6955a86e4fb3126084ae6",
+          "to": "cc63d4e21c528165228e5c32",
+          "requirement": {
+            "name": "pillow",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "2fd6955a86e4fb3126084ae6",
+          "to": "cb12e0a15dfb4e0189665dec",
+          "requirement": {
+            "name": "imageio-ffmpeg",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": "ffmpeg"
+        },
+        {
+          "from": "2fd6955a86e4fb3126084ae6",
+          "to": "e6b740f3730366040b7d30f5",
+          "requirement": {
+            "name": "psutil",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": "ffmpeg"
+        },
+        {
+          "from": "76ad8fe08b42c935b883b9f0",
+          "to": "c531be8b238828dfa6a63457",
+          "requirement": {
+            "name": "contourpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "76ad8fe08b42c935b883b9f0",
+          "to": "8e258e86e27264ebcaeb7222",
+          "requirement": {
+            "name": "cycler",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "76ad8fe08b42c935b883b9f0",
+          "to": "2d533768ca92dd533567520e",
+          "requirement": {
+            "name": "fonttools",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "76ad8fe08b42c935b883b9f0",
+          "to": "20338883980515d534eccf6b",
+          "requirement": {
+            "name": "kiwisolver",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "76ad8fe08b42c935b883b9f0",
+          "to": "63010bad04e20910832a118f",
+          "requirement": {
+            "name": "numpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "76ad8fe08b42c935b883b9f0",
+          "to": "25aa8de3a4230ae674db5d77",
+          "requirement": {
+            "name": "packaging",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "76ad8fe08b42c935b883b9f0",
+          "to": "cc63d4e21c528165228e5c32",
+          "requirement": {
+            "name": "pillow",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "76ad8fe08b42c935b883b9f0",
+          "to": "3352ba99c78b770cb7e74aaa",
+          "requirement": {
+            "name": "pyparsing",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "76ad8fe08b42c935b883b9f0",
+          "to": "bfe5e4e3ed873855a1f505b9",
+          "requirement": {
+            "name": "python-dateutil",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "2ce9d09157ca9457255fe377",
+          "to": "63010bad04e20910832a118f",
+          "requirement": {
+            "name": "numpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "bfe5e4e3ed873855a1f505b9",
+          "to": "4232969fef824fc21eb175fb",
+          "requirement": {
+            "name": "six",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "bfe5e4e3ed873855a1f505b9",
+          "to": "35e1146433e8b3f00fa8766b",
+          "requirement": {
+            "name": "tzdata",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "ec0abfffcad62baa5e1c3bc1",
+          "to": "63010bad04e20910832a118f",
+          "requirement": {
+            "name": "numpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "121b36486858fafa7cf7e253",
+          "to": "acb9d5dc795e3c5b8f03d773",
+          "requirement": {
+            "name": "colorama",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        }
+      ],
+      "requirements": [
+        "holodoppler @ git+https://github.com/DigitalHolography/HoloDoppler.git@main"
+      ],
+      "direct_dependencies": [
+        {
+          "name": "holodoppler",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "stage": "hd"
+    },
+    "dopplerview": {
+      "python": "3.13.14",
+      "nodes": [
+        "00b70757c34c4e26aa4d0257",
+        "05f146cf8e67a7ef2859af9a",
+        "06284629f8a48e3aecc49719",
+        "0fc0c910e3e579cbaf7aa889",
+        "121b36486858fafa7cf7e253",
+        "13b33389fd05f9842a82ccc2",
+        "160931eae3e6a057347d6e9b",
+        "1c994f9b8f36711bc64317b3",
+        "1f136b604035983d8358c43f",
+        "20338883980515d534eccf6b",
+        "25aa8de3a4230ae674db5d77",
+        "2ba75a43839d1c2c6a4998c8",
+        "2d1a5b858bc607e6ac196a48",
+        "2d533768ca92dd533567520e",
+        "2fd6955a86e4fb3126084ae6",
+        "31d2dc97d0ae43cd61d15319",
+        "3352ba99c78b770cb7e74aaa",
+        "35e1146433e8b3f00fa8766b",
+        "36142d30a3588c9bc7c80df1",
+        "382105b049b07636f734f8ea",
+        "4232969fef824fc21eb175fb",
+        "44a6eec8e5c204b68943c4ea",
+        "4b6852043c67caaf906a99d5",
+        "4cf56fa36ce8a087539bd3bd",
+        "50b73071bdced47fee73b94d",
+        "50e7b2fe389e920589861640",
+        "5924aaa96e5f056d45b14344",
+        "63651b5159fe1fcffa1483a4",
+        "641d15c89f2e23ee4a74713f",
+        "67a94f088d6ed82eafb9afac",
+        "6c47429bab17e3c38c02ff2d",
+        "76ad8fe08b42c935b883b9f0",
+        "81780affb8b8de0e6cb55506",
+        "87633c2a73cdac053c4235c8",
+        "876356780c33caba1bfe746e",
+        "8e258e86e27264ebcaeb7222",
+        "98405f0453ca7853fe3517f2",
+        "9c1b206444c8d88235b900cd",
+        "a55a425391e5b5de9ae84aaf",
+        "a96e091a2187b9ee89f83380",
+        "aa9825ea6e1c733e11cb45a3",
+        "acb9d5dc795e3c5b8f03d773",
+        "ad40e98a422bc127f0c56a15",
+        "ae8c6200bf87963db12d7904",
+        "b8104f842b9af7dba666aa7a",
+        "bb445e73c6e0236203e62629",
+        "be01e5b79c04d5c547ca6d3a",
+        "bf2497e7b5563e5a3efcfda8",
+        "bfe5e4e3ed873855a1f505b9",
+        "c33b4646fdad469f89c889cf",
+        "c38a84b0cf76f64f73463fcf",
+        "c531be8b238828dfa6a63457",
+        "c63940b112e351996f4954d0",
+        "cc63d4e21c528165228e5c32",
+        "ce101433acfd04fbc7c579e0",
+        "d3f70abd57ac5ba947dd2732",
+        "dadfddcf62c0ab6b1c223189",
+        "dd62e126a3772c775594a32e",
+        "e28c0dbf4874b2c62ed73fe2",
+        "e6b740f3730366040b7d30f5",
+        "ec0abfffcad62baa5e1c3bc1",
+        "f625a486ddf499752787b462",
+        "f883968e16f515313c66c02e",
+        "fabcbae2b2836e2f27ac3c1b",
+        "fb0a3573ce41f3930eddbc1f",
+        "fb98a1e1d22a49cdc05c2999",
+        "fda90508bea82b6da13d7d44"
+      ],
+      "edges": [
+        {
+          "from": "c38a84b0cf76f64f73463fcf",
+          "to": "fb98a1e1d22a49cdc05c2999",
+          "requirement": {
+            "name": "idna",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "c38a84b0cf76f64f73463fcf",
+          "to": "50e7b2fe389e920589861640",
+          "requirement": {
+            "name": "typing-extensions",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "c531be8b238828dfa6a63457",
+          "to": "44a6eec8e5c204b68943c4ea",
+          "requirement": {
+            "name": "numpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "50b73071bdced47fee73b94d",
+          "to": "1c994f9b8f36711bc64317b3",
+          "requirement": {
+            "name": "h5py",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "50b73071bdced47fee73b94d",
+          "to": "fb0a3573ce41f3930eddbc1f",
+          "requirement": {
+            "name": "huggingface-hub",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "50b73071bdced47fee73b94d",
+          "to": "76ad8fe08b42c935b883b9f0",
+          "requirement": {
+            "name": "matplotlib",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "50b73071bdced47fee73b94d",
+          "to": "44a6eec8e5c204b68943c4ea",
+          "requirement": {
+            "name": "numpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "50b73071bdced47fee73b94d",
+          "to": "06284629f8a48e3aecc49719",
+          "requirement": {
+            "name": "onnxruntime",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "50b73071bdced47fee73b94d",
+          "to": "67a94f088d6ed82eafb9afac",
+          "requirement": {
+            "name": "opencv-python-headless",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "50b73071bdced47fee73b94d",
+          "to": "ce101433acfd04fbc7c579e0",
+          "requirement": {
+            "name": "pandas",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "50b73071bdced47fee73b94d",
+          "to": "cc63d4e21c528165228e5c32",
+          "requirement": {
+            "name": "pillow",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "50b73071bdced47fee73b94d",
+          "to": "e6b740f3730366040b7d30f5",
+          "requirement": {
+            "name": "psutil",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "50b73071bdced47fee73b94d",
+          "to": "e28c0dbf4874b2c62ed73fe2",
+          "requirement": {
+            "name": "pyinstaller",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "50b73071bdced47fee73b94d",
+          "to": "2ba75a43839d1c2c6a4998c8",
+          "requirement": {
+            "name": "pyyaml",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "50b73071bdced47fee73b94d",
+          "to": "a55a425391e5b5de9ae84aaf",
+          "requirement": {
+            "name": "scikit-image",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "50b73071bdced47fee73b94d",
+          "to": "f625a486ddf499752787b462",
+          "requirement": {
+            "name": "scikit-learn",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "50b73071bdced47fee73b94d",
+          "to": "ec0abfffcad62baa5e1c3bc1",
+          "requirement": {
+            "name": "scipy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "50b73071bdced47fee73b94d",
+          "to": "31d2dc97d0ae43cd61d15319",
+          "requirement": {
+            "name": "sv-ttk",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "50b73071bdced47fee73b94d",
+          "to": "fda90508bea82b6da13d7d44",
+          "requirement": {
+            "name": "threadpoolctl",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "50b73071bdced47fee73b94d",
+          "to": "c33b4646fdad469f89c889cf",
+          "requirement": {
+            "name": "tkinterdnd2",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "50b73071bdced47fee73b94d",
+          "to": "fabcbae2b2836e2f27ac3c1b",
+          "requirement": {
+            "name": "torch",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "50b73071bdced47fee73b94d",
+          "to": "dd62e126a3772c775594a32e",
+          "requirement": {
+            "name": "torchvision",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "50b73071bdced47fee73b94d",
+          "to": "121b36486858fafa7cf7e253",
+          "requirement": {
+            "name": "tqdm",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "50b73071bdced47fee73b94d",
+          "to": "0fc0c910e3e579cbaf7aa889",
+          "requirement": {
+            "name": "typer",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "1c994f9b8f36711bc64317b3",
+          "to": "44a6eec8e5c204b68943c4ea",
+          "requirement": {
+            "name": "numpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "4b6852043c67caaf906a99d5",
+          "to": "aa9825ea6e1c733e11cb45a3",
+          "requirement": {
+            "name": "h11",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "4b6852043c67caaf906a99d5",
+          "to": "1f136b604035983d8358c43f",
+          "requirement": {
+            "name": "truststore",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "d3f70abd57ac5ba947dd2732",
+          "to": "c38a84b0cf76f64f73463fcf",
+          "requirement": {
+            "name": "anyio",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "d3f70abd57ac5ba947dd2732",
+          "to": "4b6852043c67caaf906a99d5",
+          "requirement": {
+            "name": "httpcore2",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "d3f70abd57ac5ba947dd2732",
+          "to": "fb98a1e1d22a49cdc05c2999",
+          "requirement": {
+            "name": "idna",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "d3f70abd57ac5ba947dd2732",
+          "to": "1f136b604035983d8358c43f",
+          "requirement": {
+            "name": "truststore",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "fb0a3573ce41f3930eddbc1f",
+          "to": "641d15c89f2e23ee4a74713f",
+          "requirement": {
+            "name": "click",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "fb0a3573ce41f3930eddbc1f",
+          "to": "4cf56fa36ce8a087539bd3bd",
+          "requirement": {
+            "name": "filelock",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "fb0a3573ce41f3930eddbc1f",
+          "to": "13b33389fd05f9842a82ccc2",
+          "requirement": {
+            "name": "fsspec",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "fb0a3573ce41f3930eddbc1f",
+          "to": "bf2497e7b5563e5a3efcfda8",
+          "requirement": {
+            "name": "hf-xet",
+            "marker": "(platform_machine == 'AMD64' and sys_platform == 'win32') or (platform_machine == 'ARM64' and sys_platform == 'win32') or (platform_machine == 'aarch64' and sys_platform == 'win32') or (platform_machine == 'amd64' and sys_platform == 'win32') or (platform_machine == 'arm64' and sys_platform == 'win32') or (platform_machine == 'x86_64' and sys_platform == 'win32')"
+          },
+          "extra": null
+        },
+        {
+          "from": "fb0a3573ce41f3930eddbc1f",
+          "to": "d3f70abd57ac5ba947dd2732",
+          "requirement": {
+            "name": "httpx2",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "fb0a3573ce41f3930eddbc1f",
+          "to": "25aa8de3a4230ae674db5d77",
+          "requirement": {
+            "name": "packaging",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "fb0a3573ce41f3930eddbc1f",
+          "to": "2ba75a43839d1c2c6a4998c8",
+          "requirement": {
+            "name": "pyyaml",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "fb0a3573ce41f3930eddbc1f",
+          "to": "121b36486858fafa7cf7e253",
+          "requirement": {
+            "name": "tqdm",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "fb0a3573ce41f3930eddbc1f",
+          "to": "50e7b2fe389e920589861640",
+          "requirement": {
+            "name": "typing-extensions",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "2fd6955a86e4fb3126084ae6",
+          "to": "44a6eec8e5c204b68943c4ea",
+          "requirement": {
+            "name": "numpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "2fd6955a86e4fb3126084ae6",
+          "to": "cc63d4e21c528165228e5c32",
+          "requirement": {
+            "name": "pillow",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "876356780c33caba1bfe746e",
+          "to": "05f146cf8e67a7ef2859af9a",
+          "requirement": {
+            "name": "markupsafe",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "f883968e16f515313c66c02e",
+          "to": "a96e091a2187b9ee89f83380",
+          "requirement": {
+            "name": "cloudpickle",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "160931eae3e6a057347d6e9b",
+          "to": "25aa8de3a4230ae674db5d77",
+          "requirement": {
+            "name": "packaging",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "be01e5b79c04d5c547ca6d3a",
+          "to": "81780affb8b8de0e6cb55506",
+          "requirement": {
+            "name": "mdurl",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "76ad8fe08b42c935b883b9f0",
+          "to": "c531be8b238828dfa6a63457",
+          "requirement": {
+            "name": "contourpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "76ad8fe08b42c935b883b9f0",
+          "to": "8e258e86e27264ebcaeb7222",
+          "requirement": {
+            "name": "cycler",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "76ad8fe08b42c935b883b9f0",
+          "to": "2d533768ca92dd533567520e",
+          "requirement": {
+            "name": "fonttools",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "76ad8fe08b42c935b883b9f0",
+          "to": "20338883980515d534eccf6b",
+          "requirement": {
+            "name": "kiwisolver",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "76ad8fe08b42c935b883b9f0",
+          "to": "44a6eec8e5c204b68943c4ea",
+          "requirement": {
+            "name": "numpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "76ad8fe08b42c935b883b9f0",
+          "to": "25aa8de3a4230ae674db5d77",
+          "requirement": {
+            "name": "packaging",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "76ad8fe08b42c935b883b9f0",
+          "to": "cc63d4e21c528165228e5c32",
+          "requirement": {
+            "name": "pillow",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "76ad8fe08b42c935b883b9f0",
+          "to": "3352ba99c78b770cb7e74aaa",
+          "requirement": {
+            "name": "pyparsing",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "76ad8fe08b42c935b883b9f0",
+          "to": "bfe5e4e3ed873855a1f505b9",
+          "requirement": {
+            "name": "python-dateutil",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "06284629f8a48e3aecc49719",
+          "to": "ad40e98a422bc127f0c56a15",
+          "requirement": {
+            "name": "flatbuffers",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "06284629f8a48e3aecc49719",
+          "to": "44a6eec8e5c204b68943c4ea",
+          "requirement": {
+            "name": "numpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "06284629f8a48e3aecc49719",
+          "to": "25aa8de3a4230ae674db5d77",
+          "requirement": {
+            "name": "packaging",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "06284629f8a48e3aecc49719",
+          "to": "98405f0453ca7853fe3517f2",
+          "requirement": {
+            "name": "protobuf",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "67a94f088d6ed82eafb9afac",
+          "to": "44a6eec8e5c204b68943c4ea",
+          "requirement": {
+            "name": "numpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "ce101433acfd04fbc7c579e0",
+          "to": "44a6eec8e5c204b68943c4ea",
+          "requirement": {
+            "name": "numpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "ce101433acfd04fbc7c579e0",
+          "to": "bfe5e4e3ed873855a1f505b9",
+          "requirement": {
+            "name": "python-dateutil",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "ce101433acfd04fbc7c579e0",
+          "to": "35e1146433e8b3f00fa8766b",
+          "requirement": {
+            "name": "tzdata",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "e28c0dbf4874b2c62ed73fe2",
+          "to": "bb445e73c6e0236203e62629",
+          "requirement": {
+            "name": "altgraph",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "e28c0dbf4874b2c62ed73fe2",
+          "to": "25aa8de3a4230ae674db5d77",
+          "requirement": {
+            "name": "packaging",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "e28c0dbf4874b2c62ed73fe2",
+          "to": "6c47429bab17e3c38c02ff2d",
+          "requirement": {
+            "name": "pefile",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "e28c0dbf4874b2c62ed73fe2",
+          "to": "9c1b206444c8d88235b900cd",
+          "requirement": {
+            "name": "pyinstaller-hooks-contrib",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "e28c0dbf4874b2c62ed73fe2",
+          "to": "c63940b112e351996f4954d0",
+          "requirement": {
+            "name": "pywin32-ctypes",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "e28c0dbf4874b2c62ed73fe2",
+          "to": "00b70757c34c4e26aa4d0257",
+          "requirement": {
+            "name": "setuptools",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "9c1b206444c8d88235b900cd",
+          "to": "25aa8de3a4230ae674db5d77",
+          "requirement": {
+            "name": "packaging",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "bfe5e4e3ed873855a1f505b9",
+          "to": "4232969fef824fc21eb175fb",
+          "requirement": {
+            "name": "six",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "bfe5e4e3ed873855a1f505b9",
+          "to": "35e1146433e8b3f00fa8766b",
+          "requirement": {
+            "name": "tzdata",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "ae8c6200bf87963db12d7904",
+          "to": "be01e5b79c04d5c547ca6d3a",
+          "requirement": {
+            "name": "markdown-it-py",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "ae8c6200bf87963db12d7904",
+          "to": "382105b049b07636f734f8ea",
+          "requirement": {
+            "name": "pygments",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "a55a425391e5b5de9ae84aaf",
+          "to": "2fd6955a86e4fb3126084ae6",
+          "requirement": {
+            "name": "imageio",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "a55a425391e5b5de9ae84aaf",
+          "to": "160931eae3e6a057347d6e9b",
+          "requirement": {
+            "name": "lazy-loader",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "a55a425391e5b5de9ae84aaf",
+          "to": "5924aaa96e5f056d45b14344",
+          "requirement": {
+            "name": "networkx",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "a55a425391e5b5de9ae84aaf",
+          "to": "44a6eec8e5c204b68943c4ea",
+          "requirement": {
+            "name": "numpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "a55a425391e5b5de9ae84aaf",
+          "to": "25aa8de3a4230ae674db5d77",
+          "requirement": {
+            "name": "packaging",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "a55a425391e5b5de9ae84aaf",
+          "to": "cc63d4e21c528165228e5c32",
+          "requirement": {
+            "name": "pillow",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "a55a425391e5b5de9ae84aaf",
+          "to": "ec0abfffcad62baa5e1c3bc1",
+          "requirement": {
+            "name": "scipy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "a55a425391e5b5de9ae84aaf",
+          "to": "dadfddcf62c0ab6b1c223189",
+          "requirement": {
+            "name": "tifffile",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "f625a486ddf499752787b462",
+          "to": "f883968e16f515313c66c02e",
+          "requirement": {
+            "name": "joblib",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "f625a486ddf499752787b462",
+          "to": "63651b5159fe1fcffa1483a4",
+          "requirement": {
+            "name": "narwhals",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "f625a486ddf499752787b462",
+          "to": "44a6eec8e5c204b68943c4ea",
+          "requirement": {
+            "name": "numpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "f625a486ddf499752787b462",
+          "to": "ec0abfffcad62baa5e1c3bc1",
+          "requirement": {
+            "name": "scipy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "f625a486ddf499752787b462",
+          "to": "fda90508bea82b6da13d7d44",
+          "requirement": {
+            "name": "threadpoolctl",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "ec0abfffcad62baa5e1c3bc1",
+          "to": "44a6eec8e5c204b68943c4ea",
+          "requirement": {
+            "name": "numpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "2d1a5b858bc607e6ac196a48",
+          "to": "36142d30a3588c9bc7c80df1",
+          "requirement": {
+            "name": "mpmath",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "dadfddcf62c0ab6b1c223189",
+          "to": "44a6eec8e5c204b68943c4ea",
+          "requirement": {
+            "name": "numpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "fabcbae2b2836e2f27ac3c1b",
+          "to": "4cf56fa36ce8a087539bd3bd",
+          "requirement": {
+            "name": "filelock",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "fabcbae2b2836e2f27ac3c1b",
+          "to": "13b33389fd05f9842a82ccc2",
+          "requirement": {
+            "name": "fsspec",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "fabcbae2b2836e2f27ac3c1b",
+          "to": "876356780c33caba1bfe746e",
+          "requirement": {
+            "name": "jinja2",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "fabcbae2b2836e2f27ac3c1b",
+          "to": "5924aaa96e5f056d45b14344",
+          "requirement": {
+            "name": "networkx",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "fabcbae2b2836e2f27ac3c1b",
+          "to": "00b70757c34c4e26aa4d0257",
+          "requirement": {
+            "name": "setuptools",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "fabcbae2b2836e2f27ac3c1b",
+          "to": "2d1a5b858bc607e6ac196a48",
+          "requirement": {
+            "name": "sympy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "fabcbae2b2836e2f27ac3c1b",
+          "to": "50e7b2fe389e920589861640",
+          "requirement": {
+            "name": "typing-extensions",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "dd62e126a3772c775594a32e",
+          "to": "44a6eec8e5c204b68943c4ea",
+          "requirement": {
+            "name": "numpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "dd62e126a3772c775594a32e",
+          "to": "cc63d4e21c528165228e5c32",
+          "requirement": {
+            "name": "pillow",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "dd62e126a3772c775594a32e",
+          "to": "fabcbae2b2836e2f27ac3c1b",
+          "requirement": {
+            "name": "torch",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "121b36486858fafa7cf7e253",
+          "to": "acb9d5dc795e3c5b8f03d773",
+          "requirement": {
+            "name": "colorama",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "0fc0c910e3e579cbaf7aa889",
+          "to": "87633c2a73cdac053c4235c8",
+          "requirement": {
+            "name": "annotated-doc",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "0fc0c910e3e579cbaf7aa889",
+          "to": "acb9d5dc795e3c5b8f03d773",
+          "requirement": {
+            "name": "colorama",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "0fc0c910e3e579cbaf7aa889",
+          "to": "ae8c6200bf87963db12d7904",
+          "requirement": {
+            "name": "rich",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "0fc0c910e3e579cbaf7aa889",
+          "to": "b8104f842b9af7dba666aa7a",
+          "requirement": {
+            "name": "shellingham",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        }
+      ],
+      "requirements": [
+        "dopplerview @ git+https://github.com/DigitalHolography/DopplerView.git@main",
+        "onnxruntime>=1.25,<1.26"
+      ],
+      "direct_dependencies": [
+        {
+          "name": "dopplerview",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "onnxruntime",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "stage": "dv"
+    },
+    "eyeflow": {
+      "python": "3.13.14",
+      "nodes": [
+        "121b36486858fafa7cf7e253",
+        "160931eae3e6a057347d6e9b",
+        "1c994f9b8f36711bc64317b3",
+        "20338883980515d534eccf6b",
+        "25aa8de3a4230ae674db5d77",
+        "2ce9d09157ca9457255fe377",
+        "2d533768ca92dd533567520e",
+        "2fd6955a86e4fb3126084ae6",
+        "31d2dc97d0ae43cd61d15319",
+        "3352ba99c78b770cb7e74aaa",
+        "35e1146433e8b3f00fa8766b",
+        "3ed3f2e37e6a8323b39657a9",
+        "4232969fef824fc21eb175fb",
+        "44a6eec8e5c204b68943c4ea",
+        "50e7b2fe389e920589861640",
+        "5924aaa96e5f056d45b14344",
+        "755ec59c2696919572516ef9",
+        "76ad8fe08b42c935b883b9f0",
+        "8e258e86e27264ebcaeb7222",
+        "a3a826cd86d7074103e57681",
+        "a55a425391e5b5de9ae84aaf",
+        "a96e091a2187b9ee89f83380",
+        "acb9d5dc795e3c5b8f03d773",
+        "bfe5e4e3ed873855a1f505b9",
+        "c33b4646fdad469f89c889cf",
+        "c531be8b238828dfa6a63457",
+        "cb02c30ecaf261f5d13b6e11",
+        "cc63d4e21c528165228e5c32",
+        "dadfddcf62c0ab6b1c223189",
+        "ec0abfffcad62baa5e1c3bc1",
+        "f883968e16f515313c66c02e",
+        "f99f49a20afbfe72a0790b6f",
+        "fecced32e32336d18671abff"
+      ],
+      "edges": [
+        {
+          "from": "c531be8b238828dfa6a63457",
+          "to": "44a6eec8e5c204b68943c4ea",
+          "requirement": {
+            "name": "numpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "cb02c30ecaf261f5d13b6e11",
+          "to": "1c994f9b8f36711bc64317b3",
+          "requirement": {
+            "name": "h5py",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "cb02c30ecaf261f5d13b6e11",
+          "to": "f883968e16f515313c66c02e",
+          "requirement": {
+            "name": "joblib",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "cb02c30ecaf261f5d13b6e11",
+          "to": "76ad8fe08b42c935b883b9f0",
+          "requirement": {
+            "name": "matplotlib",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "cb02c30ecaf261f5d13b6e11",
+          "to": "44a6eec8e5c204b68943c4ea",
+          "requirement": {
+            "name": "numpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "cb02c30ecaf261f5d13b6e11",
+          "to": "2ce9d09157ca9457255fe377",
+          "requirement": {
+            "name": "opencv-python",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "cb02c30ecaf261f5d13b6e11",
+          "to": "cc63d4e21c528165228e5c32",
+          "requirement": {
+            "name": "pillow",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "cb02c30ecaf261f5d13b6e11",
+          "to": "3ed3f2e37e6a8323b39657a9",
+          "requirement": {
+            "name": "pydantic",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "cb02c30ecaf261f5d13b6e11",
+          "to": "a55a425391e5b5de9ae84aaf",
+          "requirement": {
+            "name": "scikit-image",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "cb02c30ecaf261f5d13b6e11",
+          "to": "ec0abfffcad62baa5e1c3bc1",
+          "requirement": {
+            "name": "scipy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "cb02c30ecaf261f5d13b6e11",
+          "to": "a3a826cd86d7074103e57681",
+          "requirement": {
+            "name": "simpleitk",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "cb02c30ecaf261f5d13b6e11",
+          "to": "31d2dc97d0ae43cd61d15319",
+          "requirement": {
+            "name": "sv-ttk",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "cb02c30ecaf261f5d13b6e11",
+          "to": "c33b4646fdad469f89c889cf",
+          "requirement": {
+            "name": "tkinterdnd2",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "cb02c30ecaf261f5d13b6e11",
+          "to": "121b36486858fafa7cf7e253",
+          "requirement": {
+            "name": "tqdm",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "1c994f9b8f36711bc64317b3",
+          "to": "44a6eec8e5c204b68943c4ea",
+          "requirement": {
+            "name": "numpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "2fd6955a86e4fb3126084ae6",
+          "to": "44a6eec8e5c204b68943c4ea",
+          "requirement": {
+            "name": "numpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "2fd6955a86e4fb3126084ae6",
+          "to": "cc63d4e21c528165228e5c32",
+          "requirement": {
+            "name": "pillow",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "f883968e16f515313c66c02e",
+          "to": "a96e091a2187b9ee89f83380",
+          "requirement": {
+            "name": "cloudpickle",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "160931eae3e6a057347d6e9b",
+          "to": "25aa8de3a4230ae674db5d77",
+          "requirement": {
+            "name": "packaging",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "76ad8fe08b42c935b883b9f0",
+          "to": "c531be8b238828dfa6a63457",
+          "requirement": {
+            "name": "contourpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "76ad8fe08b42c935b883b9f0",
+          "to": "8e258e86e27264ebcaeb7222",
+          "requirement": {
+            "name": "cycler",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "76ad8fe08b42c935b883b9f0",
+          "to": "2d533768ca92dd533567520e",
+          "requirement": {
+            "name": "fonttools",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "76ad8fe08b42c935b883b9f0",
+          "to": "20338883980515d534eccf6b",
+          "requirement": {
+            "name": "kiwisolver",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "76ad8fe08b42c935b883b9f0",
+          "to": "44a6eec8e5c204b68943c4ea",
+          "requirement": {
+            "name": "numpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "76ad8fe08b42c935b883b9f0",
+          "to": "25aa8de3a4230ae674db5d77",
+          "requirement": {
+            "name": "packaging",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "76ad8fe08b42c935b883b9f0",
+          "to": "cc63d4e21c528165228e5c32",
+          "requirement": {
+            "name": "pillow",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "76ad8fe08b42c935b883b9f0",
+          "to": "3352ba99c78b770cb7e74aaa",
+          "requirement": {
+            "name": "pyparsing",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "76ad8fe08b42c935b883b9f0",
+          "to": "bfe5e4e3ed873855a1f505b9",
+          "requirement": {
+            "name": "python-dateutil",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "2ce9d09157ca9457255fe377",
+          "to": "44a6eec8e5c204b68943c4ea",
+          "requirement": {
+            "name": "numpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "3ed3f2e37e6a8323b39657a9",
+          "to": "f99f49a20afbfe72a0790b6f",
+          "requirement": {
+            "name": "annotated-types",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "3ed3f2e37e6a8323b39657a9",
+          "to": "fecced32e32336d18671abff",
+          "requirement": {
+            "name": "pydantic-core",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "3ed3f2e37e6a8323b39657a9",
+          "to": "50e7b2fe389e920589861640",
+          "requirement": {
+            "name": "typing-extensions",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "3ed3f2e37e6a8323b39657a9",
+          "to": "755ec59c2696919572516ef9",
+          "requirement": {
+            "name": "typing-inspection",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "fecced32e32336d18671abff",
+          "to": "50e7b2fe389e920589861640",
+          "requirement": {
+            "name": "typing-extensions",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "bfe5e4e3ed873855a1f505b9",
+          "to": "4232969fef824fc21eb175fb",
+          "requirement": {
+            "name": "six",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "bfe5e4e3ed873855a1f505b9",
+          "to": "35e1146433e8b3f00fa8766b",
+          "requirement": {
+            "name": "tzdata",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "a55a425391e5b5de9ae84aaf",
+          "to": "2fd6955a86e4fb3126084ae6",
+          "requirement": {
+            "name": "imageio",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "a55a425391e5b5de9ae84aaf",
+          "to": "160931eae3e6a057347d6e9b",
+          "requirement": {
+            "name": "lazy-loader",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "a55a425391e5b5de9ae84aaf",
+          "to": "5924aaa96e5f056d45b14344",
+          "requirement": {
+            "name": "networkx",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "a55a425391e5b5de9ae84aaf",
+          "to": "44a6eec8e5c204b68943c4ea",
+          "requirement": {
+            "name": "numpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "a55a425391e5b5de9ae84aaf",
+          "to": "25aa8de3a4230ae674db5d77",
+          "requirement": {
+            "name": "packaging",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "a55a425391e5b5de9ae84aaf",
+          "to": "cc63d4e21c528165228e5c32",
+          "requirement": {
+            "name": "pillow",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "a55a425391e5b5de9ae84aaf",
+          "to": "ec0abfffcad62baa5e1c3bc1",
+          "requirement": {
+            "name": "scipy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "a55a425391e5b5de9ae84aaf",
+          "to": "dadfddcf62c0ab6b1c223189",
+          "requirement": {
+            "name": "tifffile",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "ec0abfffcad62baa5e1c3bc1",
+          "to": "44a6eec8e5c204b68943c4ea",
+          "requirement": {
+            "name": "numpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "dadfddcf62c0ab6b1c223189",
+          "to": "44a6eec8e5c204b68943c4ea",
+          "requirement": {
+            "name": "numpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "121b36486858fafa7cf7e253",
+          "to": "acb9d5dc795e3c5b8f03d773",
+          "requirement": {
+            "name": "colorama",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "755ec59c2696919572516ef9",
+          "to": "50e7b2fe389e920589861640",
+          "requirement": {
+            "name": "typing-extensions",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        }
+      ],
+      "requirements": [
+        "EyeFlow @ git+https://github.com/DigitalHolography/EyeFlow.git@main"
+      ],
+      "direct_dependencies": [
+        {
+          "name": "eyeflow",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "stage": "ef"
+    },
+    "angioeye": {
+      "python": "3.13.14",
+      "nodes": [
+        "1c994f9b8f36711bc64317b3",
+        "20338883980515d534eccf6b",
+        "25aa8de3a4230ae674db5d77",
+        "2d533768ca92dd533567520e",
+        "31d2dc97d0ae43cd61d15319",
+        "3352ba99c78b770cb7e74aaa",
+        "35e1146433e8b3f00fa8766b",
+        "4232969fef824fc21eb175fb",
+        "44a6eec8e5c204b68943c4ea",
+        "76ad8fe08b42c935b883b9f0",
+        "8e258e86e27264ebcaeb7222",
+        "9dd06b99923f9354b939849d",
+        "bfe5e4e3ed873855a1f505b9",
+        "c33b4646fdad469f89c889cf",
+        "c531be8b238828dfa6a63457",
+        "cc63d4e21c528165228e5c32",
+        "ce101433acfd04fbc7c579e0",
+        "ec0abfffcad62baa5e1c3bc1"
+      ],
+      "edges": [
+        {
+          "from": "9dd06b99923f9354b939849d",
+          "to": "1c994f9b8f36711bc64317b3",
+          "requirement": {
+            "name": "h5py",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "9dd06b99923f9354b939849d",
+          "to": "76ad8fe08b42c935b883b9f0",
+          "requirement": {
+            "name": "matplotlib",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "9dd06b99923f9354b939849d",
+          "to": "44a6eec8e5c204b68943c4ea",
+          "requirement": {
+            "name": "numpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "9dd06b99923f9354b939849d",
+          "to": "ce101433acfd04fbc7c579e0",
+          "requirement": {
+            "name": "pandas",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "9dd06b99923f9354b939849d",
+          "to": "ec0abfffcad62baa5e1c3bc1",
+          "requirement": {
+            "name": "scipy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "9dd06b99923f9354b939849d",
+          "to": "31d2dc97d0ae43cd61d15319",
+          "requirement": {
+            "name": "sv-ttk",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "9dd06b99923f9354b939849d",
+          "to": "c33b4646fdad469f89c889cf",
+          "requirement": {
+            "name": "tkinterdnd2",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "c531be8b238828dfa6a63457",
+          "to": "44a6eec8e5c204b68943c4ea",
+          "requirement": {
+            "name": "numpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "1c994f9b8f36711bc64317b3",
+          "to": "44a6eec8e5c204b68943c4ea",
+          "requirement": {
+            "name": "numpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "76ad8fe08b42c935b883b9f0",
+          "to": "c531be8b238828dfa6a63457",
+          "requirement": {
+            "name": "contourpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "76ad8fe08b42c935b883b9f0",
+          "to": "8e258e86e27264ebcaeb7222",
+          "requirement": {
+            "name": "cycler",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "76ad8fe08b42c935b883b9f0",
+          "to": "2d533768ca92dd533567520e",
+          "requirement": {
+            "name": "fonttools",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "76ad8fe08b42c935b883b9f0",
+          "to": "20338883980515d534eccf6b",
+          "requirement": {
+            "name": "kiwisolver",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "76ad8fe08b42c935b883b9f0",
+          "to": "44a6eec8e5c204b68943c4ea",
+          "requirement": {
+            "name": "numpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "76ad8fe08b42c935b883b9f0",
+          "to": "25aa8de3a4230ae674db5d77",
+          "requirement": {
+            "name": "packaging",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "76ad8fe08b42c935b883b9f0",
+          "to": "cc63d4e21c528165228e5c32",
+          "requirement": {
+            "name": "pillow",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "76ad8fe08b42c935b883b9f0",
+          "to": "3352ba99c78b770cb7e74aaa",
+          "requirement": {
+            "name": "pyparsing",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "76ad8fe08b42c935b883b9f0",
+          "to": "bfe5e4e3ed873855a1f505b9",
+          "requirement": {
+            "name": "python-dateutil",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "ce101433acfd04fbc7c579e0",
+          "to": "44a6eec8e5c204b68943c4ea",
+          "requirement": {
+            "name": "numpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "ce101433acfd04fbc7c579e0",
+          "to": "bfe5e4e3ed873855a1f505b9",
+          "requirement": {
+            "name": "python-dateutil",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "ce101433acfd04fbc7c579e0",
+          "to": "35e1146433e8b3f00fa8766b",
+          "requirement": {
+            "name": "tzdata",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "bfe5e4e3ed873855a1f505b9",
+          "to": "4232969fef824fc21eb175fb",
+          "requirement": {
+            "name": "six",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "bfe5e4e3ed873855a1f505b9",
+          "to": "35e1146433e8b3f00fa8766b",
+          "requirement": {
+            "name": "tzdata",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "ec0abfffcad62baa5e1c3bc1",
+          "to": "44a6eec8e5c204b68943c4ea",
+          "requirement": {
+            "name": "numpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        }
+      ],
+      "requirements": [
+        "AngioEye @ git+https://github.com/DigitalHolography/AngioEye.git@main"
+      ],
+      "direct_dependencies": [
+        {
+          "name": "angioeye",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "stage": "ae"
+    }
+  },
+  "nodes": {
+    "bd5685590718539a5840ea6d": {
+      "name": "altair",
+      "version": "6.3.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/ca/b9/10a8bb13a0462e0bc4e02c0b7b8237dc24ab590f5bb4be94bec5e8f1d532/altair-6.3.0-py3-none-any.whl",
+        "hash": "sha256:7defb6ca730676dfc99a299768e2769f51585fcb3dc960ea71aacc368929d65e",
+        "abi": "pure"
+      },
+      "consumers": [
+        "manager"
+      ],
+      "dependencies": [
+        {
+          "name": "jinja2",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "jsonschema",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "narwhals",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "packaging",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "typing-extensions",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "bb445e73c6e0236203e62629": {
+      "name": "altgraph",
+      "version": "0.17.5",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/a9/ba/000a1996d4308bc65120167c21241a3b205464a2e0b58deda26ae8ac21d1/altgraph-0.17.5-py2.py3-none-any.whl",
+        "hash": "sha256:f3a22400bce1b0c701683820ac4f3b159cd301acab067c51c653e06961600597",
+        "abi": "pure"
+      },
+      "consumers": [
+        "manager",
+        "dopplerview"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "c38a84b0cf76f64f73463fcf": {
+      "name": "anyio",
+      "version": "4.15.1",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/12/b8/4bd346e22b28902df4d651910f5242c28d84e4a5c2435ca5c3f797ed7e2e/anyio-4.15.1-py3-none-any.whl",
+        "hash": "sha256:6152fdbbf9a77fdec97731721bebf7c4c44f7c29b424b0065826173efc7ed101",
+        "abi": "pure"
+      },
+      "consumers": [
+        "manager",
+        "dopplerview"
+      ],
+      "dependencies": [
+        {
+          "name": "idna",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "typing-extensions",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "6119a16d6c26208893fddd77": {
+      "name": "attrs",
+      "version": "26.1.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/64/b4/17d4b0b2a2dc85a6df63d1157e028ed19f90d4cd97c36717afef2bc2f395/attrs-26.1.0-py3-none-any.whl",
+        "hash": "sha256:c647aa4a12dfbad9333ca4e71fe62ddc36f4e63b2d260a37a8b83d2f043ac309",
+        "abi": "pure"
+      },
+      "consumers": [
+        "manager"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "15fa5f442652ad6a5b86bf9e": {
+      "name": "certifi",
+      "version": "2026.10.23",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/32/d1/a3652fe2c19134d0d15922177821d863cbd7e842d53a21bbe7e8e3a1b5ac/certifi-2026.10.23-py3-none-any.whl",
+        "hash": "sha256:e9b54de76e530bb6cf0ccd036787103acb58fd42ba930ea8bf948ddbaa2f61d1",
+        "abi": "pure"
+      },
+      "consumers": [
+        "manager"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "6259c2257f86a983df302a97": {
+      "name": "charset-normalizer",
+      "version": "3.5.2",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/9c/76/b8ec57f4e9ee3253541abf95e4a462c0175fe8032dcd070f1f2421240942/charset_normalizer-3.5.2-cp313-cp313-win_amd64.whl",
+        "hash": "sha256:78456a747de8dc58360ffa581f30a002baf5aa28cb262536545e91f113ed7639",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "manager"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "641d15c89f2e23ee4a74713f": {
+      "name": "click",
+      "version": "8.5.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/58/50/6c0d534c5f134586a8e1ba4e330569e32f057e33372ae556463212fb4cd3/click-8.5.0-py3-none-any.whl",
+        "hash": "sha256:255bc9599cf7748b4b1a446ccc735421bd08a2ae529a8b88597d3de5664ee360",
+        "abi": "pure"
+      },
+      "consumers": [
+        "manager",
+        "dopplerview"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "aa9825ea6e1c733e11cb45a3": {
+      "name": "h11",
+      "version": "0.16.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/04/4b/29cac41a4d98d144bf5f6d33995617b185d14b22401f75ca86f384e87ff1/h11-0.16.0-py3-none-any.whl",
+        "hash": "sha256:63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86",
+        "abi": "pure"
+      },
+      "consumers": [
+        "manager",
+        "dopplerview"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "1c994f9b8f36711bc64317b3": {
+      "name": "h5py",
+      "version": "3.16.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/c3/d9/a27997f84341fc0dfcdd1fe4179b6ba6c32a7aa880fdb8c514d4dad6fba3/h5py-3.16.0-cp313-cp313-win_amd64.whl",
+        "hash": "sha256:18f2bbcd545e6991412253b98727374c356d67caa920e68dc79eab36bf5fedad",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "manager",
+        "holodoppler",
+        "dopplerview",
+        "eyeflow",
+        "angioeye"
+      ],
+      "dependencies": [
+        {
+          "name": "numpy",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "fb98a1e1d22a49cdc05c2999": {
+      "name": "idna",
+      "version": "3.20",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/58/a2/bb081bab032533a855d44de1d56f8e8426114ff1ba5d1f07a438a0a654f8/idna-3.20-py3-none-any.whl",
+        "hash": "sha256:ab7ae7122974553370f0bdb919e1a960b2cd1bc1ef0276416d896db81c14582c",
+        "abi": "pure"
+      },
+      "consumers": [
+        "manager",
+        "dopplerview"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "cb12e0a15dfb4e0189665dec": {
+      "name": "imageio-ffmpeg",
+      "version": "0.6.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/2c/c6/fa760e12a2483469e2bf5058c5faff664acf66cadb4df2ad6205b016a73d/imageio_ffmpeg-0.6.0-py3-none-win_amd64.whl",
+        "hash": "sha256:02fa47c83703c37df6bfe4896aab339013f62bf02c5ebf2dce6da56af04ffc0a",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "manager",
+        "holodoppler"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "957e0335c2aaaf562108c93a": {
+      "name": "itsdangerous",
+      "version": "2.2.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/04/96/92447566d16df59b2a776c0fb82dbc4d9e07cd95062562af01e408583fc4/itsdangerous-2.2.0-py3-none-any.whl",
+        "hash": "sha256:c6242fc49e35958c8b15141343aa660db5fc54d4f13a1db01a3f5891b98700ef",
+        "abi": "pure"
+      },
+      "consumers": [
+        "manager"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "876356780c33caba1bfe746e": {
+      "name": "jinja2",
+      "version": "3.1.6",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/62/a1/3d680cbfd5f4b8f15abc1d571870c5fc3e594bb582bc3b64ea099db13e56/jinja2-3.1.6-py3-none-any.whl",
+        "hash": "sha256:85ece4451f492d0c13c5dd7c13a64681a86afae63a5f347908daf103ce6d2f67",
+        "abi": "pure"
+      },
+      "consumers": [
+        "manager",
+        "dopplerview"
+      ],
+      "dependencies": [
+        {
+          "name": "markupsafe",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "21068964f383364e52cb94d6": {
+      "name": "jsonschema",
+      "version": "4.26.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/69/90/f63fb5873511e014207a475e2bb4e8b2e570d655b00ac19a9a0ca0a385ee/jsonschema-4.26.0-py3-none-any.whl",
+        "hash": "sha256:d489f15263b8d200f8387e64b4c3a75f06629559fb73deb8fdfb525f2dab50ce",
+        "abi": "pure"
+      },
+      "consumers": [
+        "manager"
+      ],
+      "dependencies": [
+        {
+          "name": "attrs",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "jsonschema-specifications",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "referencing",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "rpds-py",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "9100c7d9ac380167e4f84c37": {
+      "name": "jsonschema-specifications",
+      "version": "2025.9.1",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/41/45/1a4ed80516f02155c51f51e8cedb3c1902296743db0bbc66608a0db2814f/jsonschema_specifications-2025.9.1-py3-none-any.whl",
+        "hash": "sha256:98802fee3a11ee76ecaca44429fda8a41bff98b00a0f2838151b113f210cc6fe",
+        "abi": "pure"
+      },
+      "consumers": [
+        "manager"
+      ],
+      "dependencies": [
+        {
+          "name": "referencing",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "05f146cf8e67a7ef2859af9a": {
+      "name": "markupsafe",
+      "version": "3.0.4",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/6f/36/163da64de88a13db79214ef75fa041be7fa13bdb42261cf5b7484de14bfb/markupsafe-3.0.4-cp313-cp313-win_amd64.whl",
+        "hash": "sha256:1f1f9477e174582b0a1b583d60b66e1f2cf5d3fe12cee985e4aedf44766600e5",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "manager",
+        "dopplerview"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "63651b5159fe1fcffa1483a4": {
+      "name": "narwhals",
+      "version": "2.27.1",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/d1/89/5d4c86da1130d9059681e5b6cd7645df5c10279a6a079c5c37dcb2cc6f3f/narwhals-2.27.1-py3-none-any.whl",
+        "hash": "sha256:d057df13f5852b8e157596e82eb5e955fad267425df5e420e0ee9863da483b31",
+        "abi": "pure"
+      },
+      "consumers": [
+        "manager",
+        "dopplerview"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "44a6eec8e5c204b68943c4ea": {
+      "name": "numpy",
+      "version": "2.5.4",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/90/8c/140a40398a66b4471211be1affdb6ed24c486d581bd28d07b7f2fcb69540/numpy-2.5.4-cp313-cp313-win_amd64.whl",
+        "hash": "sha256:8b4d2fd2d34e5f8c9235ee787de5631a37a28402b15cb80814df973d2be54129",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "manager",
+        "dopplerview",
+        "eyeflow",
+        "angioeye"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "25aa8de3a4230ae674db5d77": {
+      "name": "packaging",
+      "version": "26.3",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/63/34/ba1c580383c9eada3711951fef0795c80b829a078d72188184bcab9dd527/packaging-26.3-py3-none-any.whl",
+        "hash": "sha256:d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c",
+        "abi": "pure"
+      },
+      "consumers": [
+        "manager",
+        "holodoppler",
+        "dopplerview",
+        "eyeflow",
+        "angioeye"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "14fe4c89e07a55c88161f67a": {
+      "name": "pandas",
+      "version": "2.3.3",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/4f/c7/e54682c96a895d0c808453269e0b5928a07a127a15704fedb643e9b0a4c8/pandas-2.3.3-cp313-cp313-win_amd64.whl",
+        "hash": "sha256:f8bfc0e12dc78f777f323f55c58649591b2cd0c43534e8355c51d3fede5f4dee",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "manager"
+      ],
+      "dependencies": [
+        {
+          "name": "numpy",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "python-dateutil",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "pytz",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "tzdata",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "6c47429bab17e3c38c02ff2d": {
+      "name": "pefile",
+      "version": "2024.8.26",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/54/16/12b82f791c7f50ddec566873d5bdd245baa1491bac11d15ffb98aecc8f8b/pefile-2024.8.26-py3-none-any.whl",
+        "hash": "sha256:76f8b485dcd3b1bb8166f1128d395fa3d87af26360c2358fb75b80019b957c6f",
+        "abi": "pure"
+      },
+      "consumers": [
+        "manager",
+        "dopplerview"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "cc63d4e21c528165228e5c32": {
+      "name": "pillow",
+      "version": "13.0.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/d7/ed/1b16fb66a37e1b9e41370b93b2c614c7da761a5b2a41dc333f7af4639962/pillow-13.0.0-cp313-cp313-win_amd64.whl",
+        "hash": "sha256:9dda0788a9932776a75d8bcc020076edc308ce2508b51f6739a45e3158b3fc42",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "manager",
+        "holodoppler",
+        "dopplerview",
+        "eyeflow",
+        "angioeye"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "98405f0453ca7853fe3517f2": {
+      "name": "protobuf",
+      "version": "7.36.2",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/8a/55/b77bda4e5e5f5971fb51b07663694690e9afdb9402136c16a522bd621cad/protobuf-7.36.2-cp310-abi3-win_amd64.whl",
+        "hash": "sha256:a300819d441e078a5608c0d3c709796bb548136058fda017ae51d425b44fd353",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "manager",
+        "dopplerview"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "2618ba2d54e2b50dfaa91e43": {
+      "name": "pyarrow",
+      "version": "23.0.1",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/d5/09/a532297c9591a727d67760e2e756b83905dd89adb365a7f6e9c72578bcc1/pyarrow-23.0.1-cp313-cp313-win_amd64.whl",
+        "hash": "sha256:cecfb12ef629cf6be0b1887f9f86463b0dd3dc3195ae6224e74006be4736035a",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "manager"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "81d8b05b1ad8a0177dace02b": {
+      "name": "pydeck",
+      "version": "0.9.3",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/6f/34/3998411437aff304a9ed4fa37a6fe1ef3132bcd2b5eac59851b80c86123c/pydeck-0.9.3-py2.py3-none-any.whl",
+        "hash": "sha256:d8a47c11c81fb12d51b1feb42427ff4f0e13cb599e48931021b2cba98b6849a6",
+        "abi": "pure"
+      },
+      "consumers": [
+        "manager"
+      ],
+      "dependencies": [
+        {
+          "name": "jinja2",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "numpy",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "e28c0dbf4874b2c62ed73fe2": {
+      "name": "pyinstaller",
+      "version": "6.22.3",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/24/83/c5422204772a27aef643280fdc887b7ef55679989096b21dceb1b9625fc4/pyinstaller-6.22.3-py3-none-win_amd64.whl",
+        "hash": "sha256:500bd58c7bf7e584a8435adccbd763a0b918d5c12b08d74ff50fd79b2915458b",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "manager",
+        "dopplerview"
+      ],
+      "dependencies": [
+        {
+          "name": "altgraph",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "packaging",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "pefile",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "pyinstaller-hooks-contrib",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "pywin32-ctypes",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "setuptools",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "9c1b206444c8d88235b900cd": {
+      "name": "pyinstaller-hooks-contrib",
+      "version": "2026.9",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/93/fe/ded0e20de0580257d97dbabb4db7ab4d96ad8ade7d41149e66308057cf52/pyinstaller_hooks_contrib-2026.9-py3-none-any.whl",
+        "hash": "sha256:fb3e67dd64122561724c48ad0366ac9e8c16e638b63bf7d85de03bf3fdbf06c3",
+        "abi": "pure"
+      },
+      "consumers": [
+        "manager",
+        "dopplerview"
+      ],
+      "dependencies": [
+        {
+          "name": "packaging",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "bfe5e4e3ed873855a1f505b9": {
+      "name": "python-dateutil",
+      "version": "3.0.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/5a/17/cebee01d1c0c1441174cf0456ddc91b280d79acb65340c05e41d77866ee8/python_dateutil-3.0.0-py2.py3-none-any.whl",
+        "hash": "sha256:3c79630202e4152c6add678446984236efe4f57e84d8e892aab0637bab82e9fd",
+        "abi": "pure"
+      },
+      "consumers": [
+        "manager",
+        "holodoppler",
+        "dopplerview",
+        "eyeflow",
+        "angioeye"
+      ],
+      "dependencies": [
+        {
+          "name": "six",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "tzdata",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "5e33f08e269aeaa487e0a8c1": {
+      "name": "python-multipart",
+      "version": "0.0.32",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/e1/04/e8135ebd1ad02c56ec633277529b2602ff99ff634be76cdba5744cf554fd/python_multipart-0.0.32-py3-none-any.whl",
+        "hash": "sha256:ff6d3f776f16878c894e52e107296ffc890e913c611b1a4ec6c44e2821fe2e23",
+        "abi": "pure"
+      },
+      "consumers": [
+        "manager"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "29f8f8fadc16f97a50644438": {
+      "name": "pytz",
+      "version": "2026.5",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/4f/ef/c66110d46fb800dda0bf33164182dfadabe26a90e4476844d502a23dca8e/pytz-2026.5-py2.py3-none-any.whl",
+        "hash": "sha256:e658af3757f9e26a9d25dd2aff38335acd92bc9104f890a894b2c1ba28311b03",
+        "abi": "pure"
+      },
+      "consumers": [
+        "manager"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "c63940b112e351996f4954d0": {
+      "name": "pywin32-ctypes",
+      "version": "0.2.3",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/de/3d/8161f7711c017e01ac9f008dfddd9410dff3674334c233bde66e7ba65bbf/pywin32_ctypes-0.2.3-py3-none-any.whl",
+        "hash": "sha256:8a1513379d709975552d202d942d9837758905c8d01eb82b8bcc30918929e7b8",
+        "abi": "pure"
+      },
+      "consumers": [
+        "manager",
+        "dopplerview"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "2ba75a43839d1c2c6a4998c8": {
+      "name": "pyyaml",
+      "version": "6.0.3",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/97/c9/39d5b874e8b28845e4ec2202b5da735d0199dbe5b8fb85f91398814a9a46/pyyaml-6.0.3-cp313-cp313-win_amd64.whl",
+        "hash": "sha256:79005a0d97d5ddabfeeea4cf676af11e647e41d81c9a7722a193022accdb6b7c",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "manager",
+        "holodoppler",
+        "dopplerview"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "5d0093e8b6cc39822e37dd32": {
+      "name": "referencing",
+      "version": "0.37.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/2c/58/ca301544e1fa93ed4f80d724bf5b194f6e4b945841c5bfd555878eea9fcb/referencing-0.37.0-py3-none-any.whl",
+        "hash": "sha256:381329a9f99628c9069361716891d34ad94af76e461dcb0335825aecc7692231",
+        "abi": "pure"
+      },
+      "consumers": [
+        "manager"
+      ],
+      "dependencies": [
+        {
+          "name": "attrs",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "rpds-py",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "7dd2901de0a48cb40c459cf4": {
+      "name": "requests",
+      "version": "2.34.2",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/a0/f4/c67b0b3f1b9245e8d266f0f112c500d50e5b4e83cb6f3b71b6528104182a/requests-2.34.2-py3-none-any.whl",
+        "hash": "sha256:2a0d60c172f83ac6ab31e4554906c0f3b3588d37b5cb939b1c061f4907e278e0",
+        "abi": "pure"
+      },
+      "consumers": [
+        "manager"
+      ],
+      "dependencies": [
+        {
+          "name": "certifi",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "charset-normalizer",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "idna",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "urllib3",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "2e146f95e3ec0523e758e00f": {
+      "name": "rpds-py",
+      "version": "2026.9.1",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/31/9c/ba5a9569d719bfdd6ce863df4133ac6a1658cf1b07cc3534c31db729fbbc/rpds_py-2026.9.1-cp313-cp313-win_amd64.whl",
+        "hash": "sha256:3e93b2cd69a9830be33e03945cd7cda940a0a8bfcfbff41d6144f0cb0d3d8bd9",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "manager"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "00b70757c34c4e26aa4d0257": {
+      "name": "setuptools",
+      "version": "84.2.1",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/ef/55/6dc6d6bb953bdfc52519a0059592c52b6e3b8ad51cf8256dffceb55b0610/setuptools-84.2.1-py3-none-any.whl",
+        "hash": "sha256:ca140b45d5325a9478f880e351484f62fef15f336462e449ca0c03c873d589c2",
+        "abi": "pure"
+      },
+      "consumers": [
+        "manager",
+        "dopplerview"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "4232969fef824fc21eb175fb": {
+      "name": "six",
+      "version": "1.17.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/b7/ce/149a00dd41f10bc29e5921b496af8b574d8413afcd5e30dfa0ed46c2cc5e/six-1.17.0-py2.py3-none-any.whl",
+        "hash": "sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274",
+        "abi": "pure"
+      },
+      "consumers": [
+        "manager",
+        "holodoppler",
+        "dopplerview",
+        "eyeflow",
+        "angioeye"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "6a544b7678bdf7fe1dfb29bb": {
+      "name": "starlette",
+      "version": "1.9.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/f3/93/181df62699d9b5aca1d87e5cfda131dac87e3cdaebf668662f7206ca3470/starlette-1.9.0-py3-none-any.whl",
+        "hash": "sha256:fd3f159936e882d06c1108f84688f7cda2cf85fc6a592a50edbd175e882c2ddc",
+        "abi": "pure"
+      },
+      "consumers": [
+        "manager"
+      ],
+      "dependencies": [
+        {
+          "name": "anyio",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "97e9f96035042410cb829e61": {
+      "name": "streamlit",
+      "version": "1.66.1",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/4a/eb/f12286b0b5c30e3fd8e45ca47f05a6cd14cb6e583d04ef4409974a17d371/streamlit-1.66.1-py3-none-any.whl",
+        "hash": "sha256:29607190a589fe1fa9bd7e154635d335d47dc09b4010c6cc273daa6e4430ee31",
+        "abi": "pure"
+      },
+      "consumers": [
+        "manager"
+      ],
+      "dependencies": [
+        {
+          "name": "altair",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "anyio",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "click",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "itsdangerous",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "numpy",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "packaging",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "pandas",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "pillow",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "protobuf",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "pyarrow",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "pydeck",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "python-multipart",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "requests",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "starlette",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "typing-extensions",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "uvicorn",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "watchdog",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "websockets",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "50e7b2fe389e920589861640": {
+      "name": "typing-extensions",
+      "version": "4.16.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/49/d3/b8441a820a491ddfc024b0b0cf0393375b75ea13866d9c66727e54c2fc80/typing_extensions-4.16.0-py3-none-any.whl",
+        "hash": "sha256:481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8",
+        "abi": "pure"
+      },
+      "consumers": [
+        "manager",
+        "dopplerview",
+        "eyeflow"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "35e1146433e8b3f00fa8766b": {
+      "name": "tzdata",
+      "version": "2026.5",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/94/21/1e5995a1c920cce14e4bffae20c665ec10e7ed03ab25e006cd741092b718/tzdata-2026.5-py2.py3-none-any.whl",
+        "hash": "sha256:b683bd1b6659ddcd810ff02ad09ba821d4bf1065072805063eb35c49617905ac",
+        "abi": "pure"
+      },
+      "consumers": [
+        "manager",
+        "holodoppler",
+        "dopplerview",
+        "eyeflow",
+        "angioeye"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "e270dae3a0dd2318d0af03a8": {
+      "name": "urllib3",
+      "version": "2.8.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/92/9d/c4e665119135114480843e7ab388fa94d8480650450e6f8e26b70d323a4c/urllib3-2.8.0-py3-none-any.whl",
+        "hash": "sha256:0cf3cae568d36aa9576b28dfb35f11328f1cb974ca7647d9475ebb86c75ac6e3",
+        "abi": "pure"
+      },
+      "consumers": [
+        "manager"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "b35f99111bbdb959ec961109": {
+      "name": "uvicorn",
+      "version": "0.54.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/38/0c/b54a4fdd7f90a3af8b02ebc9ce6712c2c208b7926a2f7bad95c33ebbe943/uvicorn-0.54.0-py3-none-any.whl",
+        "hash": "sha256:505bdb0f318731d45f1f712071fc781a8981f6847a31c902c9f5e652d4f67faf",
+        "abi": "pure"
+      },
+      "consumers": [
+        "manager"
+      ],
+      "dependencies": [
+        {
+          "name": "click",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "h11",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "1f3da75fac482cb5c4bba92c": {
+      "name": "watchdog",
+      "version": "6.0.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/db/d9/c495884c6e548fce18a8f40568ff120bc3a4b7b99813081c8ac0c936fa64/watchdog-6.0.0-py3-none-win_amd64.whl",
+        "hash": "sha256:cbafb470cf848d93b5d013e2ecb245d4aa1c8fd0504e863ccefa32445359d680",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "manager"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "6e7a4b0e1241e55eb1b01e78": {
+      "name": "websockets",
+      "version": "17.3",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/7d/6c/db5c907d1cbea84444bc759ff63db97fc586988d11a34d5565e8b50080fa/websockets-17.3-cp313-cp313-win_amd64.whl",
+        "hash": "sha256:66027e401c70d0cf55021b91b8a7ec2cd5810e20602f945b4fe6ae8b37ed232b",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "manager"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "acb9d5dc795e3c5b8f03d773": {
+      "name": "colorama",
+      "version": "0.4.6",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/d1/d6/3965ed04c63042e047cb6a3e6ed1a63a35087b6a609aa3a15ed8ac56c221/colorama-0.4.6-py2.py3-none-any.whl",
+        "hash": "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6",
+        "abi": "pure"
+      },
+      "consumers": [
+        "holodoppler",
+        "dopplerview",
+        "eyeflow"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "c531be8b238828dfa6a63457": {
+      "name": "contourpy",
+      "version": "1.4.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/68/c1/a59df0754bf83a6f3e153cc19d550a5b01f607e389b1c4d57f436f9139e0/contourpy-1.4.0-cp313-cp313-win_amd64.whl",
+        "hash": "sha256:6507a016976a75a15aee47809a34605de6244ccc056e6164bf9fb14b27eecad4",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "holodoppler",
+        "dopplerview",
+        "eyeflow",
+        "angioeye"
+      ],
+      "dependencies": [
+        {
+          "name": "numpy",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "fe219ff217014d50fdf8496b": {
+      "name": "cuda-pathfinder",
+      "version": "1.8.4",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/8e/93/f0904fa7d954ecc4c0db17c8d63d185d442dd59fc6757f1d1f448c59c256/cuda_pathfinder-1.8.4-py3-none-any.whl",
+        "hash": "sha256:85a4e708c725d603f576042ef32781a3d1737c51e84c35fe361d2680191af65a",
+        "abi": "pure"
+      },
+      "consumers": [
+        "holodoppler"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "32ad7765a1824b542527c07b": {
+      "name": "cupy-cuda13x",
+      "version": "14.2.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/5d/75/9df3c545baad4ff2e384db1ff6c8005fa4040492c4ee5672ca8b8711d29d/cupy_cuda13x-14.2.0-cp313-cp313-win_amd64.whl",
+        "hash": "sha256:f9a2a55abf889f6df68b5f62cd5f3ec4a2f305ac57ed09becd52e16201edcd86",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "holodoppler"
+      ],
+      "dependencies": [
+        {
+          "name": "cuda-pathfinder",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "numpy",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "8e258e86e27264ebcaeb7222": {
+      "name": "cycler",
+      "version": "0.12.1",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/e7/05/c19819d5e3d95294a6f5947fb9b9629efb316b96de511b418c53d245aae6/cycler-0.12.1-py3-none-any.whl",
+        "hash": "sha256:85cef7cff222d8644161529808465972e51340599459b8ac3ccbac5a854e0d30",
+        "abi": "pure"
+      },
+      "consumers": [
+        "holodoppler",
+        "dopplerview",
+        "eyeflow",
+        "angioeye"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "2d533768ca92dd533567520e": {
+      "name": "fonttools",
+      "version": "4.67.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/c1/f6/39e9461211309965514642c005a8d51e866a1092f69f5f693b16de9c5395/fonttools-4.67.0-cp313-cp313-win_amd64.whl",
+        "hash": "sha256:7343cd0ef70edf8be7f4913cb9b55b992fb4e04055b47dcfecddcc2eb045a9d2",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "holodoppler",
+        "dopplerview",
+        "eyeflow",
+        "angioeye"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "2dd22287ef4ee44ce2196347": {
+      "name": "holodoppler",
+      "version": "1.4",
+      "artifact": {
+        "git": "git+https://github.com/DigitalHolography/HoloDoppler.git@054de5f958fcc7bc5bcdc397792449369c1014b6",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "holodoppler"
+      ],
+      "dependencies": [
+        {
+          "name": "cupy-cuda13x",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "h5py",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "imageio",
+          "extra": [
+            "ffmpeg"
+          ],
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "matplotlib",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "numpy",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "opencv-python",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "pillow",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "pyyaml",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "scipy",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "sv-ttk",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "tkinterdnd2",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "tqdm",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "2fd6955a86e4fb3126084ae6": {
+      "name": "imageio",
+      "version": "2.38.1",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/7d/8a/3b7f62b9df56460959f1b9bef094248d2a4d7f393c5b0d2da8efcdf0e40e/imageio-2.38.1-py3-none-any.whl",
+        "hash": "sha256:36d23eb7423d2fb63f637098758edb3d2df3687f7125e0a5ce8596572022dcf9",
+        "abi": "pure"
+      },
+      "consumers": [
+        "holodoppler",
+        "dopplerview",
+        "eyeflow"
+      ],
+      "dependencies": [
+        {
+          "name": "numpy",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "pillow",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "20338883980515d534eccf6b": {
+      "name": "kiwisolver",
+      "version": "1.5.1",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/f5/22/deabbb3ad6d918d74b7831b2d8ae7151b09d21c87974e5ee8a456f58c94c/kiwisolver-1.5.1-cp313-cp313-win_amd64.whl",
+        "hash": "sha256:dc23390afe9f4ef9ac3bcc72a03a56eebbde03f4c571a32cb38f859cff9a6524",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "holodoppler",
+        "dopplerview",
+        "eyeflow",
+        "angioeye"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "76ad8fe08b42c935b883b9f0": {
+      "name": "matplotlib",
+      "version": "3.11.2",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/94/2e/6d1d33f242c705b5c6c6fb3f0fc141add51cb1abb62912e59de0835d28c4/matplotlib-3.11.2-cp313-cp313-win_amd64.whl",
+        "hash": "sha256:bc067c462a86f0e57bf52fc6e058d90171a5420007dac00c46e90153050c69a7",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "holodoppler",
+        "dopplerview",
+        "eyeflow",
+        "angioeye"
+      ],
+      "dependencies": [
+        {
+          "name": "contourpy",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "cycler",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "fonttools",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "kiwisolver",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "numpy",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "packaging",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "pillow",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "pyparsing",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "python-dateutil",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "63010bad04e20910832a118f": {
+      "name": "numpy",
+      "version": "2.4.6",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/b5/cd/9cc4dc876fb065d5c220aae4d5e14826b2715331bb7618ce1fb07a679d99/numpy-2.4.6-cp313-cp313-win_amd64.whl",
+        "hash": "sha256:c4fc99836233ea196540b17ab0983aff60ed07941751930f5f4d05bc3b3b7359",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "holodoppler"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "2ce9d09157ca9457255fe377": {
+      "name": "opencv-python",
+      "version": "5.0.0.93",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/21/f0/9fa6e85cb10c8eb36a0222d27e50fe381b86ce49a55446bf39f491727564/opencv_python-5.0.0.93-cp37-abi3-win_amd64.whl",
+        "hash": "sha256:f90ba04b8f73bc5c3814037699739f0156f597338a98f05956c684e7c3ca10d2",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "holodoppler",
+        "eyeflow"
+      ],
+      "dependencies": [
+        {
+          "name": "numpy",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "e6b740f3730366040b7d30f5": {
+      "name": "psutil",
+      "version": "7.2.2",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/b4/90/e2159492b5426be0c1fef7acba807a03511f97c5f86b3caeda6ad92351a7/psutil-7.2.2-cp37-abi3-win_amd64.whl",
+        "hash": "sha256:eb7e81434c8d223ec4a219b5fc1c47d0417b12be7ea866e24fb5ad6e84b3d988",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "holodoppler",
+        "dopplerview"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "3352ba99c78b770cb7e74aaa": {
+      "name": "pyparsing",
+      "version": "3.3.3",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/38/bb/d215ee7c73b61497b28a5503f9f53523f294fcc936762b7caf90e0c1c2b5/pyparsing-3.3.3-py3-none-any.whl",
+        "hash": "sha256:ece8c00a69cf01b45d0b1dedabb469c90d8caf996d4fda40f147627a122849a4",
+        "abi": "pure"
+      },
+      "consumers": [
+        "holodoppler",
+        "dopplerview",
+        "eyeflow",
+        "angioeye"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "ec0abfffcad62baa5e1c3bc1": {
+      "name": "scipy",
+      "version": "1.18.1",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/93/0e/e0348fbc0dbab65c114cf78957e7dfeb49f8e8b556b4d930cc12ff195e18/scipy-1.18.1-cp313-cp313-win_amd64.whl",
+        "hash": "sha256:559ed65f60c1af5a03f3912605a1b5114f522c7c32fb23c3376ae8f03219fe28",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "holodoppler",
+        "dopplerview",
+        "eyeflow",
+        "angioeye"
+      ],
+      "dependencies": [
+        {
+          "name": "numpy",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "31d2dc97d0ae43cd61d15319": {
+      "name": "sv-ttk",
+      "version": "2.6.1",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/5b/36/32629d8bab9bccd54a36716a960ba1148fca4c1fd453370dba0b42d712ea/sv_ttk-2.6.1-py3-none-any.whl",
+        "hash": "sha256:8ca5944f95431a911986b00c54e7f44608f3f811382cd985fd14bb3e65f95d97",
+        "abi": "pure"
+      },
+      "consumers": [
+        "holodoppler",
+        "dopplerview",
+        "eyeflow",
+        "angioeye"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "c33b4646fdad469f89c889cf": {
+      "name": "tkinterdnd2",
+      "version": "0.6.4",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/73/a6/72313c930c923406bd55fd7d389f6fcab2064ccd76be3590ef9d584cf2cf/tkinterdnd2-0.6.4-py3-none-any.whl",
+        "hash": "sha256:4b11e0ac6febd8609faf154851d782eca4068bfa68a88ca3d3dded8294367f80",
+        "abi": "pure"
+      },
+      "consumers": [
+        "holodoppler",
+        "dopplerview",
+        "eyeflow",
+        "angioeye"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "121b36486858fafa7cf7e253": {
+      "name": "tqdm",
+      "version": "4.70.1",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/a7/03/921a3d3c75785aca9ebfbfcabfbc3a1be12e2ab5265deb026d55a5a3f83e/tqdm-4.70.1-py3-none-any.whl",
+        "hash": "sha256:c293e525e6fef9c20e8728fd4612df02a0aa31bb5fe91ecd93e123b1b7bffa73",
+        "abi": "pure"
+      },
+      "consumers": [
+        "holodoppler",
+        "dopplerview",
+        "eyeflow"
+      ],
+      "dependencies": [
+        {
+          "name": "colorama",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "87633c2a73cdac053c4235c8": {
+      "name": "annotated-doc",
+      "version": "0.0.5",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/3e/30/e900b21425a860e195f32e37657aa1f7c7f2b1bfb26f03ca209b90933c06/annotated_doc-0.0.5-py3-none-any.whl",
+        "hash": "sha256:117bac03a25ede5df5440e855b32d556049ca169ead221505badf432fed4b101",
+        "abi": "pure"
+      },
+      "consumers": [
+        "dopplerview"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "a96e091a2187b9ee89f83380": {
+      "name": "cloudpickle",
+      "version": "3.1.2",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/88/39/799be3f2f0f38cc727ee3b4f1445fe6d5e4133064ec2e4115069418a5bb6/cloudpickle-3.1.2-py3-none-any.whl",
+        "hash": "sha256:9acb47f6afd73f60dc1df93bb801b472f05ff42fa6c84167d25cb206be1fbf4a",
+        "abi": "pure"
+      },
+      "consumers": [
+        "dopplerview",
+        "eyeflow"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "50b73071bdced47fee73b94d": {
+      "name": "dopplerview",
+      "version": "1.8.0",
+      "artifact": {
+        "git": "git+https://github.com/DigitalHolography/DopplerView.git@8250b090275e1ff071516650ccdff8b4ff06ed83",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "dopplerview"
+      ],
+      "dependencies": [
+        {
+          "name": "h5py",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "huggingface-hub",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "matplotlib",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "numpy",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "onnxruntime",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "opencv-python-headless",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "pandas",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "pillow",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "psutil",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "pyinstaller",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "pyyaml",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "scikit-image",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "scikit-learn",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "scipy",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "sv-ttk",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "threadpoolctl",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "tkinterdnd2",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "torch",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "torchvision",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "tqdm",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "typer",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "4cf56fa36ce8a087539bd3bd": {
+      "name": "filelock",
+      "version": "4.2.4",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/e0/1b/5e74289a1878e666bb4b65fe5805a04cafcac2aa5f519ef1ead67ef91c56/filelock-4.2.4-py3-none-any.whl",
+        "hash": "sha256:301241438c57936ef93f4243a94f2559022268bfcf9b375a9a72eb0f8db8358e",
+        "abi": "pure"
+      },
+      "consumers": [
+        "dopplerview"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "ad40e98a422bc127f0c56a15": {
+      "name": "flatbuffers",
+      "version": "25.12.19",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/e8/2d/d2a548598be01649e2d46231d151a6c56d10b964d94043a335ae56ea2d92/flatbuffers-25.12.19-py2.py3-none-any.whl",
+        "hash": "sha256:7634f50c427838bb021c2d66a3d1168e9d199b0607e6329399f04846d42e20b4",
+        "abi": "pure"
+      },
+      "consumers": [
+        "dopplerview"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "13b33389fd05f9842a82ccc2": {
+      "name": "fsspec",
+      "version": "2026.9.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/6c/c0/a98505f18594f1bce828bb159cec0fcf9860562f1a2c85913409fc8f3d9e/fsspec-2026.9.0-py3-none-any.whl",
+        "hash": "sha256:8dd6e646e99ea382bd85f97a45e6b526a442d79423a7dc673f1e2756d05fcb5f",
+        "abi": "pure"
+      },
+      "consumers": [
+        "dopplerview"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "bf2497e7b5563e5a3efcfda8": {
+      "name": "hf-xet",
+      "version": "1.7.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/4d/59/b35106dfa71b6eef605dc88bd038fe99c7f86fb132a15b60d0bf2f235b2c/hf_xet-1.7.0-cp38-abi3-win_amd64.whl",
+        "hash": "sha256:2b7bb5727889b0f2436dbaaad8fc4c3e66b8240d992716989e0c086b4278b1bc",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "dopplerview"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "4b6852043c67caaf906a99d5": {
+      "name": "httpcore2",
+      "version": "2.16.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/af/c2/ce417c397afa5181f0e3c6ff01a4d01639414e1adef08730d97571297151/httpcore2-2.16.0-py3-none-any.whl",
+        "hash": "sha256:5c4358319f2602d984ad93182c9fee5160f22e9da7babdda870a5e7c4e2dc34f",
+        "abi": "pure"
+      },
+      "consumers": [
+        "dopplerview"
+      ],
+      "dependencies": [
+        {
+          "name": "h11",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "truststore",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "d3f70abd57ac5ba947dd2732": {
+      "name": "httpx2",
+      "version": "2.16.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/7b/3d/2e4bc4fd1ef9770871669adb348d612a6e4786b303a23f9935b81c48dd60/httpx2-2.16.0-py3-none-any.whl",
+        "hash": "sha256:fd2c5d7909e8d86fe92d53020c310ca0e4e431b838c207c5754b9bbf0308d49a",
+        "abi": "pure"
+      },
+      "consumers": [
+        "dopplerview"
+      ],
+      "dependencies": [
+        {
+          "name": "anyio",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "httpcore2",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "idna",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "truststore",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "fb0a3573ce41f3930eddbc1f": {
+      "name": "huggingface-hub",
+      "version": "2.3.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/c7/89/5f6ef1162d0323f167b6baab04d1b4bd6a946161a8af6d86f622d9d79aa1/huggingface_hub-2.3.0-py3-none-any.whl",
+        "hash": "sha256:5da369600233568a126eb5578754935b2add9446b42d9e2fc0927d56840ac1a5",
+        "abi": "pure"
+      },
+      "consumers": [
+        "dopplerview"
+      ],
+      "dependencies": [
+        {
+          "name": "click",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "filelock",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "fsspec",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "hf-xet",
+          "marker": "(platform_machine == 'AMD64' and sys_platform == 'win32') or (platform_machine == 'ARM64' and sys_platform == 'win32') or (platform_machine == 'aarch64' and sys_platform == 'win32') or (platform_machine == 'amd64' and sys_platform == 'win32') or (platform_machine == 'arm64' and sys_platform == 'win32') or (platform_machine == 'x86_64' and sys_platform == 'win32')"
+        },
+        {
+          "name": "httpx2",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "packaging",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "pyyaml",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "tqdm",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "typing-extensions",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "f883968e16f515313c66c02e": {
+      "name": "joblib",
+      "version": "1.6.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/18/53/84099323c2ec4be98d935f63c033ac4151ee83836ca1050ede3b3aadf155/joblib-1.6.0-py3-none-any.whl",
+        "hash": "sha256:3dbbf9f6e4b592a2357b854608e980fe6390d131d7a82f011a377ef2ebef7aba",
+        "abi": "pure"
+      },
+      "consumers": [
+        "dopplerview",
+        "eyeflow"
+      ],
+      "dependencies": [
+        {
+          "name": "cloudpickle",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "160931eae3e6a057347d6e9b": {
+      "name": "lazy-loader",
+      "version": "0.6",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/23/93/4e45e37f26c820216704b36b8e67cc55c490a7abd287a78a26a2c0e21386/lazy_loader-0.6-py3-none-any.whl",
+        "hash": "sha256:77253be3391b06124a0e16105bd663b6c54470af1a9ca8e1cf026f38d58ed056",
+        "abi": "pure"
+      },
+      "consumers": [
+        "dopplerview",
+        "eyeflow"
+      ],
+      "dependencies": [
+        {
+          "name": "packaging",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "be01e5b79c04d5c547ca6d3a": {
+      "name": "markdown-it-py",
+      "version": "4.2.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/b3/81/4da04ced5a082363ecfa159c010d200ecbd959ae410c10c0264a38cac0f5/markdown_it_py-4.2.0-py3-none-any.whl",
+        "hash": "sha256:9f7ebbcd14fe59494226453aed97c1070d83f8d24b6fc3a3bcf9a38092641c4a",
+        "abi": "pure"
+      },
+      "consumers": [
+        "dopplerview"
+      ],
+      "dependencies": [
+        {
+          "name": "mdurl",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "81780affb8b8de0e6cb55506": {
+      "name": "mdurl",
+      "version": "0.1.2",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl",
+        "hash": "sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8",
+        "abi": "pure"
+      },
+      "consumers": [
+        "dopplerview"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "36142d30a3588c9bc7c80df1": {
+      "name": "mpmath",
+      "version": "1.3.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/43/e3/7d92a15f894aa0c9c4b49b8ee9ac9850d6e63b03c9c32c0367a13ae62209/mpmath-1.3.0-py3-none-any.whl",
+        "hash": "sha256:a0b2b9fe80bbcd81a6647ff13108738cfb482d481d826cc0e02f5b35e5c88d2c",
+        "abi": "pure"
+      },
+      "consumers": [
+        "dopplerview"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "5924aaa96e5f056d45b14344": {
+      "name": "networkx",
+      "version": "3.7",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/7e/cd/fe58041e9011f307c490e3e17dd48cc516448f7c698a3f2d9d9d65d7e6a8/networkx-3.7-py3-none-any.whl",
+        "hash": "sha256:e3fd2c13a7814cee3746340d8d7f8598a67f16a58bf47fb7f8793fab6efca1b0",
+        "abi": "pure"
+      },
+      "consumers": [
+        "dopplerview",
+        "eyeflow"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "06284629f8a48e3aecc49719": {
+      "name": "onnxruntime",
+      "version": "1.25.1",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/50/83/47964ac7e2f7e2f9e83c69ec466642c6835466252cc2ef0561eafeb56b66/onnxruntime-1.25.1-cp313-cp313-win_amd64.whl",
+        "hash": "sha256:08717d6eee2820807ba60b1b17032af207bd7aaca5b6c4abaee71f83feae877b",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "dopplerview"
+      ],
+      "dependencies": [
+        {
+          "name": "flatbuffers",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "numpy",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "packaging",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "protobuf",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "67a94f088d6ed82eafb9afac": {
+      "name": "opencv-python-headless",
+      "version": "5.0.0.93",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/b8/88/763b967f7efd7226b82c9fae16d560cba049b1f0c036647e65c610fd636e/opencv_python_headless-5.0.0.93-cp37-abi3-win_amd64.whl",
+        "hash": "sha256:829717b6a95554f273e49e357cee3b3a2a26b6f4842fbc1bed2b45bdd8f87e0e",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "dopplerview"
+      ],
+      "dependencies": [
+        {
+          "name": "numpy",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "ce101433acfd04fbc7c579e0": {
+      "name": "pandas",
+      "version": "3.1.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/e3/5c/ea5472e8444f5871427f3a6818725684fcdce74223ca1b22aa7ca345d490/pandas-3.1.0-cp313-cp313-win_amd64.whl",
+        "hash": "sha256:07807035ad66de0d833d68f9bee05801dbf08b88d56a233b0e9fd189372c3261",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "dopplerview",
+        "angioeye"
+      ],
+      "dependencies": [
+        {
+          "name": "numpy",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "python-dateutil",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "tzdata",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "382105b049b07636f734f8ea": {
+      "name": "pygments",
+      "version": "2.21.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/71/46/17f022dd3e953bf20a04a028a21ec746d942f8d2af30fa0f124fa0e6a684/pygments-2.21.0-py3-none-any.whl",
+        "hash": "sha256:2363c69b61c4a97c838da3b130dcd6468f4848992b21a82f2a63ec34377137d9",
+        "abi": "pure"
+      },
+      "consumers": [
+        "dopplerview"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "ae8c6200bf87963db12d7904": {
+      "name": "rich",
+      "version": "15.0.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/82/3b/64d4899d73f91ba49a8c18a8ff3f0ea8f1c1d75481760df8c68ef5235bf5/rich-15.0.0-py3-none-any.whl",
+        "hash": "sha256:33bd4ef74232fb73fe9279a257718407f169c09b78a87ad3d296f548e27de0bb",
+        "abi": "pure"
+      },
+      "consumers": [
+        "dopplerview"
+      ],
+      "dependencies": [
+        {
+          "name": "markdown-it-py",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "pygments",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "a55a425391e5b5de9ae84aaf": {
+      "name": "scikit-image",
+      "version": "0.26.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/8f/58/2b11b933097bc427e42b4a8b15f7de8f24f2bac1fd2779d2aea1431b2c31/scikit_image-0.26.0-cp313-cp313-win_amd64.whl",
+        "hash": "sha256:ac529eb9dbd5954f9aaa2e3fe9a3fd9661bfe24e134c688587d811a0233127f1",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "dopplerview",
+        "eyeflow"
+      ],
+      "dependencies": [
+        {
+          "name": "imageio",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "lazy-loader",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "networkx",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "numpy",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "packaging",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "pillow",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "scipy",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "tifffile",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "f625a486ddf499752787b462": {
+      "name": "scikit-learn",
+      "version": "1.9.1",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/96/45/a10add34c08184d373be9384660c75758128ca881ed27b503b6f6a742478/scikit_learn-1.9.1-cp313-cp313-win_amd64.whl",
+        "hash": "sha256:2070f271e5375dc42c6bb93b461ab1c0aa5841d4009267e0cfd95a39dca94a43",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "dopplerview"
+      ],
+      "dependencies": [
+        {
+          "name": "joblib",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "narwhals",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "numpy",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "scipy",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "threadpoolctl",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "b8104f842b9af7dba666aa7a": {
+      "name": "shellingham",
+      "version": "1.5.4",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/e0/f9/0595336914c5619e5f28a1fb793285925a8cd4b432c9da0a987836c7f822/shellingham-1.5.4-py2.py3-none-any.whl",
+        "hash": "sha256:7ecfff8f2fd72616f7481040475a65b2bf8af90a56c89140852d1120324e8686",
+        "abi": "pure"
+      },
+      "consumers": [
+        "dopplerview"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "2d1a5b858bc607e6ac196a48": {
+      "name": "sympy",
+      "version": "1.14.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/a2/09/77d55d46fd61b4a135c444fc97158ef34a095e5681d0a6c10b75bf356191/sympy-1.14.0-py3-none-any.whl",
+        "hash": "sha256:e091cc3e99d2141a0ba2847328f5479b05d94a6635cb96148ccb3f34671bd8f5",
+        "abi": "pure"
+      },
+      "consumers": [
+        "dopplerview"
+      ],
+      "dependencies": [
+        {
+          "name": "mpmath",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "fda90508bea82b6da13d7d44": {
+      "name": "threadpoolctl",
+      "version": "3.7.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/43/3f/f88a53f60a472b46f4023f56d204dd7de33d34c5d2acbfa0d70a674e639e/threadpoolctl-3.7.0-py3-none-any.whl",
+        "hash": "sha256:cd8b60b5641b45c67bbf73c64c843235fc2d8a480c87389f52f5dbee893b86be",
+        "abi": "pure"
+      },
+      "consumers": [
+        "dopplerview"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "dadfddcf62c0ab6b1c223189": {
+      "name": "tifffile",
+      "version": "2026.10.15",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/5b/bc/9e7664e2d30d4e82ada1b29dbb249d2dcac1ed1114cbbf11764f670d8be7/tifffile-2026.10.15-py3-none-any.whl",
+        "hash": "sha256:3dcf6c56731a45c1f85c81e90dad922b0a380a2d639e77f71207e010f8ef0f7b",
+        "abi": "pure"
+      },
+      "consumers": [
+        "dopplerview",
+        "eyeflow"
+      ],
+      "dependencies": [
+        {
+          "name": "numpy",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "fabcbae2b2836e2f27ac3c1b": {
+      "name": "torch",
+      "version": "2.14.1",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/7b/4b/32c00cacbe682a4c08d9c6c3e7a7116c912184cc7155f06c64f545db97d1/torch-2.14.1-cp313-cp313-win_amd64.whl",
+        "hash": "sha256:711713391d26a1ce5e9fbc6c996d954a8c12e8825374cc77b809a6af29539b8c",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "dopplerview"
+      ],
+      "dependencies": [
+        {
+          "name": "filelock",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "fsspec",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "jinja2",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "networkx",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "setuptools",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "sympy",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "typing-extensions",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "dd62e126a3772c775594a32e": {
+      "name": "torchvision",
+      "version": "0.29.1",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/6f/d7/08452a8497aab125557b7698886990eb1ab3d3a923dedcd88f309a727fe5/torchvision-0.29.1-cp313-cp313-win_amd64.whl",
+        "hash": "sha256:41338cd71864419de9ae1e1b0058f6b8645f0548370c4750c7694ffa9bff611c",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "dopplerview"
+      ],
+      "dependencies": [
+        {
+          "name": "numpy",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "pillow",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "torch",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "1f136b604035983d8358c43f": {
+      "name": "truststore",
+      "version": "0.10.5",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/51/e9/3a7820be2bb0fe53b6bc9c3be26d3d1158004e4c3ab953aa6840b955b1e9/truststore-0.10.5-py3-none-any.whl",
+        "hash": "sha256:9aaaedaefaf06d8b206278cf8b5012bc897f485a874503501e12d776df78951c",
+        "abi": "pure"
+      },
+      "consumers": [
+        "dopplerview"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "0fc0c910e3e579cbaf7aa889": {
+      "name": "typer",
+      "version": "0.27.3",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/07/ea/2e31b67051e91a133189e9c000c222502ddc6969856416de0d095de4c0b0/typer-0.27.3-py3-none-any.whl",
+        "hash": "sha256:e50022f28b82a86313e54501317a1db64bf8f8d036ff8cfe5ca7e47675454aff",
+        "abi": "pure"
+      },
+      "consumers": [
+        "dopplerview"
+      ],
+      "dependencies": [
+        {
+          "name": "annotated-doc",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "colorama",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "rich",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "shellingham",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "f99f49a20afbfe72a0790b6f": {
+      "name": "annotated-types",
+      "version": "0.8.0",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/99/91/8acff4f5e50511b911bbccb72b8628a49c68ce14148cd9f6431094859a90/annotated_types-0.8.0-py3-none-any.whl",
+        "hash": "sha256:f072f4d804ea359e4eaf198b1af7a8b0943881a87f31bb764f8bf219bb9419e0",
+        "abi": "pure"
+      },
+      "consumers": [
+        "eyeflow"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "cb02c30ecaf261f5d13b6e11": {
+      "name": "eyeflow",
+      "version": "1.23.0",
+      "artifact": {
+        "git": "git+https://github.com/DigitalHolography/EyeFlow.git@ea90ea97d4da8ab5f1a732d1929f526f1a052a64",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "eyeflow"
+      ],
+      "dependencies": [
+        {
+          "name": "h5py",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "joblib",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "matplotlib",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "numpy",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "opencv-python",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "pillow",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "pydantic",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "scikit-image",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "scipy",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "simpleitk",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "sv-ttk",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "tkinterdnd2",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "tqdm",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "3ed3f2e37e6a8323b39657a9": {
+      "name": "pydantic",
+      "version": "2.14.1",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/35/ea/a56b9fe5066f3537b7882f77e9c5dfb26d8c2eefdaed9b5fc73d57b4dc22/pydantic-2.14.1-py3-none-any.whl",
+        "hash": "sha256:9195d967ec791692a04438115466764fb8b9a27b31f14a760437694f40d6b454",
+        "abi": "pure"
+      },
+      "consumers": [
+        "eyeflow"
+      ],
+      "dependencies": [
+        {
+          "name": "annotated-types",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "pydantic-core",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "typing-extensions",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "typing-inspection",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "fecced32e32336d18671abff": {
+      "name": "pydantic-core",
+      "version": "2.50.1",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/2d/1f/323f78ddd9d9938aac420c1abb4e8ba799fc8bdab0acc67c0593b837c979/pydantic_core-2.50.1-cp313-cp313-win_amd64.whl",
+        "hash": "sha256:7816e98acc08119dc0f340ab167048ecc54126316330c1f0caf7c6756c88e28f",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "eyeflow"
+      ],
+      "dependencies": [
+        {
+          "name": "typing-extensions",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "a3a826cd86d7074103e57681": {
+      "name": "simpleitk",
+      "version": "2.5.6",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/16/d0/a746280d0987413e443c26f19fe5c559fb3034160ee0a7307ae2d85e8d59/simpleitk-2.5.6-cp311-abi3-win_amd64.whl",
+        "hash": "sha256:0002b298efb31332f99587cf26ed9f42c2c3ec006a0570f492dfc9ea27303d73",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "eyeflow"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "755ec59c2696919572516ef9": {
+      "name": "typing-inspection",
+      "version": "0.4.4",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/67/81/4add07e5172b7ac40d8ed5ff580409a7801a4fe26d529bdd915401dabfbe/typing_inspection-0.4.4-py3-none-any.whl",
+        "hash": "sha256:65b8397ba37ccbce054456aaccddfc91e6e3083c92824df348d96ca832f3f147",
+        "abi": "pure"
+      },
+      "consumers": [
+        "eyeflow"
+      ],
+      "dependencies": [
+        {
+          "name": "typing-extensions",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "9dd06b99923f9354b939849d": {
+      "name": "angioeye",
+      "version": "1.24.0",
+      "artifact": {
+        "git": "git+https://github.com/DigitalHolography/AngioEye.git@d3d283af9d3d14e7bfeeb0e7b634ff1863af751d",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "angioeye"
+      ],
+      "dependencies": [
+        {
+          "name": "h5py",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "matplotlib",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "numpy",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "pandas",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "scipy",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "sv-ttk",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "tkinterdnd2",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    }
+  },
+  "python_versions": [
+    "3.13.14"
+  ],
+  "compatibility": {
+    "manager": [
+      "3.13.14"
+    ],
+    "holodoppler": [
+      "3.13.14"
+    ],
+    "dopplerview": [
+      "3.13.14"
+    ],
+    "eyeflow": [
+      "3.13.14"
+    ],
+    "angioeye": [
+      "3.13.14"
+    ]
+  },
+  "resolution_failures": {},
+  "pinned_requirements": {
+    "manager": [
+      "packaging>=24",
+      "h5py>=3.10",
+      "imageio-ffmpeg>=0.5",
+      "pandas>=2.0,<3",
+      "pyarrow>=23,<24",
+      "pyyaml>=6",
+      "streamlit>=1.35",
+      "pyinstaller>=6.0,<7"
+    ],
+    "holodoppler": [
+      "holodoppler @ git+https://github.com/DigitalHolography/HoloDoppler.git@054de5f958fcc7bc5bcdc397792449369c1014b6"
+    ],
+    "dopplerview": [
+      "dopplerview @ git+https://github.com/DigitalHolography/DopplerView.git@8250b090275e1ff071516650ccdff8b4ff06ed83",
+      "onnxruntime>=1.25,<1.26"
+    ],
+    "eyeflow": [
+      "EyeFlow @ git+https://github.com/DigitalHolography/EyeFlow.git@ea90ea97d4da8ab5f1a732d1929f526f1a052a64"
+    ],
+    "angioeye": [
+      "AngioEye @ git+https://github.com/DigitalHolography/AngioEye.git@d3d283af9d3d14e7bfeeb0e7b634ff1863af751d"
+    ]
+  },
+  "projects": {
+    "manager": "apps/manager",
+    "holodoppler": "apps/holodoppler",
+    "dopplerview": "apps/dopplerview",
+    "eyeflow": "apps/eyeflow",
+    "angioeye": "apps/angioeye"
+  },
+  "lock_hashes": {
+    "apps/manager/pyproject.toml": "13c08cd5903dba91c17f4d0364706eb30edcf5fe4cfe28785f530e40d7360173",
+    "apps/manager/uv.lock": "88a8e45014746acb06b9e43ec16f0ac730568fc3cb2bc429ecccac22d11604ab",
+    "apps/holodoppler/pyproject.toml": "2591f018f0222e3e56735c7cbffcba8a801903f09565902044c6d093fea1541b",
+    "apps/holodoppler/uv.lock": "db832c4d5d0a89977b415eb8f000205f0e193319bde300e83cece543493000d1",
+    "apps/dopplerview/pyproject.toml": "786f05174b1217b5d037bb2cb72708135244f0f8bed3b32e929af89ce8d6aaad",
+    "apps/dopplerview/uv.lock": "de6d4a598353206f02edcc6caf6118dafa2e0d6a3c03ae5c9d5a7a7fbe826c4d",
+    "apps/eyeflow/pyproject.toml": "a27d67fb15a6395ff30a6eb31b62bbcda8cb70f26239a35c29eddf6c6fd96274",
+    "apps/eyeflow/uv.lock": "63b0da803c68a697d542da8c7c97cee20f9c131e4176ee62c3bdb42a573f6d7a",
+    "apps/angioeye/pyproject.toml": "3527fd582496beba31b980f39844b4aad71143229c5f858e31d70953981d762f",
+    "apps/angioeye/uv.lock": "10191a1bec8e698504c8d0d118756bfee973ec89582008253b833f2e77abac94"
+  },
+  "id": "cc21ae172f70f5d82c126a2b"
+}

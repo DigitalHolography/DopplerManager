@@ -4,8 +4,8 @@ from types import SimpleNamespace
 
 import pytest
 
-import doppler_manager.release_defaults as release_defaults
-import doppler_manager.sync_processing as sync_processing
+from doppler_manager.runtime import defaults as release_defaults
+from doppler_manager.runtime.apps import RUNTIMES
 
 
 def _write(path: Path, content: str) -> None:
@@ -31,7 +31,7 @@ def test_sync_restores_defaults_when_package_versions_are_unchanged(
         workspace / "pyproject.toml",
         Path("pyproject.toml").read_text(encoding="utf-8"),
     )
-    for runtime in sync_processing.RUNTIMES.values():
+    for runtime in RUNTIMES.values():
         (runtime_root / runtime.project_name / ".venv").mkdir(parents=True)
     cache = tmp_path / "uv-cache"
     expected: dict[Path, str] = {}
@@ -67,31 +67,12 @@ def test_sync_restores_defaults_when_package_versions_are_unchanged(
 
     monkeypatch.setenv("UV_CACHE_DIR", str(cache))
     monkeypatch.setattr(
-        sync_processing, "__file__",
-        str(workspace / "src/doppler_manager/sync_processing.py"),
-    )
-    monkeypatch.setattr(
-        sync_processing, "_parse_args",
-        lambda: SimpleNamespace(
-            environment_root=str(runtime_root) if custom_root else None
-        ),
-    )
-    monkeypatch.setattr(
-        sync_processing, "_ensure_environment",
-        lambda environment, _version: environment / "python",
-    )
-    monkeypatch.setattr(
-        sync_processing, "_copy_runtime_support_files", lambda *_args: None
-    )
-    # Model an install where uv finds every requirement already satisfied.
-    monkeypatch.setattr(sync_processing, "_run_uv", lambda *_args: None)
-    monkeypatch.setattr(
         release_defaults.metadata, "distribution",
         lambda name: pytest.fail(f"Unexpected manager distribution lookup: {name}"),
     )
     monkeypatch.chdir(tmp_path)
 
-    assert sync_processing.main() == 0
+    release_defaults.sync_processing_defaults(workspace / "processing_defaults", environment_root=runtime_root)
     target = workspace / "processing_defaults"
     for relative, content in expected.items():
         assert (target / relative).read_text(encoding="utf-8") == content
@@ -100,6 +81,6 @@ def test_sync_restores_defaults_when_package_versions_are_unchanged(
     _write(target / "eyeflow/default_settings.json", "{}")
     (target / "holodoppler/default_parameters_simple.yaml").unlink()
 
-    assert sync_processing.main() == 0
+    release_defaults.sync_processing_defaults(workspace / "processing_defaults", environment_root=runtime_root)
     for relative, content in expected.items():
         assert (target / relative).read_text(encoding="utf-8") == content

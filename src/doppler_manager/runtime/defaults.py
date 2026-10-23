@@ -5,7 +5,7 @@ import shutil
 from importlib import metadata
 from pathlib import Path
 
-from ._external_cli_runner import _project_name, _uv_git_checkout_roots
+from doppler_manager._external_cli_runner import _project_name, _uv_git_checkout_roots
 
 
 HOLODOPPLER_SETTINGS_SUFFIXES = frozenset({".json", ".yaml", ".yml"})
@@ -70,6 +70,16 @@ def _distribution(
     if environment_root is None:
         return metadata.distribution(name)
 
+    from .manifest import selected_generation
+
+    generation = selected_generation(Path(environment_root))
+    if generation is not None:
+        data = json.loads((generation / "runtime.json").read_text(encoding="utf-8"))
+        search_paths = [generation / relative for relative in data["apps"][project.lower()]["paths"]]
+        for installed in metadata.distributions(path=[str(path) for path in search_paths]):
+            if installed.metadata.get("Name", "").lower() == name.lower():
+                return installed
+        raise metadata.PackageNotFoundError(name)
     environment = Path(environment_root) / project.lower() / ".venv"
     search_paths = [
         environment / "Lib" / "site-packages",

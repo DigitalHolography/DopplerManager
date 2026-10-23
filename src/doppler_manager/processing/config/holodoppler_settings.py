@@ -5,7 +5,7 @@ import os
 from collections.abc import Sequence
 from pathlib import Path
 
-from doppler_manager import release_defaults
+from doppler_manager.runtime import defaults as release_defaults
 from doppler_manager.processing.core.paths import safe_resolve
 
 from . import defaults

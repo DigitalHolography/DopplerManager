@@ -1,7 +1,9 @@
-software_pipeline_validation/
-.venv/
-.venv-release/
-.venv-release-runtimes/
+# Local environments, including legacy release environments.
+/.venv/
+/.venv-release/
+/.venv-release-runtimes/
+
+# Python and test caches.
 __pycache__/
 *.py[cod]
 *$py.class
@@ -11,19 +13,30 @@ __pycache__/
 /.cache/
 .coverage
 htmlcov/
-dist/
-build/
 *.egg-info/
+
+# Build payloads, generated specs, diagnostic scripts and validation evidence.
+/dist/
+/build/
+/software_pipeline_validation/
+
+# Credentials and editor state.
 .env
 .env.*
 .vscode/
 .idea/
-.streamlit/secrets.toml
-.doppler_cache/
-processing_defaults/
-processing_runtimes/*/.venv/
-processing_runtimes/*/uv.lock
-/processing_runtimes/current.json
-/processing_runtimes/generations/
+/.streamlit/secrets.toml
+
+# Generated application data. Runtime generations contain no maintained source.
+/.doppler_cache/
+/processing_defaults/
+/processing_runtimes/
+
+# Dependency tooling cache and transactional bundle staging. Selected locks in
+# dependencies/<platform>/apps remain versioned.
+/.cache/doppler-manager/
 /dependencies/.*.lock
+/dependencies/.*.stage-*/
+/dependencies/.*.backup-*/
+/dependencies/**/.venv/
 *.log

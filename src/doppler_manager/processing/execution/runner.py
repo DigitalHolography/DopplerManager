@@ -9,6 +9,7 @@ import traceback
 from collections.abc import Callable, Sequence
 
 from doppler_manager.logs import processing_log, processing_log_path
+from doppler_manager.runtime.external_process import external_library_search
 from doppler_manager.processing.core.constants import PROGRESS_LOG_PREFIX
 from doppler_manager.processing.core.models import JobResult, ProcessingJob
 from doppler_manager.processing.runtimes import runtime_environment
@@ -92,16 +93,17 @@ def run_single_job(job: ProcessingJob, on_log: Callable[[str], None]) -> JobResu
     )
 
     try:
-        process = subprocess.Popen(
-            list(job.command),
-            cwd=str(job.cwd),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            stdin=subprocess.DEVNULL,
-            bufsize=0,
-            env=env,
-            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
-        )
+        with external_library_search():
+            process = subprocess.Popen(
+                list(job.command),
+                cwd=str(job.cwd),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                stdin=subprocess.DEVNULL,
+                bufsize=0,
+                env=env,
+                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+            )
     except FileNotFoundError as exc:
         on_log(f"[FAIL] Could not launch {job.command[0]} (cwd={job.cwd}): {exc}")
         return JobResult(job=job, returncode=127)
