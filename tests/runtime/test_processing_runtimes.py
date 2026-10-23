@@ -4,7 +4,6 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import doppler_manager.processing.runtimes as runtimes
-from doppler_manager.sync_processing import _runtime_manifest
 
 
 def test_runtime_definitions_cover_each_processing_stage() -> None:
@@ -17,17 +16,6 @@ def test_runtime_definitions_cover_each_processing_stage() -> None:
         "ae": "angioeye",
     }
     assert len({runtime.project_name for runtime in runtimes.RUNTIMES.values()}) == 4
-
-
-def test_runtime_manifest_pins_holodoppler_compatibility() -> None:
-    manifest = _runtime_manifest(Path("pyproject.toml"))
-
-    assert manifest["hd"].python_version == "3.13"
-    assert "cinereader>=1.4.3" in manifest["hd"].requirements
-    assert "numba>=0.65.1,<0.67" in manifest["hd"].requirements
-    assert manifest["dv"].python_version is None
-    assert manifest["ef"].python_version is None
-    assert manifest["ae"].python_version is None
 
 
 def test_runtime_catalog_decodes_isolated_bridge_response(
@@ -69,7 +57,7 @@ def test_runtime_catalog_decodes_isolated_bridge_response(
             stderr="",
         )
 
-    monkeypatch.setattr(runtimes.subprocess, "run", fake_run)
+    monkeypatch.setattr(runtimes, "run_external", fake_run)
 
     available, missing = runtimes.runtime_catalog("ae", "pipelines")
 
@@ -129,9 +117,15 @@ def test_runtime_catalog_does_not_require_a_project_cwd(
             stderr="",
         )
 
-    monkeypatch.setattr(runtimes.subprocess, "run", fake_run)
+    monkeypatch.setattr(runtimes, "run_external", fake_run)
 
     assert runtimes.runtime_catalog("ae", "pipelines") == ((), ())
+
+
+def test_eyeflow_environment_does_not_inject_manager_support(monkeypatch, tmp_path):
+    monkeypatch.setenv("PYTHONPATH", str(tmp_path / "inherited"))
+    monkeypatch.setattr(runtimes, "runtime_project_dir", lambda _stage: tmp_path)
+    assert "PYTHONPATH" not in runtimes.runtime_environment("ef")
 
 
 def test_runtime_bridge_serializes_pipeline_and_postprocess_fields() -> None:

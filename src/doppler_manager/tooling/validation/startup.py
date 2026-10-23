@@ -1,0 +1,66 @@
+"""Runtime import and CLI probes; all evidence is written outside the runtime."""
+from __future__ import annotations
+
+import json
+import os
+import subprocess
+from pathlib import Path
+
+from doppler_manager.runtime.manifest import invocation
+
+def runtime_env(root: Path) -> dict[str, str]:
+    env = os.environ.copy()
+    for key in ("PYTHONPATH", "PYTHONHOME", "VIRTUAL_ENV"):
+        env.pop(key, None)
+    from doppler_manager.runtime.apps import RUNTIMES
+    env.pop("DM_PROCESSING_RUNTIME_ROOT", None)
+    env.pop("DM_PROCESSING_LOG", None)
+    for runtime in RUNTIMES.values():
+        env.pop(runtime.environment_variable, None)
+        env.pop(f"DM_{runtime.project_name.upper()}_COMMAND", None)
+    # Configs, model caches and logs from validation must not overwrite a running app's.
+    env.update(APPDATA=str(root / "roaming"), LOCALAPPDATA=str(root / "local"),
+               MPLCONFIGDIR=str(root / "matplotlib"), HF_HOME=str(root / "huggingface"),
+               PYTHONDONTWRITEBYTECODE="1", PYTHONIOENCODING="utf-8")
+    for key in ("APPDATA", "LOCALAPPDATA", "MPLCONFIGDIR", "HF_HOME"):
+        Path(env[key]).mkdir(parents=True, exist_ok=True)
+    return env
+
+
+IMPORTS = {
+    "manager": "import streamlit, h5py, pandas; import doppler_manager.app",
+    "holodoppler": "import holodoppler.cli",
+    "dopplerview": "import dopplerview.cli",
+    "eyeflow": "from launcher import cli_main; import eye_flow",
+    "angioeye": "from launcher import cli_main; import angio_eye",
+}
+
+
+def validate(root: Path, *, output: Path, frozen_exe: Path | None = None) -> list[dict]:
+    if output.resolve().is_relative_to(root.resolve()):
+        raise ValueError("Validation output must be outside the runtime directory")
+    manifest = json.loads((root / "runtime.json").read_text(encoding="utf-8"))
+    output.mkdir(parents=True, exist_ok=True)
+    env = runtime_env(output / "appdata")
+    evidence = []
+    from doppler_manager.runtime.apps import RUNTIMES
+    launchers = {v.project_name: v.launcher_args for v in RUNTIMES.values()}
+    for app in manifest["apps"]:
+        commands = [invocation(root, app, ("-c", IMPORTS[app] + "; print('IMPORT_OK')"))]
+        if app in launchers:
+            commands.append(invocation(root, app, (*launchers[app], "--help")))
+        if frozen_exe and app in launchers:
+            stage = next(k for k, v in RUNTIMES.items() if v.project_name == app)
+            commands.append((str(frozen_exe), "--dm-processing-cli", stage, "--help"))
+        for command in commands:
+            result = subprocess.run(command, env=env, cwd=root, capture_output=True,
+                                    text=True, errors="replace", timeout=180,
+                                    creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+            record = {"app": app, "command": list(command), "returncode": result.returncode,
+                      "stdout": result.stdout, "stderr": result.stderr}
+            evidence.append(record)
+            if result.returncode:
+                (output / "validation.json").write_text(json.dumps(evidence, indent=2), encoding="utf-8")
+                raise RuntimeError(f"Runtime validation failed for {app}: {result.stderr or result.stdout}")
+    (output / "validation.json").write_text(json.dumps(evidence, indent=2), encoding="utf-8")
+    return evidence

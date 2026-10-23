@@ -771,7 +771,7 @@ def test_processing_run_keeps_jobs_and_logs_outside_the_streamlit_rerun(
         "[CMD] " + processing.format_command(job.command),
         "started",
         "finished",
-        "[OK] acq-1: Holodoppler",
+        "[OK] acq-1: Holodoppler exited with code 0.",
     ]
     assert all(entry["files"] == ("acq-1",) for entry in snapshot.log_entries)
     assert run.selected_file_ids == ("acq-1",)

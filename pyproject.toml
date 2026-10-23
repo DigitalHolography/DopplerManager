@@ -5,6 +5,7 @@ description = "Streamlit MVP for detecting and verifying Holodoppler processing 
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "packaging>=24",
     "h5py>=3.10",
     "imageio-ffmpeg>=0.5",
     "pandas>=2.0,<3",
@@ -15,13 +16,15 @@ dependencies = [
 
 [project.scripts]
 dopplermanager = "doppler_manager.launcher:launch"
-sync = "doppler_manager.sync_processing:main"
+sync = "doppler_manager.tooling.sync:main"
+dependency-plan = "doppler_manager.tooling.dependencies.__main__:main"
+
+[tool.doppler_manager.dependency_plan]
+python_candidates = ["3.13", "3.14", "3.12"]
 
 [tool.doppler_manager.processing_runtimes]
 hd = [
     "holodoppler @ git+https://github.com/DigitalHolography/HoloDoppler.git@main",
-    "cinereader>=1.4.3",
-    "numba>=0.65.1,<0.67",
 ]
 dv = [
     "dopplerview @ git+https://github.com/DigitalHolography/DopplerView.git@main",
@@ -33,9 +36,6 @@ ef = [
 ae = [
     "AngioEye @ git+https://github.com/DigitalHolography/AngioEye.git@main",
 ]
-
-[tool.doppler_manager.processing_runtimes.python]
-hd = "3.13"
 
 [build-system]
 requires = ["hatchling"]

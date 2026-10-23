@@ -1,0 +1,11 @@
+[project]
+name = "dm-plan-dopplerview"
+version = "0.0.0"
+requires-python = "==3.13.14"
+dependencies = [
+  "dopplerview @ git+https://github.com/DigitalHolography/DopplerView.git@8250b090275e1ff071516650ccdff8b4ff06ed83",
+  "onnxruntime>=1.25,<1.26"
+]
+[tool.uv]
+package = false
+environments = ["sys_platform == 'win32'"]

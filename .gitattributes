@@ -1,0 +1,4 @@
+# Generated lock-input hashes must survive Windows checkouts unchanged.
+*.toml text eol=lf
+*.lock text eol=lf
+/dependencies/**/runtime-lock.json text eol=lf

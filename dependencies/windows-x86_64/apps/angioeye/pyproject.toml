@@ -1,0 +1,10 @@
+[project]
+name = "dm-plan-angioeye"
+version = "0.0.0"
+requires-python = "==3.13.14"
+dependencies = [
+  "AngioEye @ git+https://github.com/DigitalHolography/AngioEye.git@d3d283af9d3d14e7bfeeb0e7b634ff1863af751d"
+]
+[tool.uv]
+package = false
+environments = ["sys_platform == 'win32'"]

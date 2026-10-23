@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-import doppler_manager.release_defaults as release_defaults
+from doppler_manager.runtime import defaults as release_defaults
 
 
 def _write(path: Path, text: str = "{}") -> None:
