@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import traceback
 from collections import deque
 from collections.abc import Sequence
 from dataclasses import dataclass
 from threading import Lock, Thread
 from typing import Optional
 
+from doppler_manager.logs import log_manager
 from doppler_manager.processing.core.constants import PROGRESS_LOG_PREFIX
 from doppler_manager.processing.core.models import JobResult, ProcessingJob
 
@@ -99,6 +101,7 @@ class ProcessingRun:
     def append_manager_log(self, line: str) -> None:
         """Add a UI-owned log entry after the worker has finished."""
 
+        log_manager(line)
         with self._lock:
             self._current_file_ids = ()
             self._current_app = PROCESSING_LOG_MANAGER_APP
@@ -115,6 +118,7 @@ class ProcessingRun:
                 on_job=self._set_job_context,
             )
         except Exception as exc:  # noqa: BLE001
+            log_manager(f"[FAIL] Processing worker stopped unexpectedly: {exc}\n{traceback.format_exc()}")
             self._append_log(f"[FAIL] Processing worker stopped unexpectedly: {exc}")
             with self._lock:
                 self._error = str(exc)

@@ -54,7 +54,7 @@ Type: files; Name: "{autoprograms}\Doppler Manager Scan diagnostic log.lnk"
 [Icons]
 Name: "{autoprograms}\{#MyAppName} {#MyAppVersion}"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; IconFilename: "{app}\{#MyAppExeName}"
 Name: "{autoprograms}\Stop {#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Parameters: "--stop"; WorkingDir: "{app}"; IconFilename: "{app}\{#MyAppExeName}"
-Name: "{autoprograms}\{#MyAppName} diagnostic log"; Filename: "{sys}\notepad.exe"; Parameters: """{localappdata}\DopplerManager\logs\DopplerManager.log"""
+Name: "{autoprograms}\{#MyAppName} diagnostic log"; Filename: "{sys}\notepad.exe"; Parameters: """{userappdata}\DopplerManager\logs\DopplerManager.log"""
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; IconFilename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Run]

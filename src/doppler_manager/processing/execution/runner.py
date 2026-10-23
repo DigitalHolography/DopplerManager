@@ -5,8 +5,10 @@ import os
 import shutil
 import subprocess
 import time
+import traceback
 from collections.abc import Callable, Sequence
 
+from doppler_manager.logs import processing_log, processing_log_path
 from doppler_manager.processing.core.constants import PROGRESS_LOG_PREFIX
 from doppler_manager.processing.core.models import JobResult, ProcessingJob
 from doppler_manager.processing.runtimes import runtime_environment
@@ -30,46 +32,40 @@ def run_processing_jobs(
     for job in jobs:
         if on_job is not None:
             on_job(job)
-        if job.acquisition_id in failed_acquisitions:
-            on_log(f"[SKIP] {job.description}: upstream stage failed.")
-            continue
+        with processing_log(
+            job.stage, job.acquisition_id, job.command, job.cwd, on_log
+        ) as emit:
+            if job.acquisition_id in failed_acquisitions:
+                emit(f"[SKIP] {job.description}: upstream stage failed.")
+                continue
 
-        on_log(f"[START] {job.description}")
+            emit(f"[START] {job.description}")
+            try:
+                prepare_processing_output(job, emit)
+            except Exception as exc:  # noqa: BLE001
+                result = JobResult(job=job, returncode=1)
+                results.append(result)
+                failed_acquisitions.add(job.acquisition_id)
+                emit(f"[FAIL] Could not prepare {job.description}: {exc}\n{traceback.format_exc()}")
+                continue
 
-        try:
-            prepare_processing_output(job, on_log)
-        except Exception as exc:  # noqa: BLE001
-            result = JobResult(job=job, returncode=1)
+            emit(f"[CMD] {format_command(job.command)}")
+            try:
+                result = run_single_job(job, emit)
+                if result.succeeded and job.stage == "ef":
+                    install_eyeflow_output(job, emit)
+                if result.succeeded and job.stage == "ae":
+                    install_angioeye_output(job, emit)
+            except Exception as exc:  # noqa: BLE001
+                emit(f"[FAIL] Could not execute {job.description}: {exc}\n{traceback.format_exc()}")
+                result = JobResult(job=job, returncode=1)
             results.append(result)
-            failed_acquisitions.add(job.acquisition_id)
-            on_log(f"[FAIL] Could not prepare {job.description}: {exc}")
-            continue
 
-        on_log(f"[CMD] {format_command(job.command)}")
-        result = run_single_job(job, on_log)
-        results.append(result)
-
-        if result.succeeded and job.stage == "ef":
-            try:
-                install_eyeflow_output(job, on_log)
-            except Exception as exc:  # noqa: BLE001
-                on_log(f"[FAIL] Could not install EyeFlow output: {exc}")
-                result = JobResult(job=job, returncode=1)
-                results[-1] = result
-
-        if result.succeeded and job.stage == "ae":
-            try:
-                install_angioeye_output(job, on_log)
-            except Exception as exc:  # noqa: BLE001
-                on_log(f"[FAIL] Could not install AngioEye output: {exc}")
-                result = JobResult(job=job, returncode=1)
-                results[-1] = result
-
-        if result.succeeded:
-            on_log(f"[OK] {job.description}")
-        else:
-            failed_acquisitions.add(job.acquisition_id)
-            on_log(f"[FAIL] {job.description} exited with code {result.returncode}.")
+            if result.succeeded:
+                emit(f"[OK] {job.description} exited with code {result.returncode}.")
+            else:
+                failed_acquisitions.add(job.acquisition_id)
+                emit(f"[FAIL] {job.description} exited with code {result.returncode}.")
 
     return results
 
@@ -90,6 +86,10 @@ def run_single_job(job: ProcessingJob, on_log: Callable[[str], None]) -> JobResu
     runtime_stage = "ae" if job.stage == "ae_postprocess" else job.stage
     env = runtime_environment(runtime_stage)
     env["PYTHONUNBUFFERED"] = "1"
+    env["PYTHONIOENCODING"] = "utf-8"
+    env["DM_PROCESSING_LOG"] = str(
+        processing_log_path(job.stage, job.acquisition_id, job.command)
+    )
 
     try:
         process = subprocess.Popen(
@@ -102,8 +102,8 @@ def run_single_job(job: ProcessingJob, on_log: Callable[[str], None]) -> JobResu
             env=env,
             creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
         )
-    except FileNotFoundError:
-        on_log(f"[FAIL] Command not found: {job.command[0]}")
+    except FileNotFoundError as exc:
+        on_log(f"[FAIL] Could not launch {job.command[0]} (cwd={job.cwd}): {exc}")
         return JobResult(job=job, returncode=127)
 
     assert process.stdout is not None

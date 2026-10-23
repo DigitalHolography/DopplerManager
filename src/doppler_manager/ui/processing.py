@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-import html
 import copy
+import html
+import traceback
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Any, Optional
@@ -9,6 +10,7 @@ from typing import Any, Optional
 import pandas as pd
 import streamlit as st
 
+from doppler_manager.logs import log_manager
 from doppler_manager.models import AcquisitionResult, ScanResult
 from doppler_manager.processing import (
     PROCESSING_STAGES,
@@ -235,6 +237,7 @@ def render_processing_tab(
                 angioeye_postprocesses=selected_angioeye_postprocesses,
             )
         except Exception as exc:  # noqa: BLE001
+            log_manager(f"[FAIL] Could not build processing jobs: {exc}\n{traceback.format_exc()}")
             st.error(str(exc))
             return
         if not jobs:

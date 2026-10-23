@@ -222,8 +222,18 @@ git push origin v1.7.3
 If the installed executable does not open a browser on another PC, check the diagnostic log:
 
 ```text
-%LOCALAPPDATA%\DopplerManager\logs\DopplerManager.log
+%APPDATA%\DopplerManager\logs\DopplerManager.log
 ```
+
+This main log records application events and processing summaries. Full processing
+output is saved in the `Holodoppler`, `DopplerView`, `EyeFlow`, and `AngioEye`
+subfolders of the same logs directory. For example, DopplerView runs on `test.holo`
+write to `%APPDATA%\DopplerManager\logs\DopplerView\test.log`.
+Repeated runs append timestamped sections with a unique run ID, command, working
+directory, output, errors, and exit status. These files retain all emitted log
+lines independently of the UI's rolling log. Existing logs in LocalAppData are
+left in place; new logs use Roaming AppData. Runtime state and preview caches
+remain in LocalAppData because they are specific to this computer.
 
 The installer also creates Start Menu shortcuts named:
 

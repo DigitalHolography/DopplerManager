@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Protocol
 
 from doppler_manager.release_defaults import sync_processing_defaults
+from doppler_manager.logs import append_log, main_log_path
 
 
 APP_NAME = "DopplerManager"
@@ -141,9 +142,7 @@ def _runtime_script_path() -> Path:
 
 
 def _log_path() -> Path:
-    path = _runtime_dir() / "logs" / LOG_FILE_NAME
-    path.parent.mkdir(parents=True, exist_ok=True)
-    return path
+    return main_log_path()
 
 
 def _state_path() -> Path:
@@ -381,6 +380,11 @@ def _configure_stdio(log_path: Path) -> None:
     if sys.stdout is not None and sys.stderr is not None:
         return
 
+    # A windowed frozen CLI dispatcher has no Python stdio streams. Keep its
+    # own errors with the processing job instead of losing them in the main log.
+    processing_path = os.getenv("DM_PROCESSING_LOG")
+    if PROCESSING_CLI_SENTINEL in sys.argv and processing_path:
+        log_path = Path(processing_path)
     stream = log_path.open("a", encoding="utf-8", buffering=1)
     if sys.stdout is None:
         sys.stdout = stream
@@ -389,10 +393,7 @@ def _configure_stdio(log_path: Path) -> None:
 
 
 def _log(log_path: Path, message: str) -> None:
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    with log_path.open("a", encoding="utf-8") as handle:
-        for line in message.rstrip().splitlines() or [""]:
-            handle.write(f"[{timestamp}] {line}\n")
+    append_log(log_path, message)
 
 
 def _show_startup_error(log_path: Path) -> None:
