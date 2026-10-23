@@ -673,7 +673,7 @@
         "3352ba99c78b770cb7e74aaa",
         "35e1146433e8b3f00fa8766b",
         "4232969fef824fc21eb175fb",
-        "63010bad04e20910832a118f",
+        "44a6eec8e5c204b68943c4ea",
         "76ad8fe08b42c935b883b9f0",
         "8e258e86e27264ebcaeb7222",
         "acb9d5dc795e3c5b8f03d773",
@@ -689,7 +689,7 @@
       "edges": [
         {
           "from": "c531be8b238828dfa6a63457",
-          "to": "63010bad04e20910832a118f",
+          "to": "44a6eec8e5c204b68943c4ea",
           "requirement": {
             "name": "numpy",
             "marker": "sys_platform == 'win32'"
@@ -707,7 +707,7 @@
         },
         {
           "from": "32ad7765a1824b542527c07b",
-          "to": "63010bad04e20910832a118f",
+          "to": "44a6eec8e5c204b68943c4ea",
           "requirement": {
             "name": "numpy",
             "marker": "sys_platform == 'win32'"
@@ -716,7 +716,7 @@
         },
         {
           "from": "1c994f9b8f36711bc64317b3",
-          "to": "63010bad04e20910832a118f",
+          "to": "44a6eec8e5c204b68943c4ea",
           "requirement": {
             "name": "numpy",
             "marker": "sys_platform == 'win32'"
@@ -764,7 +764,7 @@
         },
         {
           "from": "2dd22287ef4ee44ce2196347",
-          "to": "63010bad04e20910832a118f",
+          "to": "44a6eec8e5c204b68943c4ea",
           "requirement": {
             "name": "numpy",
             "marker": "sys_platform == 'win32'"
@@ -836,7 +836,7 @@
         },
         {
           "from": "2fd6955a86e4fb3126084ae6",
-          "to": "63010bad04e20910832a118f",
+          "to": "44a6eec8e5c204b68943c4ea",
           "requirement": {
             "name": "numpy",
             "marker": "sys_platform == 'win32'"
@@ -908,7 +908,7 @@
         },
         {
           "from": "76ad8fe08b42c935b883b9f0",
-          "to": "63010bad04e20910832a118f",
+          "to": "44a6eec8e5c204b68943c4ea",
           "requirement": {
             "name": "numpy",
             "marker": "sys_platform == 'win32'"
@@ -953,7 +953,7 @@
         },
         {
           "from": "2ce9d09157ca9457255fe377",
-          "to": "63010bad04e20910832a118f",
+          "to": "44a6eec8e5c204b68943c4ea",
           "requirement": {
             "name": "numpy",
             "marker": "sys_platform == 'win32'"
@@ -980,7 +980,7 @@
         },
         {
           "from": "ec0abfffcad62baa5e1c3bc1",
-          "to": "63010bad04e20910832a118f",
+          "to": "44a6eec8e5c204b68943c4ea",
           "requirement": {
             "name": "numpy",
             "marker": "sys_platform == 'win32'"
@@ -2068,10 +2068,10 @@
         "a55a425391e5b5de9ae84aaf",
         "a96e091a2187b9ee89f83380",
         "acb9d5dc795e3c5b8f03d773",
+        "ba67eaf1cae84f03da9fbd27",
         "bfe5e4e3ed873855a1f505b9",
         "c33b4646fdad469f89c889cf",
         "c531be8b238828dfa6a63457",
-        "cb02c30ecaf261f5d13b6e11",
         "cc63d4e21c528165228e5c32",
         "dadfddcf62c0ab6b1c223189",
         "ec0abfffcad62baa5e1c3bc1",
@@ -2090,7 +2090,7 @@
           "extra": null
         },
         {
-          "from": "cb02c30ecaf261f5d13b6e11",
+          "from": "ba67eaf1cae84f03da9fbd27",
           "to": "1c994f9b8f36711bc64317b3",
           "requirement": {
             "name": "h5py",
@@ -2099,7 +2099,7 @@
           "extra": null
         },
         {
-          "from": "cb02c30ecaf261f5d13b6e11",
+          "from": "ba67eaf1cae84f03da9fbd27",
           "to": "f883968e16f515313c66c02e",
           "requirement": {
             "name": "joblib",
@@ -2108,7 +2108,7 @@
           "extra": null
         },
         {
-          "from": "cb02c30ecaf261f5d13b6e11",
+          "from": "ba67eaf1cae84f03da9fbd27",
           "to": "76ad8fe08b42c935b883b9f0",
           "requirement": {
             "name": "matplotlib",
@@ -2117,7 +2117,7 @@
           "extra": null
         },
         {
-          "from": "cb02c30ecaf261f5d13b6e11",
+          "from": "ba67eaf1cae84f03da9fbd27",
           "to": "44a6eec8e5c204b68943c4ea",
           "requirement": {
             "name": "numpy",
@@ -2126,7 +2126,7 @@
           "extra": null
         },
         {
-          "from": "cb02c30ecaf261f5d13b6e11",
+          "from": "ba67eaf1cae84f03da9fbd27",
           "to": "2ce9d09157ca9457255fe377",
           "requirement": {
             "name": "opencv-python",
@@ -2135,7 +2135,7 @@
           "extra": null
         },
         {
-          "from": "cb02c30ecaf261f5d13b6e11",
+          "from": "ba67eaf1cae84f03da9fbd27",
           "to": "cc63d4e21c528165228e5c32",
           "requirement": {
             "name": "pillow",
@@ -2144,7 +2144,7 @@
           "extra": null
         },
         {
-          "from": "cb02c30ecaf261f5d13b6e11",
+          "from": "ba67eaf1cae84f03da9fbd27",
           "to": "3ed3f2e37e6a8323b39657a9",
           "requirement": {
             "name": "pydantic",
@@ -2153,7 +2153,7 @@
           "extra": null
         },
         {
-          "from": "cb02c30ecaf261f5d13b6e11",
+          "from": "ba67eaf1cae84f03da9fbd27",
           "to": "a55a425391e5b5de9ae84aaf",
           "requirement": {
             "name": "scikit-image",
@@ -2162,7 +2162,7 @@
           "extra": null
         },
         {
-          "from": "cb02c30ecaf261f5d13b6e11",
+          "from": "ba67eaf1cae84f03da9fbd27",
           "to": "ec0abfffcad62baa5e1c3bc1",
           "requirement": {
             "name": "scipy",
@@ -2171,7 +2171,7 @@
           "extra": null
         },
         {
-          "from": "cb02c30ecaf261f5d13b6e11",
+          "from": "ba67eaf1cae84f03da9fbd27",
           "to": "a3a826cd86d7074103e57681",
           "requirement": {
             "name": "simpleitk",
@@ -2180,7 +2180,7 @@
           "extra": null
         },
         {
-          "from": "cb02c30ecaf261f5d13b6e11",
+          "from": "ba67eaf1cae84f03da9fbd27",
           "to": "31d2dc97d0ae43cd61d15319",
           "requirement": {
             "name": "sv-ttk",
@@ -2189,7 +2189,7 @@
           "extra": null
         },
         {
-          "from": "cb02c30ecaf261f5d13b6e11",
+          "from": "ba67eaf1cae84f03da9fbd27",
           "to": "c33b4646fdad469f89c889cf",
           "requirement": {
             "name": "tkinterdnd2",
@@ -2198,7 +2198,7 @@
           "extra": null
         },
         {
-          "from": "cb02c30ecaf261f5d13b6e11",
+          "from": "ba67eaf1cae84f03da9fbd27",
           "to": "121b36486858fafa7cf7e253",
           "requirement": {
             "name": "tqdm",
@@ -3100,6 +3100,7 @@
       },
       "consumers": [
         "manager",
+        "holodoppler",
         "dopplerview",
         "eyeflow",
         "angioeye"
@@ -3961,20 +3962,6 @@
           "marker": "sys_platform == 'win32'"
         }
       ],
-      "requires_dist": []
-    },
-    "63010bad04e20910832a118f": {
-      "name": "numpy",
-      "version": "2.4.6",
-      "artifact": {
-        "url": "https://files.pythonhosted.org/packages/b5/cd/9cc4dc876fb065d5c220aae4d5e14826b2715331bb7618ce1fb07a679d99/numpy-2.4.6-cp313-cp313-win_amd64.whl",
-        "hash": "sha256:c4fc99836233ea196540b17ab0983aff60ed07941751930f5f4d05bc3b3b7359",
-        "abi": "3.13.14"
-      },
-      "consumers": [
-        "holodoppler"
-      ],
-      "dependencies": [],
       "requires_dist": []
     },
     "2ce9d09157ca9457255fe377": {
@@ -4890,11 +4877,11 @@
       "dependencies": [],
       "requires_dist": []
     },
-    "cb02c30ecaf261f5d13b6e11": {
+    "ba67eaf1cae84f03da9fbd27": {
       "name": "eyeflow",
-      "version": "1.23.0",
+      "version": "1.24.0",
       "artifact": {
-        "git": "git+https://github.com/DigitalHolography/EyeFlow.git@ea90ea97d4da8ab5f1a732d1929f526f1a052a64",
+        "git": "git+https://github.com/DigitalHolography/EyeFlow.git@c771f8f0b74913470421fc9fccf9b6c55e118c0b",
         "abi": "3.13.14"
       },
       "consumers": [
@@ -5122,7 +5109,7 @@
       "onnxruntime>=1.25,<1.26"
     ],
     "eyeflow": [
-      "EyeFlow @ git+https://github.com/DigitalHolography/EyeFlow.git@ea90ea97d4da8ab5f1a732d1929f526f1a052a64"
+      "EyeFlow @ git+https://github.com/DigitalHolography/EyeFlow.git@c771f8f0b74913470421fc9fccf9b6c55e118c0b"
     ],
     "angioeye": [
       "AngioEye @ git+https://github.com/DigitalHolography/AngioEye.git@d3d283af9d3d14e7bfeeb0e7b634ff1863af751d"
@@ -5139,13 +5126,13 @@
     "apps/manager/pyproject.toml": "13c08cd5903dba91c17f4d0364706eb30edcf5fe4cfe28785f530e40d7360173",
     "apps/manager/uv.lock": "88a8e45014746acb06b9e43ec16f0ac730568fc3cb2bc429ecccac22d11604ab",
     "apps/holodoppler/pyproject.toml": "2591f018f0222e3e56735c7cbffcba8a801903f09565902044c6d093fea1541b",
-    "apps/holodoppler/uv.lock": "db832c4d5d0a89977b415eb8f000205f0e193319bde300e83cece543493000d1",
+    "apps/holodoppler/uv.lock": "ae5dbcb881ea114a3281f88197c85a438458979191ed0f034ede5491d75d9b5b",
     "apps/dopplerview/pyproject.toml": "786f05174b1217b5d037bb2cb72708135244f0f8bed3b32e929af89ce8d6aaad",
     "apps/dopplerview/uv.lock": "de6d4a598353206f02edcc6caf6118dafa2e0d6a3c03ae5c9d5a7a7fbe826c4d",
-    "apps/eyeflow/pyproject.toml": "a27d67fb15a6395ff30a6eb31b62bbcda8cb70f26239a35c29eddf6c6fd96274",
-    "apps/eyeflow/uv.lock": "63b0da803c68a697d542da8c7c97cee20f9c131e4176ee62c3bdb42a573f6d7a",
+    "apps/eyeflow/pyproject.toml": "4239afd3bc037f95781e1481278e011f7b497462c5bfef58a44eba9b6f10aa03",
+    "apps/eyeflow/uv.lock": "f64859f6ef426686e2f96a1d4ce670ac4ece95a67531d7af6b46760da8804999",
     "apps/angioeye/pyproject.toml": "3527fd582496beba31b980f39844b4aad71143229c5f858e31d70953981d762f",
     "apps/angioeye/uv.lock": "10191a1bec8e698504c8d0d118756bfee973ec89582008253b833f2e77abac94"
   },
-  "id": "cc21ae172f70f5d82c126a2b"
+  "id": "2801649bbb9d9a6871dbd64b"
 }

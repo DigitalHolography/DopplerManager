@@ -68,12 +68,12 @@ dependencies = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "eyeflow", git = "https://github.com/DigitalHolography/EyeFlow.git?rev=ea90ea97d4da8ab5f1a732d1929f526f1a052a64" }]
+requires-dist = [{ name = "eyeflow", git = "https://github.com/DigitalHolography/EyeFlow.git?rev=c771f8f0b74913470421fc9fccf9b6c55e118c0b" }]
 
 [[package]]
 name = "eyeflow"
-version = "1.23.0"
-source = { git = "https://github.com/DigitalHolography/EyeFlow.git?rev=ea90ea97d4da8ab5f1a732d1929f526f1a052a64#ea90ea97d4da8ab5f1a732d1929f526f1a052a64" }
+version = "1.24.0"
+source = { git = "https://github.com/DigitalHolography/EyeFlow.git?rev=c771f8f0b74913470421fc9fccf9b6c55e118c0b#c771f8f0b74913470421fc9fccf9b6c55e118c0b" }
 dependencies = [
     { name = "h5py", marker = "sys_platform == 'win32'" },
     { name = "joblib", marker = "sys_platform == 'win32'" },

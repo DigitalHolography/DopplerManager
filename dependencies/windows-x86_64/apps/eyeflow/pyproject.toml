@@ -3,7 +3,7 @@ name = "dm-plan-eyeflow"
 version = "0.0.0"
 requires-python = "==3.13.14"
 dependencies = [
-  "EyeFlow @ git+https://github.com/DigitalHolography/EyeFlow.git@ea90ea97d4da8ab5f1a732d1929f526f1a052a64"
+  "EyeFlow @ git+https://github.com/DigitalHolography/EyeFlow.git@c771f8f0b74913470421fc9fccf9b6c55e118c0b"
 ]
 [tool.uv]
 package = false
