@@ -8,6 +8,7 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+/.cache/
 .coverage
 htmlcov/
 dist/
@@ -22,4 +23,7 @@ build/
 processing_defaults/
 processing_runtimes/*/.venv/
 processing_runtimes/*/uv.lock
+/processing_runtimes/current.json
+/processing_runtimes/generations/
+/dependencies/.*.lock
 *.log
