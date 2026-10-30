@@ -30,6 +30,9 @@ def external_library_search():
 
 
 def run_external(command, *, capture_output=False, timeout=None, check=False, **kwargs):
+    # Catalog discovery and CLI delegation also run from the windowed manager.
+    # Without this flag, Windows allocates a console for the external Python.
+    kwargs.setdefault("creationflags", getattr(subprocess, "CREATE_NO_WINDOW", 0))
     if capture_output:
         kwargs.update(stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     # Restore the parent search path immediately after process creation, before

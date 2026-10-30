@@ -687,17 +687,14 @@ def test_missing_default_processing_tools_accepts_isolated_runtime(monkeypatch) 
     assert missing_default_processing_tools(["ef", "ae"]) == []
 
 
-def test_frozen_processing_command_prefix_uses_launcher_dispatch(monkeypatch) -> None:
-    monkeypatch.setattr(processing._commands.sys, "frozen", True, raising=False)
-    monkeypatch.setattr(
-        processing._commands.sys, "executable", r"C:\App\DopplerManager.exe"
-    )
+@pytest.mark.parametrize("stage", ["hd", "dv", "ef", "ae"])
+def test_frozen_processing_command_prefix_uses_isolated_runtime(monkeypatch, stage) -> None:
+    monkeypatch.setattr(sys, "frozen", True, raising=False)
+    monkeypatch.setattr(sys, "executable", r"C:\App\DopplerManager.exe")
+    prefix = (r"C:\App\runtime\python.exe", "-I", "-S", "bootstrap.py", stage)
+    monkeypatch.setattr(processing._commands, "runtime_command_prefix", lambda selected: prefix if selected == stage else ())
 
-    assert processing.command_prefix_for_stage("dv") == (
-        r"C:\App\DopplerManager.exe",
-        processing.PROCESSING_CLI_SENTINEL,
-        "dv",
-    )
+    assert processing.command_prefix_for_stage(stage) == prefix
 
 
 def test_run_single_job_keeps_progress_as_replaceable_log_lines(tmp_path: Path) -> None:

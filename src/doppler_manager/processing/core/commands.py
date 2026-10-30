@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-import sys
 from collections.abc import Sequence
 
 from doppler_manager.processing.runtimes import (
@@ -11,7 +10,6 @@ from doppler_manager.processing.runtimes import (
 
 from .constants import (
     COMMAND_ENV_VARS,
-    PROCESSING_CLI_SENTINEL,
     PROCESSING_STAGES,
 )
 
@@ -21,9 +19,10 @@ def command_prefix_for_stage(stage: str) -> tuple[str, ...]:
     override = os.getenv(env_var, "").strip()
     if override:
         return (override,)
-    if getattr(sys, "frozen", False):
-        return (sys.executable, PROCESSING_CLI_SENTINEL, stage)
     if stage in PROCESSING_STAGES:
+        # Launch the console Python directly, including in a windowed build.
+        # The job runner owns its hidden window and stdout/stderr pipes; an
+        # intermediate windowed executable has no Python stdio to forward them.
         return runtime_command_prefix(stage)
     raise ValueError(f"Unknown processing stage: {stage}")
 
