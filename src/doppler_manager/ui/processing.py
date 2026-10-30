@@ -80,20 +80,12 @@ def _render_processing_run_contents() -> None:
         return
 
     snapshot = run.snapshot()
-    selected_file, selected_app = _render_log_filters(
+    _render_processing_log_view(
         list(run.selected_file_ids),
         [],
         allowed_apps=run.allowed_apps,
-    )
-    st.markdown("#### Log")
-    log_placeholder = st.empty()
-    _render_previous_log(
-        log_placeholder,
-        file_filter=selected_file,
-        app_filter=selected_app,
-        allowed_file_ids=list(run.selected_file_ids),
-        allowed_apps=run.allowed_apps,
         entries=snapshot.log_entries,
+        cell_statuses=_processing_cell_statuses(run, snapshot.job_statuses),
     )
 
     if snapshot.status in {"pending", "running"}:
@@ -280,6 +272,7 @@ def _render_processing_run_panel(run: ProcessingRun) -> None:
         entries=snapshot.log_entries,
         allowed_file_ids=list(run.selected_file_ids),
         allowed_apps=run.allowed_apps,
+        cell_statuses=_processing_cell_statuses(run, snapshot.job_statuses),
     )
 
 
@@ -722,11 +715,13 @@ def _render_processing_log_view(
     entries: Sequence[dict[str, object]] | None = None,
     allowed_file_ids: list[str] | None = None,
     allowed_apps: tuple[str, ...] | None = None,
+    cell_statuses: dict[tuple[str, str], list[str]] | None = None,
 ) -> tuple[str, str, object]:
     selected_log_file, selected_log_app = _render_log_filters(
         selected_file_ids,
         selected_stages,
         allowed_apps=allowed_apps,
+        cell_statuses=cell_statuses,
     )
     st.markdown("#### Log")
     log_placeholder = st.empty()
@@ -752,13 +747,10 @@ def _render_log_filters(
     selected_stages: list[str],
     *,
     allowed_apps: tuple[str, ...] | None = None,
+    cell_statuses: dict[tuple[str, str], list[str]] | None = None,
 ) -> tuple[str, str]:
-    file_options = sorted(dict.fromkeys(str(file_id) for file_id in selected_file_ids))
-    app_options = list(
-        _processing_app_labels(selected_stages)
-        if allowed_apps is None
-        else allowed_apps
-    )
+    file_options = list(dict.fromkeys(str(file_id) for file_id in selected_file_ids))
+    app_options = list(STAGE_OPTIONS.values())
     file_options = [PROCESSING_LOG_ALL_FILES, *file_options]
     app_options = [PROCESSING_LOG_ALL_APPS, *app_options]
 
@@ -769,18 +761,147 @@ def _render_log_filters(
     if st.session_state.get(app_key) not in app_options:
         st.session_state[app_key] = app_options[0]
 
-    filter_cols = st.columns([1.4, 1])
-    selected_file = filter_cols[0].selectbox(
-        "File log to show",
-        file_options,
-        key=file_key,
+    file_count = len(file_options) - 1
+    st.markdown(
+        '<div class="dm-log-table-heading">'
+        '<div><h4>Processing logs '
+        f'<span class="dm-log-file-count">{file_count} '
+        f'{"file" if file_count == 1 else "files"}</span></h4>'
+        '<p>Select a cell, file, or app to view its logs.</p></div>'
+        '<div class="dm-log-legend">'
+        '<span><i class="dm-log-dot pending"></i>Waiting</span>'
+        '<span><i class="dm-log-dot running"></i>Running</span>'
+        '<span><i class="dm-log-dot complete"></i>Complete</span>'
+        '<span><i class="dm-log-dot failed"></i>Failed</span>'
+        '</div></div>',
+        unsafe_allow_html=True,
     )
-    selected_app = filter_cols[1].selectbox(
-        "App",
-        app_options,
-        key=app_key,
-    )
-    return str(selected_file), str(selected_app)
+    styles = ["""
+        .dm-log-table-heading {
+            display: flex; align-items: center; justify-content: space-between;
+            flex-wrap: wrap; gap: .6rem; margin: .5rem 0 .15rem;
+        }
+        .dm-log-table-heading h4 {margin: 0; padding: 0; font-size: 1.05rem;}
+        .dm-log-table-heading p {
+            margin: .25rem 0 0; font-size: .8rem; color: var(--dm-muted, #9ca3af);
+        }
+        .dm-log-file-count {
+            display: inline-block; margin-left: .4rem; padding: .15rem .5rem;
+            border-radius: 1rem; background: rgba(148, 163, 184, .12);
+            color: var(--dm-muted, #9ca3af); font-size: .72rem; font-weight: 500;
+            vertical-align: middle;
+        }
+        .dm-log-legend {display: flex; flex-wrap: wrap; gap: .8rem;}
+        .dm-log-legend span {
+            display: inline-flex; align-items: center; gap: .3rem;
+            font-size: .72rem; color: var(--dm-muted, #9ca3af);
+        }
+        .dm-log-dot {width: .45rem; height: .45rem; border-radius: 50%;}
+        .dm-log-dot.pending {background: #94a3b8;}
+        .dm-log-dot.running {background: var(--dm-action-hover, #0e7490);}
+        .dm-log-dot.complete {background: #4ade80;}
+        .dm-log-dot.failed {background: #fb7185;}
+        .st-key-processing_log_table {
+            border-color: var(--dm-border, #2a3548) !important;
+            border-radius: 12px; background: var(--dm-surface, #111827);
+            padding: .7rem !important;
+        }
+        .st-key-processing_log_table [data-testid="stVerticalBlock"] {gap: .35rem;}
+        .st-key-processing_log_table [data-testid="stHorizontalBlock"] {gap: .4rem;}
+        .st-key-processing_log_table button {
+            min-height: 2.1rem; padding: .25rem .6rem; border-radius: 7px;
+            transition: filter .15s ease, box-shadow .15s ease;
+        }
+        .st-key-processing_log_table button p {
+            font-size: .8rem; overflow: hidden; text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .st-key-processing_log_table button:hover {filter: brightness(1.25);}
+        .st-key-processing_log_table button:focus-visible {
+            outline: 2px solid var(--dm-accent, #22d3ee); outline-offset: 2px;
+        }
+    """]
+    with st.container(
+        height="content" if file_count <= 5 else 304,
+        border=True,
+        key="processing_log_table",
+    ):
+        for row, file_id in enumerate(file_options):
+            columns = st.columns([2, 1, 1, 1, 1], gap="small")
+            for col, app in enumerate(app_options):
+                statuses = [
+                    status
+                    for (cell_file, cell_app), values in (cell_statuses or {}).items()
+                    if (row == 0 or cell_file == file_id)
+                    and (col == 0 or cell_app == app)
+                    for status in values
+                ]
+                status = _aggregate_processing_status(statuses)
+                key = f"processing_log_cell_{row}_{col}"
+                selected = (
+                    st.session_state[file_key] == file_id
+                    and st.session_state[app_key] == app
+                )
+                background, foreground = {
+                    "pending": ("rgba(148, 163, 184, .10)", "#cbd5e1"),
+                    "running": ("var(--dm-action-hover, #0e7490)", "#ffffff"),
+                    "complete": ("rgba(34, 197, 94, .18)", "#86efac"),
+                    "failed": ("rgba(244, 63, 94, .18)", "#fda4af"),
+                }[status]
+                styles.append(
+                    f".st-key-{key} button {{background:{background} !important;"
+                    f"color:{foreground} !important;"
+                    f"border:1px solid {foreground if selected else 'transparent'} !important;"
+                    f"box-shadow:{'inset 0 0 0 1px ' + foreground if selected else 'none'} !important;"
+                    f"{'justify-content:flex-start;' if col == 0 and row else ''}"
+                    f"{'font-weight:650;' if row == 0 or col == 0 else ''}}}"
+                    f".st-key-{key} button p {{color:{foreground} !important;}}"
+                )
+                label = (
+                    ("All" if col == 0 else list(STAGE_OPTIONS)[col - 1].upper())
+                    if row == 0
+                    else (file_id if col == 0 else "Logs")
+                )
+                columns[col].button(
+                    label,
+                    key=key,
+                    width="stretch",
+                    help=f"{file_id} · {app}: {status}",
+                    on_click=_select_processing_logs,
+                    args=(file_id, app),
+                )
+    st.markdown("<style>" + "\n".join(styles) + "</style>", unsafe_allow_html=True)
+    return str(st.session_state[file_key]), str(st.session_state[app_key])
+
+
+def _select_processing_logs(file_id: str, app: str) -> None:
+    st.session_state["processing_log_file_filter"] = file_id
+    st.session_state["processing_log_app_filter"] = app
+
+
+def _aggregate_processing_status(statuses: Sequence[str]) -> str:
+    if "running" in statuses:
+        return "running"
+    if any(status in {"failed", "skipped"} for status in statuses):
+        return "failed"
+    if statuses and all(status == "complete" for status in statuses):
+        return "complete"
+    return "pending"
+
+
+def _processing_cell_statuses(
+    run: ProcessingRun, job_statuses: Sequence[str]
+) -> dict[tuple[str, str], list[str]]:
+    cells: dict[tuple[str, str], list[str]] = {}
+    for job, status in zip(run.jobs, job_statuses):
+        file_ids = (
+            run.selected_file_ids
+            if job.acquisition_id == "__angioeye_postprocess__"
+            else (job.acquisition_id,)
+        )
+        for file_id in file_ids:
+            cells.setdefault((file_id, _processing_app_label(job.stage)), []).append(status)
+    return cells
 
 
 def _processing_log_entries(
@@ -864,7 +985,28 @@ def _render_previous_log(
     if not visible_entries:
         target.caption("No log entries match the selected file and app.")
         return
+    file_order = list(dict.fromkeys(
+        allowed_file_ids if allowed_file_ids is not None
+        else (file_id for entry in visible_entries for file_id in entry["files"])
+    ))
+    app_order = list(STAGE_OPTIONS.values())
+    grouped_lines = []
+    for file_id in file_order:
+        for app in app_order:
+            lines = [
+                str(entry["line"]) for entry in visible_entries
+                if file_id in entry["files"] and entry["app"] == app
+            ]
+            if lines:
+                grouped_lines.append(f"=== {file_id} · {app} ===\n" + "\n".join(lines))
+    # Preserve manager output when displaying an unrestricted legacy log.
+    ungrouped = [
+        str(entry["line"]) for entry in visible_entries
+        if not entry["files"] or entry["app"] not in app_order
+    ]
+    if ungrouped:
+        grouped_lines.append("\n".join(ungrouped))
     target.code(
-        "\n".join(str(entry["line"]) for entry in visible_entries),
+        "\n\n".join(grouped_lines),
         language="text",
     )

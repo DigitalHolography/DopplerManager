@@ -26,6 +26,7 @@ def run_processing_jobs(
     jobs: Sequence[ProcessingJob],
     on_log: Callable[[str], None],
     on_job: Callable[[ProcessingJob], None] | None = None,
+    on_job_finished: Callable[[ProcessingJob, str], None] | None = None,
 ) -> list[JobResult]:
     results: list[JobResult] = []
     failed_acquisitions: set[str] = set()
@@ -38,6 +39,8 @@ def run_processing_jobs(
         ) as emit:
             if job.acquisition_id in failed_acquisitions:
                 emit(f"[SKIP] {job.description}: upstream stage failed.")
+                if on_job_finished is not None:
+                    on_job_finished(job, "skipped")
                 continue
 
             emit(f"[START] {job.description}")
@@ -48,6 +51,8 @@ def run_processing_jobs(
                 results.append(result)
                 failed_acquisitions.add(job.acquisition_id)
                 emit(f"[FAIL] Could not prepare {job.description}: {exc}\n{traceback.format_exc()}")
+                if on_job_finished is not None:
+                    on_job_finished(job, "failed")
                 continue
 
             emit(f"[CMD] {format_command(job.command)}")
@@ -67,6 +72,8 @@ def run_processing_jobs(
             else:
                 failed_acquisitions.add(job.acquisition_id)
                 emit(f"[FAIL] {job.description} exited with code {result.returncode}.")
+            if on_job_finished is not None:
+                on_job_finished(job, "complete" if result.succeeded else "failed")
 
     return results
 

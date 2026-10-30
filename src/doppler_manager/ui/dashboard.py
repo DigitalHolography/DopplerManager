@@ -11,6 +11,7 @@ import pandas as pd
 import streamlit as st
 
 from doppler_manager.models import AcquisitionResult, FileRef, STAGE_ORDER
+from doppler_manager.exports import build_cohort_ef_zip, build_ef_h5_zip, ef_h5_files
 from doppler_manager.ui.formatting import status_text
 
 
@@ -314,19 +315,65 @@ def render_exports(scan_result, filtered: pd.DataFrame) -> None:
 
 
 def _render_export_button(container, scan_result, filtered: pd.DataFrame) -> None:
-    zip_bytes = build_missing_holo_lists_zip(
-        scan_result.acquisitions,
-        filtered,
-        scan_result.all_holo_files,
-    )
+    if container.button("Export", icon=":material/download:", width="stretch"):
+        _render_export_dialog(scan_result, filtered)
 
-    container.download_button(
-        "Explort lists",
-        data=zip_bytes,
+
+@st.dialog("Export", width="medium", icon=":material/download:", on_dismiss="rerun")
+def _render_export_dialog(scan_result, filtered: pd.DataFrame) -> None:
+    acquisitions = scan_result.acquisitions
+    has_ef = any(ef_h5_files(item) for item in acquisitions)
+    st.markdown("#### 1. Export scan lists")
+    st.download_button(
+        "Export text lists ZIP",
+        data=build_missing_holo_lists_zip(
+            scan_result.acquisitions,
+            filtered,
+            scan_result.all_holo_files,
+        ),
         file_name="doppler_manager_scan_lists.zip",
         mime="application/zip",
         width="stretch",
+        on_click="ignore",
     )
+    st.divider()
+    st.markdown("#### 2. Export all EF h5 files")
+    st.caption("Includes all EF h5 files found in the scan, regardless of index filters.")
+    if not has_ef:
+        st.info("EF exports are available once a scan finds at least one EF h5 file.")
+    if st.button("Prepare EF h5 ZIP", disabled=not has_ef, width="stretch"):
+        try:
+            with st.spinner("Preparing EF archive…"):
+                payload = build_ef_h5_zip(acquisitions)
+            st.download_button(
+                "Download EF h5 ZIP", payload, "doppler_manager_ef_h5.zip",
+                "application/zip", on_click="ignore", width="stretch",
+            )
+        except OSError as exc:
+            st.error(f"Unable to read EF files: {exc}")
+    st.divider()
+    st.markdown("#### 3. Export EF h5 files by cohort")
+    st.caption(
+        "Upload a UTF-8 text list or paste paths below. Use [cohort name] headers, "
+        "then one acquisition path or name per line. Missing or ambiguous acquisitions "
+        "are listed in missing_EF.txt inside the ZIP."
+    )
+    uploaded = st.file_uploader("Cohort path list (.txt)", type=["txt"], disabled=not has_ef)
+    text = st.text_area(
+        "Cohort paths", placeholder="[Controls]\nC:\\data\\acquisition.holo\n[Patients]\nother_acquisition",
+        disabled=not has_ef, height=160,
+    )
+    if st.button("Prepare cohort ZIP", disabled=not has_ef, width="stretch"):
+        try:
+            cohort_text = uploaded.getvalue().decode("utf-8-sig") if uploaded is not None else text
+            with st.spinner("Preparing cohort archive…"):
+                payload = build_cohort_ef_zip(acquisitions, cohort_text)
+            st.download_button(
+                "Download cohort ZIP", payload, "doppler_manager_ef_cohorts.zip",
+                "application/zip", on_click="ignore", width="stretch",
+            )
+        except (ValueError, OSError) as exc:
+            st.error(f"Unable to export cohorts: {exc}")
 
 
 def build_missing_holo_lists_zip(

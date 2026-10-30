@@ -97,7 +97,27 @@ Generated MP4 files for AVI previews are stored in `%LOCALAPPDATA%\DopplerManage
 
 ## Exports
 
-The `Acquisition Index` tab exposes one scan-list export:
+The `Acquisition Index` tab has an `Export` button that opens a popup with three options, in order:
+
+1. Export scan text lists as a ZIP (described below).
+2. Export all EF h5 files found in the full scan as a ZIP.
+3. Export EF h5 files grouped by cohort as a ZIP.
+
+The EF options are enabled only when the scan contains at least one EF h5 file. Prepare the archive, then download it. Index filters do not limit EF exports.
+
+For cohorts, upload a UTF-8 `.txt` file or paste a list with `[cohort name]` headers followed by one acquisition path or name per line. An uploaded file takes precedence over pasted text. Paths may reference `.holo` files, acquisition folders, or scanned EF h5 files. Exact scanned paths are matched first; otherwise the acquisition name must be unique in the scan. Each cohort becomes a folder containing its EF h5 files. A root-level `missing_EF.txt` lists missing or ambiguous acquisitions under their cohort headers, including acquisitions whose EF files are no longer available. Empty cohort folders are preserved. Invalid folder names and paths before the first header are rejected.
+
+For example:
+
+```text
+[Controls]
+C:\data\acquisition_a.holo
+C:\data\acquisition_b.holo
+[Patients]
+acquisition_c
+```
+
+The scan-list export downloads:
 
 - `doppler_manager_scan_lists.zip`
 

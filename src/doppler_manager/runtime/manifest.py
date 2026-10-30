@@ -13,7 +13,9 @@ def python_executable(root: Path) -> Path:
 def invocation(root: Path, app: str, args: list[str] | tuple[str, ...]) -> tuple[str, ...]:
     data = json.loads((root / "runtime.json").read_text(encoding="utf-8"))
     python = root / data["apps"][app]["python"]
-    return (str(python), "-I", "-S", str(root / "bootstrap.py"), app, *args)
+    # -I ignores PYTHONUNBUFFERED/PYTHONIOENCODING, so configure live UTF-8
+    # processing output with interpreter flags rather than environment variables.
+    return (str(python), "-I", "-S", "-u", "-X", "utf8", str(root / "bootstrap.py"), app, *args)
 
 
 def selected_generation(root: Path) -> Path | None:

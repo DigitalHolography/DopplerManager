@@ -26,6 +26,7 @@ class ProcessingRunSnapshot:
     log_entries: tuple[dict[str, object], ...]
     results: tuple[JobResult, ...]
     error: Optional[str]
+    job_statuses: tuple[str, ...] = ()
 
 
 class ProcessingRun:
@@ -57,6 +58,8 @@ class ProcessingRun:
         self._current_app = PROCESSING_LOG_MANAGER_APP
         self._last_log_was_progress = False
         self._completion_claimed = False
+        self._job_statuses = ["pending"] * len(self.jobs)
+        self._current_job_index = -1
 
     def start(self) -> None:
         with self._lock:
@@ -83,6 +86,7 @@ class ProcessingRun:
                 ),
                 results=self._results,
                 error=self._error,
+                job_statuses=tuple(self._job_statuses),
             )
 
     @property
@@ -116,6 +120,7 @@ class ProcessingRun:
                 self.jobs,
                 self._append_log,
                 on_job=self._set_job_context,
+                on_job_finished=self._finish_job,
             )
         except Exception as exc:  # noqa: BLE001
             log_manager(f"[FAIL] Processing worker stopped unexpectedly: {exc}\n{traceback.format_exc()}")
@@ -123,6 +128,8 @@ class ProcessingRun:
             with self._lock:
                 self._error = str(exc)
                 self._status = "failed"
+                if self._current_job_index >= 0:
+                    self._job_statuses[self._current_job_index] = "failed"
             return
 
         with self._lock:
@@ -136,8 +143,15 @@ class ProcessingRun:
             file_ids = (job.acquisition_id,)
 
         with self._lock:
+            self._current_job_index += 1
+            self._job_statuses[self._current_job_index] = "running"
             self._current_file_ids = file_ids
             self._current_app = self._processing_app_label(job.stage)
+            self._last_log_was_progress = False
+
+    def _finish_job(self, job: ProcessingJob, status: str) -> None:
+        with self._lock:
+            self._job_statuses[self._current_job_index] = status
 
     def _append_log(self, line: str) -> None:
         with self._lock:
