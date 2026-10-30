@@ -3,7 +3,9 @@ name = "dm-plan-eyeflow"
 version = "0.0.0"
 requires-python = "==3.13.14"
 dependencies = [
-  "EyeFlow @ git+https://github.com/DigitalHolography/EyeFlow.git@c771f8f0b74913470421fc9fccf9b6c55e118c0b"
+  "EyeFlow @ git+https://github.com/DigitalHolography/EyeFlow.git@7888378ff96f16d314ff1f427c976bc9b9bbfb59",
+  "cloudpickle>=3.0",
+  "joblib>=1.5,<1.6"
 ]
 [tool.uv]
 package = false

@@ -32,6 +32,8 @@ dv = [
 ]
 ef = [
     "EyeFlow @ git+https://github.com/DigitalHolography/EyeFlow.git@main",
+    "cloudpickle>=3.0",
+    "joblib>=1.5,<1.6",
 ]
 ae = [
     "AngioEye @ git+https://github.com/DigitalHolography/AngioEye.git@main",

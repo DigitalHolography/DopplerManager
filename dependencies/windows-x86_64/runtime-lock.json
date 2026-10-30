@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "input_hash": "aa14dbe872616c44e422c786e7d7981c13d09eb32af0a35404b8ccd851de87fe",
+  "input_hash": "014915a68f0f0cd2e8128f0fbeb3f6bc50a3b7faa64b855a00f61806bacf3fda",
   "inputs": {
     "apps": {
       "manager": {
@@ -34,7 +34,9 @@
       "eyeflow": {
         "stage": "ef",
         "requirements": [
-          "EyeFlow @ git+https://github.com/DigitalHolography/EyeFlow.git@main"
+          "EyeFlow @ git+https://github.com/DigitalHolography/EyeFlow.git@main",
+          "cloudpickle>=3.0",
+          "joblib>=1.5,<1.6"
         ],
         "requires_python": ">=3.10"
       },
@@ -67,10 +69,8 @@
         "21068964f383364e52cb94d6",
         "25aa8de3a4230ae674db5d77",
         "2618ba2d54e2b50dfaa91e43",
-        "29f8f8fadc16f97a50644438",
         "2ba75a43839d1c2c6a4998c8",
         "2e146f95e3ec0523e758e00f",
-        "35e1146433e8b3f00fa8766b",
         "4232969fef824fc21eb175fb",
         "44a6eec8e5c204b68943c4ea",
         "50e7b2fe389e920589861640",
@@ -78,12 +78,12 @@
         "5e33f08e269aeaa487e0a8c1",
         "6119a16d6c26208893fddd77",
         "6259c2257f86a983df302a97",
-        "63651b5159fe1fcffa1483a4",
         "641d15c89f2e23ee4a74713f",
-        "6a544b7678bdf7fe1dfb29bb",
+        "673d88fa8f7cdedfdfb3d3a4",
         "6c47429bab17e3c38c02ff2d",
-        "6e7a4b0e1241e55eb1b01e78",
+        "6f41f67b2cd440aeed5920e6",
         "7dd2901de0a48cb40c459cf4",
+        "7f1f3fc4a5557cb7da8cfae8",
         "81d8b05b1ad8a0177dace02b",
         "876356780c33caba1bfe746e",
         "9100c7d9ac380167e4f84c37",
@@ -94,15 +94,17 @@
         "aa9825ea6e1c733e11cb45a3",
         "b35f99111bbdb959ec961109",
         "bb445e73c6e0236203e62629",
+        "bcc88a5cbd1cfb30055030a3",
         "bd5685590718539a5840ea6d",
         "bfe5e4e3ed873855a1f505b9",
         "c38a84b0cf76f64f73463fcf",
         "c63940b112e351996f4954d0",
-        "cb12e0a15dfb4e0189665dec",
         "cc63d4e21c528165228e5c32",
+        "dfcb473a4007ca4436c9fce8",
         "e270dae3a0dd2318d0af03a8",
         "e28c0dbf4874b2c62ed73fe2",
-        "fb98a1e1d22a49cdc05c2999"
+        "fb98a1e1d22a49cdc05c2999",
+        "fc6371dd560db0e85416d686"
       ],
       "edges": [
         {
@@ -125,7 +127,7 @@
         },
         {
           "from": "bd5685590718539a5840ea6d",
-          "to": "63651b5159fe1fcffa1483a4",
+          "to": "dfcb473a4007ca4436c9fce8",
           "requirement": {
             "name": "narwhals",
             "marker": "sys_platform == 'win32'"
@@ -251,7 +253,7 @@
         },
         {
           "from": "14fe4c89e07a55c88161f67a",
-          "to": "29f8f8fadc16f97a50644438",
+          "to": "673d88fa8f7cdedfdfb3d3a4",
           "requirement": {
             "name": "pytz",
             "marker": "sys_platform == 'win32'"
@@ -260,7 +262,7 @@
         },
         {
           "from": "14fe4c89e07a55c88161f67a",
-          "to": "35e1146433e8b3f00fa8766b",
+          "to": "7f1f3fc4a5557cb7da8cfae8",
           "requirement": {
             "name": "tzdata",
             "marker": "sys_platform == 'win32'"
@@ -359,7 +361,7 @@
         },
         {
           "from": "bfe5e4e3ed873855a1f505b9",
-          "to": "35e1146433e8b3f00fa8766b",
+          "to": "7f1f3fc4a5557cb7da8cfae8",
           "requirement": {
             "name": "tzdata",
             "marker": "sys_platform == 'win32'"
@@ -421,7 +423,7 @@
           "extra": null
         },
         {
-          "from": "6a544b7678bdf7fe1dfb29bb",
+          "from": "bcc88a5cbd1cfb30055030a3",
           "to": "c38a84b0cf76f64f73463fcf",
           "requirement": {
             "name": "anyio",
@@ -548,7 +550,7 @@
         },
         {
           "from": "97e9f96035042410cb829e61",
-          "to": "6a544b7678bdf7fe1dfb29bb",
+          "to": "bcc88a5cbd1cfb30055030a3",
           "requirement": {
             "name": "starlette",
             "marker": "sys_platform == 'win32'"
@@ -584,7 +586,7 @@
         },
         {
           "from": "97e9f96035042410cb829e61",
-          "to": "6e7a4b0e1241e55eb1b01e78",
+          "to": "6f41f67b2cd440aeed5920e6",
           "requirement": {
             "name": "websockets",
             "marker": "sys_platform == 'win32'"
@@ -660,31 +662,31 @@
       "python": "3.13.14",
       "nodes": [
         "121b36486858fafa7cf7e253",
+        "16d35f6cf52bfc3b37e52a4e",
         "1c994f9b8f36711bc64317b3",
         "20338883980515d534eccf6b",
         "25aa8de3a4230ae674db5d77",
         "2ba75a43839d1c2c6a4998c8",
         "2ce9d09157ca9457255fe377",
-        "2d533768ca92dd533567520e",
-        "2dd22287ef4ee44ce2196347",
         "2fd6955a86e4fb3126084ae6",
         "31d2dc97d0ae43cd61d15319",
         "32ad7765a1824b542527c07b",
         "3352ba99c78b770cb7e74aaa",
-        "35e1146433e8b3f00fa8766b",
         "4232969fef824fc21eb175fb",
         "44a6eec8e5c204b68943c4ea",
+        "7567bd7ea48b74b384294756",
         "76ad8fe08b42c935b883b9f0",
+        "7f1f3fc4a5557cb7da8cfae8",
+        "86f6f9dde4f5e792a895aab0",
         "8e258e86e27264ebcaeb7222",
         "acb9d5dc795e3c5b8f03d773",
+        "bad5e9cc5544e3aaaaca3ae0",
         "bfe5e4e3ed873855a1f505b9",
-        "c33b4646fdad469f89c889cf",
         "c531be8b238828dfa6a63457",
-        "cb12e0a15dfb4e0189665dec",
         "cc63d4e21c528165228e5c32",
         "e6b740f3730366040b7d30f5",
         "ec0abfffcad62baa5e1c3bc1",
-        "fe219ff217014d50fdf8496b"
+        "fc6371dd560db0e85416d686"
       ],
       "edges": [
         {
@@ -698,7 +700,7 @@
         },
         {
           "from": "32ad7765a1824b542527c07b",
-          "to": "fe219ff217014d50fdf8496b",
+          "to": "86f6f9dde4f5e792a895aab0",
           "requirement": {
             "name": "cuda-pathfinder",
             "marker": "sys_platform == 'win32'"
@@ -724,7 +726,7 @@
           "extra": null
         },
         {
-          "from": "2dd22287ef4ee44ce2196347",
+          "from": "16d35f6cf52bfc3b37e52a4e",
           "to": "32ad7765a1824b542527c07b",
           "requirement": {
             "name": "cupy-cuda13x",
@@ -733,7 +735,7 @@
           "extra": null
         },
         {
-          "from": "2dd22287ef4ee44ce2196347",
+          "from": "16d35f6cf52bfc3b37e52a4e",
           "to": "1c994f9b8f36711bc64317b3",
           "requirement": {
             "name": "h5py",
@@ -742,7 +744,7 @@
           "extra": null
         },
         {
-          "from": "2dd22287ef4ee44ce2196347",
+          "from": "16d35f6cf52bfc3b37e52a4e",
           "to": "2fd6955a86e4fb3126084ae6",
           "requirement": {
             "name": "imageio",
@@ -754,7 +756,7 @@
           "extra": null
         },
         {
-          "from": "2dd22287ef4ee44ce2196347",
+          "from": "16d35f6cf52bfc3b37e52a4e",
           "to": "76ad8fe08b42c935b883b9f0",
           "requirement": {
             "name": "matplotlib",
@@ -763,7 +765,7 @@
           "extra": null
         },
         {
-          "from": "2dd22287ef4ee44ce2196347",
+          "from": "16d35f6cf52bfc3b37e52a4e",
           "to": "44a6eec8e5c204b68943c4ea",
           "requirement": {
             "name": "numpy",
@@ -772,7 +774,7 @@
           "extra": null
         },
         {
-          "from": "2dd22287ef4ee44ce2196347",
+          "from": "16d35f6cf52bfc3b37e52a4e",
           "to": "2ce9d09157ca9457255fe377",
           "requirement": {
             "name": "opencv-python",
@@ -781,7 +783,7 @@
           "extra": null
         },
         {
-          "from": "2dd22287ef4ee44ce2196347",
+          "from": "16d35f6cf52bfc3b37e52a4e",
           "to": "cc63d4e21c528165228e5c32",
           "requirement": {
             "name": "pillow",
@@ -790,7 +792,7 @@
           "extra": null
         },
         {
-          "from": "2dd22287ef4ee44ce2196347",
+          "from": "16d35f6cf52bfc3b37e52a4e",
           "to": "2ba75a43839d1c2c6a4998c8",
           "requirement": {
             "name": "pyyaml",
@@ -799,7 +801,7 @@
           "extra": null
         },
         {
-          "from": "2dd22287ef4ee44ce2196347",
+          "from": "16d35f6cf52bfc3b37e52a4e",
           "to": "ec0abfffcad62baa5e1c3bc1",
           "requirement": {
             "name": "scipy",
@@ -808,7 +810,7 @@
           "extra": null
         },
         {
-          "from": "2dd22287ef4ee44ce2196347",
+          "from": "16d35f6cf52bfc3b37e52a4e",
           "to": "31d2dc97d0ae43cd61d15319",
           "requirement": {
             "name": "sv-ttk",
@@ -817,8 +819,8 @@
           "extra": null
         },
         {
-          "from": "2dd22287ef4ee44ce2196347",
-          "to": "c33b4646fdad469f89c889cf",
+          "from": "16d35f6cf52bfc3b37e52a4e",
+          "to": "7567bd7ea48b74b384294756",
           "requirement": {
             "name": "tkinterdnd2",
             "marker": "sys_platform == 'win32'"
@@ -826,7 +828,7 @@
           "extra": null
         },
         {
-          "from": "2dd22287ef4ee44ce2196347",
+          "from": "16d35f6cf52bfc3b37e52a4e",
           "to": "121b36486858fafa7cf7e253",
           "requirement": {
             "name": "tqdm",
@@ -854,7 +856,7 @@
         },
         {
           "from": "2fd6955a86e4fb3126084ae6",
-          "to": "cb12e0a15dfb4e0189665dec",
+          "to": "fc6371dd560db0e85416d686",
           "requirement": {
             "name": "imageio-ffmpeg",
             "marker": "sys_platform == 'win32'"
@@ -890,7 +892,7 @@
         },
         {
           "from": "76ad8fe08b42c935b883b9f0",
-          "to": "2d533768ca92dd533567520e",
+          "to": "bad5e9cc5544e3aaaaca3ae0",
           "requirement": {
             "name": "fonttools",
             "marker": "sys_platform == 'win32'"
@@ -971,7 +973,7 @@
         },
         {
           "from": "bfe5e4e3ed873855a1f505b9",
-          "to": "35e1146433e8b3f00fa8766b",
+          "to": "7f1f3fc4a5557cb7da8cfae8",
           "requirement": {
             "name": "tzdata",
             "marker": "sys_platform == 'win32'"
@@ -1019,30 +1021,32 @@
         "13b33389fd05f9842a82ccc2",
         "160931eae3e6a057347d6e9b",
         "1c994f9b8f36711bc64317b3",
+        "1e9a7b379567798984f580a2",
         "1f136b604035983d8358c43f",
         "20338883980515d534eccf6b",
         "25aa8de3a4230ae674db5d77",
         "2ba75a43839d1c2c6a4998c8",
         "2d1a5b858bc607e6ac196a48",
-        "2d533768ca92dd533567520e",
         "2fd6955a86e4fb3126084ae6",
         "31d2dc97d0ae43cd61d15319",
         "3352ba99c78b770cb7e74aaa",
-        "35e1146433e8b3f00fa8766b",
         "36142d30a3588c9bc7c80df1",
         "382105b049b07636f734f8ea",
         "4232969fef824fc21eb175fb",
         "44a6eec8e5c204b68943c4ea",
+        "464d7c7926e61c263ec0a338",
         "4b6852043c67caaf906a99d5",
         "4cf56fa36ce8a087539bd3bd",
         "50b73071bdced47fee73b94d",
         "50e7b2fe389e920589861640",
+        "57d89cfe39b8dd1f5779ce1c",
         "5924aaa96e5f056d45b14344",
-        "63651b5159fe1fcffa1483a4",
         "641d15c89f2e23ee4a74713f",
         "67a94f088d6ed82eafb9afac",
         "6c47429bab17e3c38c02ff2d",
+        "7567bd7ea48b74b384294756",
         "76ad8fe08b42c935b883b9f0",
+        "7f1f3fc4a5557cb7da8cfae8",
         "81780affb8b8de0e6cb55506",
         "87633c2a73cdac053c4235c8",
         "876356780c33caba1bfe746e",
@@ -1056,11 +1060,10 @@
         "ad40e98a422bc127f0c56a15",
         "ae8c6200bf87963db12d7904",
         "b8104f842b9af7dba666aa7a",
+        "bad5e9cc5544e3aaaaca3ae0",
         "bb445e73c6e0236203e62629",
         "be01e5b79c04d5c547ca6d3a",
-        "bf2497e7b5563e5a3efcfda8",
         "bfe5e4e3ed873855a1f505b9",
-        "c33b4646fdad469f89c889cf",
         "c38a84b0cf76f64f73463fcf",
         "c531be8b238828dfa6a63457",
         "c63940b112e351996f4954d0",
@@ -1068,14 +1071,13 @@
         "ce101433acfd04fbc7c579e0",
         "d3f70abd57ac5ba947dd2732",
         "dadfddcf62c0ab6b1c223189",
-        "dd62e126a3772c775594a32e",
+        "dfcb473a4007ca4436c9fce8",
         "e28c0dbf4874b2c62ed73fe2",
         "e6b740f3730366040b7d30f5",
         "ec0abfffcad62baa5e1c3bc1",
+        "f32d2999857f1467897bb2a0",
         "f625a486ddf499752787b462",
         "f883968e16f515313c66c02e",
-        "fabcbae2b2836e2f27ac3c1b",
-        "fb0a3573ce41f3930eddbc1f",
         "fb98a1e1d22a49cdc05c2999",
         "fda90508bea82b6da13d7d44"
       ],
@@ -1118,7 +1120,7 @@
         },
         {
           "from": "50b73071bdced47fee73b94d",
-          "to": "fb0a3573ce41f3930eddbc1f",
+          "to": "f32d2999857f1467897bb2a0",
           "requirement": {
             "name": "huggingface-hub",
             "marker": "sys_platform == 'win32'"
@@ -1253,7 +1255,7 @@
         },
         {
           "from": "50b73071bdced47fee73b94d",
-          "to": "c33b4646fdad469f89c889cf",
+          "to": "7567bd7ea48b74b384294756",
           "requirement": {
             "name": "tkinterdnd2",
             "marker": "sys_platform == 'win32'"
@@ -1262,7 +1264,7 @@
         },
         {
           "from": "50b73071bdced47fee73b94d",
-          "to": "fabcbae2b2836e2f27ac3c1b",
+          "to": "464d7c7926e61c263ec0a338",
           "requirement": {
             "name": "torch",
             "marker": "sys_platform == 'win32'"
@@ -1271,7 +1273,7 @@
         },
         {
           "from": "50b73071bdced47fee73b94d",
-          "to": "dd62e126a3772c775594a32e",
+          "to": "57d89cfe39b8dd1f5779ce1c",
           "requirement": {
             "name": "torchvision",
             "marker": "sys_platform == 'win32'"
@@ -1360,7 +1362,7 @@
           "extra": null
         },
         {
-          "from": "fb0a3573ce41f3930eddbc1f",
+          "from": "f32d2999857f1467897bb2a0",
           "to": "641d15c89f2e23ee4a74713f",
           "requirement": {
             "name": "click",
@@ -1369,7 +1371,7 @@
           "extra": null
         },
         {
-          "from": "fb0a3573ce41f3930eddbc1f",
+          "from": "f32d2999857f1467897bb2a0",
           "to": "4cf56fa36ce8a087539bd3bd",
           "requirement": {
             "name": "filelock",
@@ -1378,7 +1380,7 @@
           "extra": null
         },
         {
-          "from": "fb0a3573ce41f3930eddbc1f",
+          "from": "f32d2999857f1467897bb2a0",
           "to": "13b33389fd05f9842a82ccc2",
           "requirement": {
             "name": "fsspec",
@@ -1387,8 +1389,8 @@
           "extra": null
         },
         {
-          "from": "fb0a3573ce41f3930eddbc1f",
-          "to": "bf2497e7b5563e5a3efcfda8",
+          "from": "f32d2999857f1467897bb2a0",
+          "to": "1e9a7b379567798984f580a2",
           "requirement": {
             "name": "hf-xet",
             "marker": "(platform_machine == 'AMD64' and sys_platform == 'win32') or (platform_machine == 'ARM64' and sys_platform == 'win32') or (platform_machine == 'aarch64' and sys_platform == 'win32') or (platform_machine == 'amd64' and sys_platform == 'win32') or (platform_machine == 'arm64' and sys_platform == 'win32') or (platform_machine == 'x86_64' and sys_platform == 'win32')"
@@ -1396,7 +1398,7 @@
           "extra": null
         },
         {
-          "from": "fb0a3573ce41f3930eddbc1f",
+          "from": "f32d2999857f1467897bb2a0",
           "to": "d3f70abd57ac5ba947dd2732",
           "requirement": {
             "name": "httpx2",
@@ -1405,7 +1407,7 @@
           "extra": null
         },
         {
-          "from": "fb0a3573ce41f3930eddbc1f",
+          "from": "f32d2999857f1467897bb2a0",
           "to": "25aa8de3a4230ae674db5d77",
           "requirement": {
             "name": "packaging",
@@ -1414,7 +1416,7 @@
           "extra": null
         },
         {
-          "from": "fb0a3573ce41f3930eddbc1f",
+          "from": "f32d2999857f1467897bb2a0",
           "to": "2ba75a43839d1c2c6a4998c8",
           "requirement": {
             "name": "pyyaml",
@@ -1423,7 +1425,7 @@
           "extra": null
         },
         {
-          "from": "fb0a3573ce41f3930eddbc1f",
+          "from": "f32d2999857f1467897bb2a0",
           "to": "121b36486858fafa7cf7e253",
           "requirement": {
             "name": "tqdm",
@@ -1432,7 +1434,7 @@
           "extra": null
         },
         {
-          "from": "fb0a3573ce41f3930eddbc1f",
+          "from": "f32d2999857f1467897bb2a0",
           "to": "50e7b2fe389e920589861640",
           "requirement": {
             "name": "typing-extensions",
@@ -1514,7 +1516,7 @@
         },
         {
           "from": "76ad8fe08b42c935b883b9f0",
-          "to": "2d533768ca92dd533567520e",
+          "to": "bad5e9cc5544e3aaaaca3ae0",
           "requirement": {
             "name": "fonttools",
             "marker": "sys_platform == 'win32'"
@@ -1640,7 +1642,7 @@
         },
         {
           "from": "ce101433acfd04fbc7c579e0",
-          "to": "35e1146433e8b3f00fa8766b",
+          "to": "7f1f3fc4a5557cb7da8cfae8",
           "requirement": {
             "name": "tzdata",
             "marker": "sys_platform == 'win32'"
@@ -1721,7 +1723,7 @@
         },
         {
           "from": "bfe5e4e3ed873855a1f505b9",
-          "to": "35e1146433e8b3f00fa8766b",
+          "to": "7f1f3fc4a5557cb7da8cfae8",
           "requirement": {
             "name": "tzdata",
             "marker": "sys_platform == 'win32'"
@@ -1829,7 +1831,7 @@
         },
         {
           "from": "f625a486ddf499752787b462",
-          "to": "63651b5159fe1fcffa1483a4",
+          "to": "dfcb473a4007ca4436c9fce8",
           "requirement": {
             "name": "narwhals",
             "marker": "sys_platform == 'win32'"
@@ -1891,7 +1893,7 @@
           "extra": null
         },
         {
-          "from": "fabcbae2b2836e2f27ac3c1b",
+          "from": "464d7c7926e61c263ec0a338",
           "to": "4cf56fa36ce8a087539bd3bd",
           "requirement": {
             "name": "filelock",
@@ -1900,7 +1902,7 @@
           "extra": null
         },
         {
-          "from": "fabcbae2b2836e2f27ac3c1b",
+          "from": "464d7c7926e61c263ec0a338",
           "to": "13b33389fd05f9842a82ccc2",
           "requirement": {
             "name": "fsspec",
@@ -1909,7 +1911,7 @@
           "extra": null
         },
         {
-          "from": "fabcbae2b2836e2f27ac3c1b",
+          "from": "464d7c7926e61c263ec0a338",
           "to": "876356780c33caba1bfe746e",
           "requirement": {
             "name": "jinja2",
@@ -1918,7 +1920,7 @@
           "extra": null
         },
         {
-          "from": "fabcbae2b2836e2f27ac3c1b",
+          "from": "464d7c7926e61c263ec0a338",
           "to": "5924aaa96e5f056d45b14344",
           "requirement": {
             "name": "networkx",
@@ -1927,7 +1929,7 @@
           "extra": null
         },
         {
-          "from": "fabcbae2b2836e2f27ac3c1b",
+          "from": "464d7c7926e61c263ec0a338",
           "to": "00b70757c34c4e26aa4d0257",
           "requirement": {
             "name": "setuptools",
@@ -1936,7 +1938,7 @@
           "extra": null
         },
         {
-          "from": "fabcbae2b2836e2f27ac3c1b",
+          "from": "464d7c7926e61c263ec0a338",
           "to": "2d1a5b858bc607e6ac196a48",
           "requirement": {
             "name": "sympy",
@@ -1945,7 +1947,7 @@
           "extra": null
         },
         {
-          "from": "fabcbae2b2836e2f27ac3c1b",
+          "from": "464d7c7926e61c263ec0a338",
           "to": "50e7b2fe389e920589861640",
           "requirement": {
             "name": "typing-extensions",
@@ -1954,7 +1956,7 @@
           "extra": null
         },
         {
-          "from": "dd62e126a3772c775594a32e",
+          "from": "57d89cfe39b8dd1f5779ce1c",
           "to": "44a6eec8e5c204b68943c4ea",
           "requirement": {
             "name": "numpy",
@@ -1963,7 +1965,7 @@
           "extra": null
         },
         {
-          "from": "dd62e126a3772c775594a32e",
+          "from": "57d89cfe39b8dd1f5779ce1c",
           "to": "cc63d4e21c528165228e5c32",
           "requirement": {
             "name": "pillow",
@@ -1972,8 +1974,8 @@
           "extra": null
         },
         {
-          "from": "dd62e126a3772c775594a32e",
-          "to": "fabcbae2b2836e2f27ac3c1b",
+          "from": "57d89cfe39b8dd1f5779ce1c",
+          "to": "464d7c7926e61c263ec0a338",
           "requirement": {
             "name": "torch",
             "marker": "sys_platform == 'win32'"
@@ -2045,39 +2047,52 @@
     "eyeflow": {
       "python": "3.13.14",
       "nodes": [
+        "01f32722ca112711248f397e",
+        "0c8c282f2cc2163a477e3988",
         "121b36486858fafa7cf7e253",
         "160931eae3e6a057347d6e9b",
         "1c994f9b8f36711bc64317b3",
         "20338883980515d534eccf6b",
         "25aa8de3a4230ae674db5d77",
+        "2c0246dd44b762439a9d7ed0",
         "2ce9d09157ca9457255fe377",
-        "2d533768ca92dd533567520e",
         "2fd6955a86e4fb3126084ae6",
+        "30e9f86678e1cd50f5cda66f",
         "31d2dc97d0ae43cd61d15319",
+        "32ad7765a1824b542527c07b",
         "3352ba99c78b770cb7e74aaa",
-        "35e1146433e8b3f00fa8766b",
-        "3ed3f2e37e6a8323b39657a9",
         "4232969fef824fc21eb175fb",
         "44a6eec8e5c204b68943c4ea",
         "50e7b2fe389e920589861640",
+        "5279283a3776665de8b65601",
         "5924aaa96e5f056d45b14344",
+        "6f611142280507229ceeac99",
         "755ec59c2696919572516ef9",
+        "7567bd7ea48b74b384294756",
         "76ad8fe08b42c935b883b9f0",
+        "7f1f3fc4a5557cb7da8cfae8",
+        "81ab8b2fc977f03fc5f95f06",
+        "86f6f9dde4f5e792a895aab0",
         "8e258e86e27264ebcaeb7222",
+        "9e2b739b611ba8aa335c4a58",
         "a3a826cd86d7074103e57681",
         "a55a425391e5b5de9ae84aaf",
         "a96e091a2187b9ee89f83380",
         "acb9d5dc795e3c5b8f03d773",
-        "ba67eaf1cae84f03da9fbd27",
+        "bad5e9cc5544e3aaaaca3ae0",
         "bfe5e4e3ed873855a1f505b9",
-        "c33b4646fdad469f89c889cf",
         "c531be8b238828dfa6a63457",
         "cc63d4e21c528165228e5c32",
         "dadfddcf62c0ab6b1c223189",
+        "dc61e7dded28c133bc4e78ab",
+        "e4c34c6d0888aba02f5c3ef1",
+        "e6b740f3730366040b7d30f5",
         "ec0abfffcad62baa5e1c3bc1",
-        "f883968e16f515313c66c02e",
+        "ed863bbe9c19474c95ff1cce",
+        "ede1ce60cacb48789851e704",
+        "f53f0cc87e4e9bccae6da79e",
         "f99f49a20afbfe72a0790b6f",
-        "fecced32e32336d18671abff"
+        "fda90508bea82b6da13d7d44"
       ],
       "edges": [
         {
@@ -2090,34 +2105,133 @@
           "extra": null
         },
         {
-          "from": "ba67eaf1cae84f03da9fbd27",
-          "to": "1c994f9b8f36711bc64317b3",
+          "from": "01f32722ca112711248f397e",
+          "to": "6f611142280507229ceeac99",
           "requirement": {
-            "name": "h5py",
+            "name": "nvidia-cublas",
+            "marker": "(platform_machine == 'AMD64' and sys_platform == 'win32') or (platform_machine == 'ARM64' and sys_platform == 'win32')"
+          },
+          "extra": "cublas"
+        },
+        {
+          "from": "01f32722ca112711248f397e",
+          "to": "0c8c282f2cc2163a477e3988",
+          "requirement": {
+            "name": "nvidia-cuda-nvrtc",
+            "marker": "(platform_machine == 'AMD64' and sys_platform == 'win32') or (platform_machine == 'ARM64' and sys_platform == 'win32')"
+          },
+          "extra": "cublas"
+        },
+        {
+          "from": "01f32722ca112711248f397e",
+          "to": "dc61e7dded28c133bc4e78ab",
+          "requirement": {
+            "name": "nvidia-cuda-runtime",
+            "marker": "(platform_machine == 'AMD64' and sys_platform == 'win32') or (platform_machine == 'ARM64' and sys_platform == 'win32')"
+          },
+          "extra": "cudart"
+        },
+        {
+          "from": "01f32722ca112711248f397e",
+          "to": "f53f0cc87e4e9bccae6da79e",
+          "requirement": {
+            "name": "nvidia-cufft",
+            "marker": "(platform_machine == 'AMD64' and sys_platform == 'win32') or (platform_machine == 'ARM64' and sys_platform == 'win32')"
+          },
+          "extra": "cufft"
+        },
+        {
+          "from": "01f32722ca112711248f397e",
+          "to": "ed863bbe9c19474c95ff1cce",
+          "requirement": {
+            "name": "nvidia-nvjitlink",
+            "marker": "(platform_machine == 'AMD64' and sys_platform == 'win32') or (platform_machine == 'ARM64' and sys_platform == 'win32')"
+          },
+          "extra": "cufft"
+        },
+        {
+          "from": "01f32722ca112711248f397e",
+          "to": "30e9f86678e1cd50f5cda66f",
+          "requirement": {
+            "name": "nvidia-curand",
+            "marker": "(platform_machine == 'AMD64' and sys_platform == 'win32') or (platform_machine == 'ARM64' and sys_platform == 'win32')"
+          },
+          "extra": "curand"
+        },
+        {
+          "from": "01f32722ca112711248f397e",
+          "to": "6f611142280507229ceeac99",
+          "requirement": {
+            "name": "nvidia-cublas",
+            "marker": "(platform_machine == 'AMD64' and sys_platform == 'win32') or (platform_machine == 'ARM64' and sys_platform == 'win32')"
+          },
+          "extra": "cusolver"
+        },
+        {
+          "from": "01f32722ca112711248f397e",
+          "to": "ede1ce60cacb48789851e704",
+          "requirement": {
+            "name": "nvidia-cusolver",
+            "marker": "(platform_machine == 'AMD64' and sys_platform == 'win32') or (platform_machine == 'ARM64' and sys_platform == 'win32')"
+          },
+          "extra": "cusolver"
+        },
+        {
+          "from": "01f32722ca112711248f397e",
+          "to": "5279283a3776665de8b65601",
+          "requirement": {
+            "name": "nvidia-cusparse",
+            "marker": "(platform_machine == 'AMD64' and sys_platform == 'win32') or (platform_machine == 'ARM64' and sys_platform == 'win32')"
+          },
+          "extra": "cusolver"
+        },
+        {
+          "from": "01f32722ca112711248f397e",
+          "to": "ed863bbe9c19474c95ff1cce",
+          "requirement": {
+            "name": "nvidia-nvjitlink",
+            "marker": "(platform_machine == 'AMD64' and sys_platform == 'win32') or (platform_machine == 'ARM64' and sys_platform == 'win32')"
+          },
+          "extra": "cusolver"
+        },
+        {
+          "from": "01f32722ca112711248f397e",
+          "to": "5279283a3776665de8b65601",
+          "requirement": {
+            "name": "nvidia-cusparse",
+            "marker": "(platform_machine == 'AMD64' and sys_platform == 'win32') or (platform_machine == 'ARM64' and sys_platform == 'win32')"
+          },
+          "extra": "cusparse"
+        },
+        {
+          "from": "01f32722ca112711248f397e",
+          "to": "ed863bbe9c19474c95ff1cce",
+          "requirement": {
+            "name": "nvidia-nvjitlink",
+            "marker": "(platform_machine == 'AMD64' and sys_platform == 'win32') or (platform_machine == 'ARM64' and sys_platform == 'win32')"
+          },
+          "extra": "cusparse"
+        },
+        {
+          "from": "01f32722ca112711248f397e",
+          "to": "0c8c282f2cc2163a477e3988",
+          "requirement": {
+            "name": "nvidia-cuda-nvrtc",
+            "marker": "(platform_machine == 'AMD64' and sys_platform == 'win32') or (platform_machine == 'ARM64' and sys_platform == 'win32')"
+          },
+          "extra": "nvrtc"
+        },
+        {
+          "from": "32ad7765a1824b542527c07b",
+          "to": "86f6f9dde4f5e792a895aab0",
+          "requirement": {
+            "name": "cuda-pathfinder",
             "marker": "sys_platform == 'win32'"
           },
           "extra": null
         },
         {
-          "from": "ba67eaf1cae84f03da9fbd27",
-          "to": "f883968e16f515313c66c02e",
-          "requirement": {
-            "name": "joblib",
-            "marker": "sys_platform == 'win32'"
-          },
-          "extra": null
-        },
-        {
-          "from": "ba67eaf1cae84f03da9fbd27",
-          "to": "76ad8fe08b42c935b883b9f0",
-          "requirement": {
-            "name": "matplotlib",
-            "marker": "sys_platform == 'win32'"
-          },
-          "extra": null
-        },
-        {
-          "from": "ba67eaf1cae84f03da9fbd27",
+          "from": "32ad7765a1824b542527c07b",
           "to": "44a6eec8e5c204b68943c4ea",
           "requirement": {
             "name": "numpy",
@@ -2126,7 +2240,73 @@
           "extra": null
         },
         {
-          "from": "ba67eaf1cae84f03da9fbd27",
+          "from": "32ad7765a1824b542527c07b",
+          "to": "01f32722ca112711248f397e",
+          "requirement": {
+            "name": "cuda-toolkit",
+            "extra": [
+              "cublas",
+              "cudart",
+              "cufft",
+              "curand",
+              "cusolver",
+              "cusparse",
+              "nvrtc"
+            ],
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": "ctk"
+        },
+        {
+          "from": "2c0246dd44b762439a9d7ed0",
+          "to": "32ad7765a1824b542527c07b",
+          "requirement": {
+            "name": "cupy-cuda13x",
+            "extra": [
+              "ctk"
+            ],
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "2c0246dd44b762439a9d7ed0",
+          "to": "1c994f9b8f36711bc64317b3",
+          "requirement": {
+            "name": "h5py",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "2c0246dd44b762439a9d7ed0",
+          "to": "9e2b739b611ba8aa335c4a58",
+          "requirement": {
+            "name": "joblib",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "2c0246dd44b762439a9d7ed0",
+          "to": "76ad8fe08b42c935b883b9f0",
+          "requirement": {
+            "name": "matplotlib",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "2c0246dd44b762439a9d7ed0",
+          "to": "44a6eec8e5c204b68943c4ea",
+          "requirement": {
+            "name": "numpy",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "2c0246dd44b762439a9d7ed0",
           "to": "2ce9d09157ca9457255fe377",
           "requirement": {
             "name": "opencv-python",
@@ -2135,7 +2315,7 @@
           "extra": null
         },
         {
-          "from": "ba67eaf1cae84f03da9fbd27",
+          "from": "2c0246dd44b762439a9d7ed0",
           "to": "cc63d4e21c528165228e5c32",
           "requirement": {
             "name": "pillow",
@@ -2144,8 +2324,17 @@
           "extra": null
         },
         {
-          "from": "ba67eaf1cae84f03da9fbd27",
-          "to": "3ed3f2e37e6a8323b39657a9",
+          "from": "2c0246dd44b762439a9d7ed0",
+          "to": "e6b740f3730366040b7d30f5",
+          "requirement": {
+            "name": "psutil",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "2c0246dd44b762439a9d7ed0",
+          "to": "81ab8b2fc977f03fc5f95f06",
           "requirement": {
             "name": "pydantic",
             "marker": "sys_platform == 'win32'"
@@ -2153,7 +2342,7 @@
           "extra": null
         },
         {
-          "from": "ba67eaf1cae84f03da9fbd27",
+          "from": "2c0246dd44b762439a9d7ed0",
           "to": "a55a425391e5b5de9ae84aaf",
           "requirement": {
             "name": "scikit-image",
@@ -2162,7 +2351,7 @@
           "extra": null
         },
         {
-          "from": "ba67eaf1cae84f03da9fbd27",
+          "from": "2c0246dd44b762439a9d7ed0",
           "to": "ec0abfffcad62baa5e1c3bc1",
           "requirement": {
             "name": "scipy",
@@ -2171,7 +2360,7 @@
           "extra": null
         },
         {
-          "from": "ba67eaf1cae84f03da9fbd27",
+          "from": "2c0246dd44b762439a9d7ed0",
           "to": "a3a826cd86d7074103e57681",
           "requirement": {
             "name": "simpleitk",
@@ -2180,7 +2369,7 @@
           "extra": null
         },
         {
-          "from": "ba67eaf1cae84f03da9fbd27",
+          "from": "2c0246dd44b762439a9d7ed0",
           "to": "31d2dc97d0ae43cd61d15319",
           "requirement": {
             "name": "sv-ttk",
@@ -2189,8 +2378,17 @@
           "extra": null
         },
         {
-          "from": "ba67eaf1cae84f03da9fbd27",
-          "to": "c33b4646fdad469f89c889cf",
+          "from": "2c0246dd44b762439a9d7ed0",
+          "to": "fda90508bea82b6da13d7d44",
+          "requirement": {
+            "name": "threadpoolctl",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "2c0246dd44b762439a9d7ed0",
+          "to": "7567bd7ea48b74b384294756",
           "requirement": {
             "name": "tkinterdnd2",
             "marker": "sys_platform == 'win32'"
@@ -2198,7 +2396,7 @@
           "extra": null
         },
         {
-          "from": "ba67eaf1cae84f03da9fbd27",
+          "from": "2c0246dd44b762439a9d7ed0",
           "to": "121b36486858fafa7cf7e253",
           "requirement": {
             "name": "tqdm",
@@ -2234,15 +2432,6 @@
           "extra": null
         },
         {
-          "from": "f883968e16f515313c66c02e",
-          "to": "a96e091a2187b9ee89f83380",
-          "requirement": {
-            "name": "cloudpickle",
-            "marker": "sys_platform == 'win32'"
-          },
-          "extra": null
-        },
-        {
           "from": "160931eae3e6a057347d6e9b",
           "to": "25aa8de3a4230ae674db5d77",
           "requirement": {
@@ -2271,7 +2460,7 @@
         },
         {
           "from": "76ad8fe08b42c935b883b9f0",
-          "to": "2d533768ca92dd533567520e",
+          "to": "bad5e9cc5544e3aaaaca3ae0",
           "requirement": {
             "name": "fonttools",
             "marker": "sys_platform == 'win32'"
@@ -2333,6 +2522,60 @@
           "extra": null
         },
         {
+          "from": "6f611142280507229ceeac99",
+          "to": "0c8c282f2cc2163a477e3988",
+          "requirement": {
+            "name": "nvidia-cuda-nvrtc",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "f53f0cc87e4e9bccae6da79e",
+          "to": "ed863bbe9c19474c95ff1cce",
+          "requirement": {
+            "name": "nvidia-nvjitlink",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "ede1ce60cacb48789851e704",
+          "to": "6f611142280507229ceeac99",
+          "requirement": {
+            "name": "nvidia-cublas",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "ede1ce60cacb48789851e704",
+          "to": "5279283a3776665de8b65601",
+          "requirement": {
+            "name": "nvidia-cusparse",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "ede1ce60cacb48789851e704",
+          "to": "ed863bbe9c19474c95ff1cce",
+          "requirement": {
+            "name": "nvidia-nvjitlink",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
+          "from": "5279283a3776665de8b65601",
+          "to": "ed863bbe9c19474c95ff1cce",
+          "requirement": {
+            "name": "nvidia-nvjitlink",
+            "marker": "sys_platform == 'win32'"
+          },
+          "extra": null
+        },
+        {
           "from": "2ce9d09157ca9457255fe377",
           "to": "44a6eec8e5c204b68943c4ea",
           "requirement": {
@@ -2342,7 +2585,7 @@
           "extra": null
         },
         {
-          "from": "3ed3f2e37e6a8323b39657a9",
+          "from": "81ab8b2fc977f03fc5f95f06",
           "to": "f99f49a20afbfe72a0790b6f",
           "requirement": {
             "name": "annotated-types",
@@ -2351,8 +2594,8 @@
           "extra": null
         },
         {
-          "from": "3ed3f2e37e6a8323b39657a9",
-          "to": "fecced32e32336d18671abff",
+          "from": "81ab8b2fc977f03fc5f95f06",
+          "to": "e4c34c6d0888aba02f5c3ef1",
           "requirement": {
             "name": "pydantic-core",
             "marker": "sys_platform == 'win32'"
@@ -2360,7 +2603,7 @@
           "extra": null
         },
         {
-          "from": "3ed3f2e37e6a8323b39657a9",
+          "from": "81ab8b2fc977f03fc5f95f06",
           "to": "50e7b2fe389e920589861640",
           "requirement": {
             "name": "typing-extensions",
@@ -2369,7 +2612,7 @@
           "extra": null
         },
         {
-          "from": "3ed3f2e37e6a8323b39657a9",
+          "from": "81ab8b2fc977f03fc5f95f06",
           "to": "755ec59c2696919572516ef9",
           "requirement": {
             "name": "typing-inspection",
@@ -2378,7 +2621,7 @@
           "extra": null
         },
         {
-          "from": "fecced32e32336d18671abff",
+          "from": "e4c34c6d0888aba02f5c3ef1",
           "to": "50e7b2fe389e920589861640",
           "requirement": {
             "name": "typing-extensions",
@@ -2397,7 +2640,7 @@
         },
         {
           "from": "bfe5e4e3ed873855a1f505b9",
-          "to": "35e1146433e8b3f00fa8766b",
+          "to": "7f1f3fc4a5557cb7da8cfae8",
           "requirement": {
             "name": "tzdata",
             "marker": "sys_platform == 'win32'"
@@ -2514,11 +2757,21 @@
         }
       ],
       "requirements": [
-        "EyeFlow @ git+https://github.com/DigitalHolography/EyeFlow.git@main"
+        "EyeFlow @ git+https://github.com/DigitalHolography/EyeFlow.git@main",
+        "cloudpickle>=3.0",
+        "joblib>=1.5,<1.6"
       ],
       "direct_dependencies": [
         {
+          "name": "cloudpickle",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
           "name": "eyeflow",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "joblib",
           "marker": "sys_platform == 'win32'"
         }
       ],
@@ -2530,17 +2783,17 @@
         "1c994f9b8f36711bc64317b3",
         "20338883980515d534eccf6b",
         "25aa8de3a4230ae674db5d77",
-        "2d533768ca92dd533567520e",
         "31d2dc97d0ae43cd61d15319",
         "3352ba99c78b770cb7e74aaa",
-        "35e1146433e8b3f00fa8766b",
         "4232969fef824fc21eb175fb",
         "44a6eec8e5c204b68943c4ea",
+        "7567bd7ea48b74b384294756",
         "76ad8fe08b42c935b883b9f0",
+        "7f1f3fc4a5557cb7da8cfae8",
         "8e258e86e27264ebcaeb7222",
         "9dd06b99923f9354b939849d",
+        "bad5e9cc5544e3aaaaca3ae0",
         "bfe5e4e3ed873855a1f505b9",
-        "c33b4646fdad469f89c889cf",
         "c531be8b238828dfa6a63457",
         "cc63d4e21c528165228e5c32",
         "ce101433acfd04fbc7c579e0",
@@ -2603,7 +2856,7 @@
         },
         {
           "from": "9dd06b99923f9354b939849d",
-          "to": "c33b4646fdad469f89c889cf",
+          "to": "7567bd7ea48b74b384294756",
           "requirement": {
             "name": "tkinterdnd2",
             "marker": "sys_platform == 'win32'"
@@ -2648,7 +2901,7 @@
         },
         {
           "from": "76ad8fe08b42c935b883b9f0",
-          "to": "2d533768ca92dd533567520e",
+          "to": "bad5e9cc5544e3aaaaca3ae0",
           "requirement": {
             "name": "fonttools",
             "marker": "sys_platform == 'win32'"
@@ -2729,7 +2982,7 @@
         },
         {
           "from": "ce101433acfd04fbc7c579e0",
-          "to": "35e1146433e8b3f00fa8766b",
+          "to": "7f1f3fc4a5557cb7da8cfae8",
           "requirement": {
             "name": "tzdata",
             "marker": "sys_platform == 'win32'"
@@ -2747,7 +3000,7 @@
         },
         {
           "from": "bfe5e4e3ed873855a1f505b9",
-          "to": "35e1146433e8b3f00fa8766b",
+          "to": "7f1f3fc4a5557cb7da8cfae8",
           "requirement": {
             "name": "tzdata",
             "marker": "sys_platform == 'win32'"
@@ -2961,12 +3214,12 @@
       "dependencies": [],
       "requires_dist": []
     },
-    "cb12e0a15dfb4e0189665dec": {
+    "fc6371dd560db0e85416d686": {
       "name": "imageio-ffmpeg",
-      "version": "0.6.0",
+      "version": "0.7.0",
       "artifact": {
-        "url": "https://files.pythonhosted.org/packages/2c/c6/fa760e12a2483469e2bf5058c5faff664acf66cadb4df2ad6205b016a73d/imageio_ffmpeg-0.6.0-py3-none-win_amd64.whl",
-        "hash": "sha256:02fa47c83703c37df6bfe4896aab339013f62bf02c5ebf2dce6da56af04ffc0a",
+        "url": "https://files.pythonhosted.org/packages/e5/55/1d50cdd78d862a30c2ce44f01cea387f77b364b21fa2fecf1590258b215b/imageio_ffmpeg-0.7.0-py3-none-win_amd64.whl",
+        "hash": "sha256:7a22b45f60321d4172bdf2bc61f716bce4c81b85727bd59c7c7e371055a6a440",
         "abi": "3.13.14"
       },
       "consumers": [
@@ -3075,12 +3328,12 @@
       "dependencies": [],
       "requires_dist": []
     },
-    "63651b5159fe1fcffa1483a4": {
+    "dfcb473a4007ca4436c9fce8": {
       "name": "narwhals",
-      "version": "2.27.1",
+      "version": "2.28.0",
       "artifact": {
-        "url": "https://files.pythonhosted.org/packages/d1/89/5d4c86da1130d9059681e5b6cd7645df5c10279a6a079c5c37dcb2cc6f3f/narwhals-2.27.1-py3-none-any.whl",
-        "hash": "sha256:d057df13f5852b8e157596e82eb5e955fad267425df5e420e0ee9863da483b31",
+        "url": "https://files.pythonhosted.org/packages/cf/82/8ef9c7e0f50493307a49c09cfa7f00c5a778b6d1921f7b2dabe1d3a5809e/narwhals-2.28.0-py3-none-any.whl",
+        "hash": "sha256:1f69d6385ec30e2fa6e1fdeb37c562ecabd0f713f6f3e3b58a668c5c9df9567f",
         "abi": "pure"
       },
       "consumers": [
@@ -3343,12 +3596,12 @@
       "dependencies": [],
       "requires_dist": []
     },
-    "29f8f8fadc16f97a50644438": {
+    "673d88fa8f7cdedfdfb3d3a4": {
       "name": "pytz",
-      "version": "2026.5",
+      "version": "2026.6",
       "artifact": {
-        "url": "https://files.pythonhosted.org/packages/4f/ef/c66110d46fb800dda0bf33164182dfadabe26a90e4476844d502a23dca8e/pytz-2026.5-py2.py3-none-any.whl",
-        "hash": "sha256:e658af3757f9e26a9d25dd2aff38335acd92bc9104f890a894b2c1ba28311b03",
+        "url": "https://files.pythonhosted.org/packages/b6/25/564f3fc5b70c1398d706c51f2b1470d0ea0b1b2f96fee67877b6f5bdf3b6/pytz-2026.6-py2.py3-none-any.whl",
+        "hash": "sha256:7fed3fee8fd6bd4a2b7b75a8d56021d0624127bf69bd5691f115db929ac570b3",
         "abi": "pure"
       },
       "consumers": [
@@ -3489,12 +3742,12 @@
       "dependencies": [],
       "requires_dist": []
     },
-    "6a544b7678bdf7fe1dfb29bb": {
+    "bcc88a5cbd1cfb30055030a3": {
       "name": "starlette",
-      "version": "1.9.0",
+      "version": "1.10.0",
       "artifact": {
-        "url": "https://files.pythonhosted.org/packages/f3/93/181df62699d9b5aca1d87e5cfda131dac87e3cdaebf668662f7206ca3470/starlette-1.9.0-py3-none-any.whl",
-        "hash": "sha256:fd3f159936e882d06c1108f84688f7cda2cf85fc6a592a50edbd175e882c2ddc",
+        "url": "https://files.pythonhosted.org/packages/88/2e/947cfe02def9371c07cd5bf5b6b61c829e9aecb9904db02a66cfafbc1eec/starlette-1.10.0-py3-none-any.whl",
+        "hash": "sha256:478c0ab3b4ced6e82719849c118fa406f0278a3499c1a898cd15cd31bdc38ce4",
         "abi": "pure"
       },
       "consumers": [
@@ -3611,12 +3864,12 @@
       "dependencies": [],
       "requires_dist": []
     },
-    "35e1146433e8b3f00fa8766b": {
+    "7f1f3fc4a5557cb7da8cfae8": {
       "name": "tzdata",
-      "version": "2026.5",
+      "version": "2026.6",
       "artifact": {
-        "url": "https://files.pythonhosted.org/packages/94/21/1e5995a1c920cce14e4bffae20c665ec10e7ed03ab25e006cd741092b718/tzdata-2026.5-py2.py3-none-any.whl",
-        "hash": "sha256:b683bd1b6659ddcd810ff02ad09ba821d4bf1065072805063eb35c49617905ac",
+        "url": "https://files.pythonhosted.org/packages/0a/66/9a06c2227fedfd4919f0eaaa8b94377d9730882a7e4f95823c9a331ab5e1/tzdata-2026.6-py2.py3-none-any.whl",
+        "hash": "sha256:0a10eec6e13ef16b627fabed9a5f2ba61a62b1c67f327305f4e7e412a70b4aec",
         "abi": "pure"
       },
       "consumers": [
@@ -3680,12 +3933,12 @@
       "dependencies": [],
       "requires_dist": []
     },
-    "6e7a4b0e1241e55eb1b01e78": {
+    "6f41f67b2cd440aeed5920e6": {
       "name": "websockets",
-      "version": "17.3",
+      "version": "17.4",
       "artifact": {
-        "url": "https://files.pythonhosted.org/packages/7d/6c/db5c907d1cbea84444bc759ff63db97fc586988d11a34d5565e8b50080fa/websockets-17.3-cp313-cp313-win_amd64.whl",
-        "hash": "sha256:66027e401c70d0cf55021b91b8a7ec2cd5810e20602f945b4fe6ae8b37ed232b",
+        "url": "https://files.pythonhosted.org/packages/60/a1/17e507dadbfccb755758ba977b165fec92924dfc4a8d2573b4fc1561b0cd/websockets-17.4-cp313-cp313-win_amd64.whl",
+        "hash": "sha256:203e42eb77e06f85778a908b34c5ad032f34e98a68ef33920d6685c1e65a9420",
         "abi": "3.13.14"
       },
       "consumers": [
@@ -3732,16 +3985,17 @@
       ],
       "requires_dist": []
     },
-    "fe219ff217014d50fdf8496b": {
+    "86f6f9dde4f5e792a895aab0": {
       "name": "cuda-pathfinder",
-      "version": "1.8.4",
+      "version": "1.8.5",
       "artifact": {
-        "url": "https://files.pythonhosted.org/packages/8e/93/f0904fa7d954ecc4c0db17c8d63d185d442dd59fc6757f1d1f448c59c256/cuda_pathfinder-1.8.4-py3-none-any.whl",
-        "hash": "sha256:85a4e708c725d603f576042ef32781a3d1737c51e84c35fe361d2680191af65a",
+        "url": "https://files.pythonhosted.org/packages/3d/b1/88f9aa5052f6d69afc4507763517b84872a76d3f7644edddca8bb4e3729a/cuda_pathfinder-1.8.5-py3-none-any.whl",
+        "hash": "sha256:16d1026fdd78ac0222b966441de53dec3f0dbe6b1e2c43d19d92eb29bfd81e67",
         "abi": "pure"
       },
       "consumers": [
-        "holodoppler"
+        "holodoppler",
+        "eyeflow"
       ],
       "dependencies": [],
       "requires_dist": []
@@ -3755,7 +4009,8 @@
         "abi": "3.13.14"
       },
       "consumers": [
-        "holodoppler"
+        "holodoppler",
+        "eyeflow"
       ],
       "dependencies": [
         {
@@ -3786,12 +4041,12 @@
       "dependencies": [],
       "requires_dist": []
     },
-    "2d533768ca92dd533567520e": {
+    "bad5e9cc5544e3aaaaca3ae0": {
       "name": "fonttools",
-      "version": "4.67.0",
+      "version": "4.68.0",
       "artifact": {
-        "url": "https://files.pythonhosted.org/packages/c1/f6/39e9461211309965514642c005a8d51e866a1092f69f5f693b16de9c5395/fonttools-4.67.0-cp313-cp313-win_amd64.whl",
-        "hash": "sha256:7343cd0ef70edf8be7f4913cb9b55b992fb4e04055b47dcfecddcc2eb045a9d2",
+        "url": "https://files.pythonhosted.org/packages/61/2b/6c6f578176edeec83c5e02b7e745c1c8029f8cec4e32b4898d2c573bb881/fonttools-4.68.0-cp313-cp313-win_amd64.whl",
+        "hash": "sha256:6ed796b220654b4d37ad20af73419ec7969b669dd678cab88afb602c5683a331",
         "abi": "3.13.14"
       },
       "consumers": [
@@ -3803,11 +4058,11 @@
       "dependencies": [],
       "requires_dist": []
     },
-    "2dd22287ef4ee44ce2196347": {
+    "16d35f6cf52bfc3b37e52a4e": {
       "name": "holodoppler",
-      "version": "1.4",
+      "version": "1.4.4",
       "artifact": {
-        "git": "git+https://github.com/DigitalHolography/HoloDoppler.git@054de5f958fcc7bc5bcdc397792449369c1014b6",
+        "git": "git+https://github.com/DigitalHolography/HoloDoppler.git@6a4636579b9a689848a23b5aeebdaf184f00d7b1",
         "abi": "3.13.14"
       },
       "consumers": [
@@ -3994,7 +4249,8 @@
       },
       "consumers": [
         "holodoppler",
-        "dopplerview"
+        "dopplerview",
+        "eyeflow"
       ],
       "dependencies": [],
       "requires_dist": []
@@ -4055,12 +4311,12 @@
       "dependencies": [],
       "requires_dist": []
     },
-    "c33b4646fdad469f89c889cf": {
+    "7567bd7ea48b74b384294756": {
       "name": "tkinterdnd2",
-      "version": "0.6.4",
+      "version": "0.7.0",
       "artifact": {
-        "url": "https://files.pythonhosted.org/packages/73/a6/72313c930c923406bd55fd7d389f6fcab2064ccd76be3590ef9d584cf2cf/tkinterdnd2-0.6.4-py3-none-any.whl",
-        "hash": "sha256:4b11e0ac6febd8609faf154851d782eca4068bfa68a88ca3d3dded8294367f80",
+        "url": "https://files.pythonhosted.org/packages/eb/13/73054a55222b55604846d78c2e5e0c84bbe9f35bc7d6d9697a289c905b3a/tkinterdnd2-0.7.0-py3-none-any.whl",
+        "hash": "sha256:f93d4f5ad439648ba1673f15db3e271cdd08f075c87f43553ffcdde4e634a717",
         "abi": "pure"
       },
       "consumers": [
@@ -4262,12 +4518,12 @@
       "dependencies": [],
       "requires_dist": []
     },
-    "bf2497e7b5563e5a3efcfda8": {
+    "1e9a7b379567798984f580a2": {
       "name": "hf-xet",
-      "version": "1.7.0",
+      "version": "1.8.0",
       "artifact": {
-        "url": "https://files.pythonhosted.org/packages/4d/59/b35106dfa71b6eef605dc88bd038fe99c7f86fb132a15b60d0bf2f235b2c/hf_xet-1.7.0-cp38-abi3-win_amd64.whl",
-        "hash": "sha256:2b7bb5727889b0f2436dbaaad8fc4c3e66b8240d992716989e0c086b4278b1bc",
+        "url": "https://files.pythonhosted.org/packages/97/4d/2c76a992b370ff77d0b5219275779f8c9a7dabb8ee649deb265dfed84d0f/hf_xet-1.8.0-cp38-abi3-win_amd64.whl",
+        "hash": "sha256:92188598dedc1e1f5609bd718d4db8687a6c89915553912571e2f587892eecec",
         "abi": "3.13.14"
       },
       "consumers": [
@@ -4330,12 +4586,12 @@
       ],
       "requires_dist": []
     },
-    "fb0a3573ce41f3930eddbc1f": {
+    "f32d2999857f1467897bb2a0": {
       "name": "huggingface-hub",
-      "version": "2.3.0",
+      "version": "2.4.0",
       "artifact": {
-        "url": "https://files.pythonhosted.org/packages/c7/89/5f6ef1162d0323f167b6baab04d1b4bd6a946161a8af6d86f622d9d79aa1/huggingface_hub-2.3.0-py3-none-any.whl",
-        "hash": "sha256:5da369600233568a126eb5578754935b2add9446b42d9e2fc0927d56840ac1a5",
+        "url": "https://files.pythonhosted.org/packages/d4/55/ff47f1b082ecf5f43f4bc1e3b932d68eead171dabbbd1a92666c686301d7/huggingface_hub-2.4.0-py3-none-any.whl",
+        "hash": "sha256:42ecfd93ede47bdd333daebbf66a32d7bfe2e18752754fe4d2d4f98a0179d801",
         "abi": "pure"
       },
       "consumers": [
@@ -4390,8 +4646,7 @@
         "abi": "pure"
       },
       "consumers": [
-        "dopplerview",
-        "eyeflow"
+        "dopplerview"
       ],
       "dependencies": [
         {
@@ -4723,7 +4978,8 @@
         "abi": "pure"
       },
       "consumers": [
-        "dopplerview"
+        "dopplerview",
+        "eyeflow"
       ],
       "dependencies": [],
       "requires_dist": []
@@ -4748,12 +5004,12 @@
       ],
       "requires_dist": []
     },
-    "fabcbae2b2836e2f27ac3c1b": {
+    "464d7c7926e61c263ec0a338": {
       "name": "torch",
-      "version": "2.14.1",
+      "version": "2.15.0",
       "artifact": {
-        "url": "https://files.pythonhosted.org/packages/7b/4b/32c00cacbe682a4c08d9c6c3e7a7116c912184cc7155f06c64f545db97d1/torch-2.14.1-cp313-cp313-win_amd64.whl",
-        "hash": "sha256:711713391d26a1ce5e9fbc6c996d954a8c12e8825374cc77b809a6af29539b8c",
+        "url": "https://files.pythonhosted.org/packages/3d/6c/f26ed528d197859cf8a634bbfafc3bc136f5590b6620df179d1858a34fdc/torch-2.15.0-cp313-cp313-win_amd64.whl",
+        "hash": "sha256:e079089d36401261ebe145504309d0114fb9a00529eac4b33048221d2376a15c",
         "abi": "3.13.14"
       },
       "consumers": [
@@ -4791,12 +5047,12 @@
       ],
       "requires_dist": []
     },
-    "dd62e126a3772c775594a32e": {
+    "57d89cfe39b8dd1f5779ce1c": {
       "name": "torchvision",
-      "version": "0.29.1",
+      "version": "0.29.2",
       "artifact": {
-        "url": "https://files.pythonhosted.org/packages/6f/d7/08452a8497aab125557b7698886990eb1ab3d3a923dedcd88f309a727fe5/torchvision-0.29.1-cp313-cp313-win_amd64.whl",
-        "hash": "sha256:41338cd71864419de9ae1e1b0058f6b8645f0548370c4750c7694ffa9bff611c",
+        "url": "https://files.pythonhosted.org/packages/cf/9a/a728c3af061bff5e0c8a8389b6dfe99646f8290a2f6a5f8fb624a0c15b92/torchvision-0.29.2-py3-none-win_amd64.whl",
+        "hash": "sha256:5812c312d4401c3587a045fa4c6228d982ebc4faa9b472275d11afe5852e24f9",
         "abi": "3.13.14"
       },
       "consumers": [
@@ -4877,17 +5133,38 @@
       "dependencies": [],
       "requires_dist": []
     },
-    "ba67eaf1cae84f03da9fbd27": {
-      "name": "eyeflow",
-      "version": "1.24.0",
+    "01f32722ca112711248f397e": {
+      "name": "cuda-toolkit",
+      "version": "13.4.3",
       "artifact": {
-        "git": "git+https://github.com/DigitalHolography/EyeFlow.git@c771f8f0b74913470421fc9fccf9b6c55e118c0b",
+        "url": "https://files.pythonhosted.org/packages/2f/5f/016d1ea09ce3a627e8b607068ba8c92696af5298fc34586069bf60067985/cuda_toolkit-13.4.3-py2.py3-none-any.whl",
+        "hash": "sha256:c56be2a9f538653ef5b1aa27787ed046ea08afa10bd55e95335a35fd196ac14e",
+        "abi": "pure"
+      },
+      "consumers": [
+        "eyeflow"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "2c0246dd44b762439a9d7ed0": {
+      "name": "eyeflow",
+      "version": "1.25.0",
+      "artifact": {
+        "git": "git+https://github.com/DigitalHolography/EyeFlow.git@7888378ff96f16d314ff1f427c976bc9b9bbfb59",
         "abi": "3.13.14"
       },
       "consumers": [
         "eyeflow"
       ],
       "dependencies": [
+        {
+          "name": "cupy-cuda13x",
+          "extra": [
+            "ctk"
+          ],
+          "marker": "sys_platform == 'win32'"
+        },
         {
           "name": "h5py",
           "marker": "sys_platform == 'win32'"
@@ -4913,6 +5190,10 @@
           "marker": "sys_platform == 'win32'"
         },
         {
+          "name": "psutil",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
           "name": "pydantic",
           "marker": "sys_platform == 'win32'"
         },
@@ -4933,6 +5214,10 @@
           "marker": "sys_platform == 'win32'"
         },
         {
+          "name": "threadpoolctl",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
           "name": "tkinterdnd2",
           "marker": "sys_platform == 'win32'"
         },
@@ -4943,12 +5228,166 @@
       ],
       "requires_dist": []
     },
-    "3ed3f2e37e6a8323b39657a9": {
-      "name": "pydantic",
-      "version": "2.14.1",
+    "9e2b739b611ba8aa335c4a58": {
+      "name": "joblib",
+      "version": "1.5.3",
       "artifact": {
-        "url": "https://files.pythonhosted.org/packages/35/ea/a56b9fe5066f3537b7882f77e9c5dfb26d8c2eefdaed9b5fc73d57b4dc22/pydantic-2.14.1-py3-none-any.whl",
-        "hash": "sha256:9195d967ec791692a04438115466764fb8b9a27b31f14a760437694f40d6b454",
+        "url": "https://files.pythonhosted.org/packages/7b/91/984aca2ec129e2757d1e4e3c81c3fcda9d0f85b74670a094cc443d9ee949/joblib-1.5.3-py3-none-any.whl",
+        "hash": "sha256:5fc3c5039fc5ca8c0276333a188bbd59d6b7ab37fe6632daa76bc7f9ec18e713",
+        "abi": "pure"
+      },
+      "consumers": [
+        "eyeflow"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "6f611142280507229ceeac99": {
+      "name": "nvidia-cublas",
+      "version": "13.8.0.4",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/a3/df/f1246959833e2c437db8be3e5b477f66b87f8817821ed40de6c7561c9a36/nvidia_cublas-13.8.0.4-py3-none-win_amd64.whl",
+        "hash": "sha256:8c5494423bb8a46822cb6b0cb95d7fa4be2d7b96a31155dff083839ec8297910",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "eyeflow"
+      ],
+      "dependencies": [
+        {
+          "name": "nvidia-cuda-nvrtc",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "0c8c282f2cc2163a477e3988": {
+      "name": "nvidia-cuda-nvrtc",
+      "version": "13.4.92",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/64/5b/aa91896f64444eff1dd7f189f4db05046c7f0ba08c0f531283c1c1aac581/nvidia_cuda_nvrtc-13.4.92-py3-none-win_amd64.whl",
+        "hash": "sha256:6af7ac5372920f6a7a560d0699348560fe44cb52c1d722d6afd3119f8af948c4",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "eyeflow"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "dc61e7dded28c133bc4e78ab": {
+      "name": "nvidia-cuda-runtime",
+      "version": "13.4.92",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/86/00/d5436004268f049214193659ebc36550b5ef3925c3d13b4cc980e13be6f5/nvidia_cuda_runtime-13.4.92-py3-none-win_amd64.whl",
+        "hash": "sha256:08dca5e4aba480c2fd5b55075c0fa71b84ef9dcf0521f2d58baa14a803a7311c",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "eyeflow"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "f53f0cc87e4e9bccae6da79e": {
+      "name": "nvidia-cufft",
+      "version": "12.4.0.43",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/7b/cc/be7fe31058127336a66c88414a2ecc6beecf680baf85994a43eaf292b202/nvidia_cufft-12.4.0.43-py3-none-win_amd64.whl",
+        "hash": "sha256:4ff7075f2d0b5f69291f70938d37a86ec632cbe5747184c74ba1f50f17accacc",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "eyeflow"
+      ],
+      "dependencies": [
+        {
+          "name": "nvidia-nvjitlink",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "30e9f86678e1cd50f5cda66f": {
+      "name": "nvidia-curand",
+      "version": "10.4.4.72",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/e2/d4/f59ab342b82ff05ff27d674acd470ba625d788bf71338f7da6c89669d6b9/nvidia_curand-10.4.4.72-py3-none-win_amd64.whl",
+        "hash": "sha256:e0bce83e083ef25976ee74f59e8f067c15149a74538f1be6c2462e286e7c9c68",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "eyeflow"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "ede1ce60cacb48789851e704": {
+      "name": "nvidia-cusolver",
+      "version": "12.3.5.3",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/c9/d5/7328b9d871a7f5bc3238cf15a4f2a8635d7aa8fe445215163dc0b60c4ca5/nvidia_cusolver-12.3.5.3-py3-none-win_amd64.whl",
+        "hash": "sha256:43c33b50b5a8d254ad42ffe0300bbd56ba27a3303e9229be2cf298f3944ac47f",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "eyeflow"
+      ],
+      "dependencies": [
+        {
+          "name": "nvidia-cublas",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "nvidia-cusparse",
+          "marker": "sys_platform == 'win32'"
+        },
+        {
+          "name": "nvidia-nvjitlink",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "5279283a3776665de8b65601": {
+      "name": "nvidia-cusparse",
+      "version": "12.8.6.72",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/85/f7/e0d0edefab227c9967df12484fd50e5586b9af86439f38354779c7086e8b/nvidia_cusparse-12.8.6.72-py3-none-win_amd64.whl",
+        "hash": "sha256:013d3f83316431dd3338cf15141dd5420b24dffc6663fc083c053c8409fa3cb7",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "eyeflow"
+      ],
+      "dependencies": [
+        {
+          "name": "nvidia-nvjitlink",
+          "marker": "sys_platform == 'win32'"
+        }
+      ],
+      "requires_dist": []
+    },
+    "ed863bbe9c19474c95ff1cce": {
+      "name": "nvidia-nvjitlink",
+      "version": "13.4.92",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/72/7c/c44bd7277afafed9de262a23baec4dc8dcf7ecbb1b9ecb228821442d1e9b/nvidia_nvjitlink-13.4.92-py3-none-win_amd64.whl",
+        "hash": "sha256:b286f3a4f227a9363efdec263c7b91788cef1478d2b8a5fa8bab7f3e82ff82fd",
+        "abi": "3.13.14"
+      },
+      "consumers": [
+        "eyeflow"
+      ],
+      "dependencies": [],
+      "requires_dist": []
+    },
+    "81ab8b2fc977f03fc5f95f06": {
+      "name": "pydantic",
+      "version": "2.14.2",
+      "artifact": {
+        "url": "https://files.pythonhosted.org/packages/97/01/c71a71258b58659c72504e5fd65b451f6e36e34dc931d0b237ded213c814/pydantic-2.14.2-py3-none-any.whl",
+        "hash": "sha256:7efbf7507b937931cd32a5755acb00ea1cf5ccb1d4e8067a5850d5069e382118",
         "abi": "pure"
       },
       "consumers": [
@@ -4974,12 +5413,12 @@
       ],
       "requires_dist": []
     },
-    "fecced32e32336d18671abff": {
+    "e4c34c6d0888aba02f5c3ef1": {
       "name": "pydantic-core",
-      "version": "2.50.1",
+      "version": "2.50.2",
       "artifact": {
-        "url": "https://files.pythonhosted.org/packages/2d/1f/323f78ddd9d9938aac420c1abb4e8ba799fc8bdab0acc67c0593b837c979/pydantic_core-2.50.1-cp313-cp313-win_amd64.whl",
-        "hash": "sha256:7816e98acc08119dc0f340ab167048ecc54126316330c1f0caf7c6756c88e28f",
+        "url": "https://files.pythonhosted.org/packages/6f/dd/14eeec394ec1422f9c4e9743cd746f4502232a7c65eb235d1a03729d94ab/pydantic_core-2.50.2-cp313-cp313-win_amd64.whl",
+        "hash": "sha256:e5c801bdf3cc92274b8fc2c7023c8751e5ae81260c009ac558ff55ce712a2d45",
         "abi": "3.13.14"
       },
       "consumers": [
@@ -5102,14 +5541,16 @@
       "pyinstaller>=6.0,<7"
     ],
     "holodoppler": [
-      "holodoppler @ git+https://github.com/DigitalHolography/HoloDoppler.git@054de5f958fcc7bc5bcdc397792449369c1014b6"
+      "holodoppler @ git+https://github.com/DigitalHolography/HoloDoppler.git@6a4636579b9a689848a23b5aeebdaf184f00d7b1"
     ],
     "dopplerview": [
       "dopplerview @ git+https://github.com/DigitalHolography/DopplerView.git@8250b090275e1ff071516650ccdff8b4ff06ed83",
       "onnxruntime>=1.25,<1.26"
     ],
     "eyeflow": [
-      "EyeFlow @ git+https://github.com/DigitalHolography/EyeFlow.git@c771f8f0b74913470421fc9fccf9b6c55e118c0b"
+      "EyeFlow @ git+https://github.com/DigitalHolography/EyeFlow.git@7888378ff96f16d314ff1f427c976bc9b9bbfb59",
+      "cloudpickle>=3.0",
+      "joblib>=1.5,<1.6"
     ],
     "angioeye": [
       "AngioEye @ git+https://github.com/DigitalHolography/AngioEye.git@d3d283af9d3d14e7bfeeb0e7b634ff1863af751d"
@@ -5124,15 +5565,15 @@
   },
   "lock_hashes": {
     "apps/manager/pyproject.toml": "13c08cd5903dba91c17f4d0364706eb30edcf5fe4cfe28785f530e40d7360173",
-    "apps/manager/uv.lock": "88a8e45014746acb06b9e43ec16f0ac730568fc3cb2bc429ecccac22d11604ab",
-    "apps/holodoppler/pyproject.toml": "2591f018f0222e3e56735c7cbffcba8a801903f09565902044c6d093fea1541b",
-    "apps/holodoppler/uv.lock": "ae5dbcb881ea114a3281f88197c85a438458979191ed0f034ede5491d75d9b5b",
+    "apps/manager/uv.lock": "a37ac556904cc1905b5d791afa66f9ded21d3c77430f126284b408a596ca6281",
+    "apps/holodoppler/pyproject.toml": "c4700949f5a5b08abfa0f989d7e9e76d44b1177a557708902a5fa4465b6d7689",
+    "apps/holodoppler/uv.lock": "044dfb320058fe44d9506b8c941779419e8206889665f04a5be9e76e582b2b6f",
     "apps/dopplerview/pyproject.toml": "786f05174b1217b5d037bb2cb72708135244f0f8bed3b32e929af89ce8d6aaad",
-    "apps/dopplerview/uv.lock": "de6d4a598353206f02edcc6caf6118dafa2e0d6a3c03ae5c9d5a7a7fbe826c4d",
-    "apps/eyeflow/pyproject.toml": "4239afd3bc037f95781e1481278e011f7b497462c5bfef58a44eba9b6f10aa03",
-    "apps/eyeflow/uv.lock": "f64859f6ef426686e2f96a1d4ce670ac4ece95a67531d7af6b46760da8804999",
+    "apps/dopplerview/uv.lock": "a6846b1986001059a973165d26e8856c80683ef4155b05206c7020618b1ea08a",
+    "apps/eyeflow/pyproject.toml": "193c2414f149ba90dbf785c089baf33e4a108d9468f0cbc1d1bf2f4d3e4201b6",
+    "apps/eyeflow/uv.lock": "78e1afdaf52f207f9bbb520eb4d8422222c6e7c9a593656d80aa191525eda64a",
     "apps/angioeye/pyproject.toml": "3527fd582496beba31b980f39844b4aad71143229c5f858e31d70953981d762f",
-    "apps/angioeye/uv.lock": "10191a1bec8e698504c8d0d118756bfee973ec89582008253b833f2e77abac94"
+    "apps/angioeye/uv.lock": "2645528f20975c68281ea15d380a779aae9bb96a8c9504ae83d79e063d67df1f"
   },
-  "id": "2801649bbb9d9a6871dbd64b"
+  "id": "d486ac7e7d312e27c0b9bb1f"
 }
